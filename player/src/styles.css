@@ -1,0 +1,32 @@
+@import 'tailwindcss';
+
+/*
+ * Tailwind v4 auto-detects sources from the Vite root, which here is player/.
+ * The stage components live outside it and share this stylesheet's classes,
+ * so they have to be pointed at explicitly — without this every layout class
+ * in the stage silently fails to generate.
+ */
+@source "../../src/stage-ui";
+
+@theme {
+  --color-ink: #0b0a10;
+  --color-ink-soft: #14121c;
+  --color-ink-line: #262234;
+  --color-ember: #e0a458;
+  --color-arcane: #8b7ee8;
+  --font-display: 'Cinzel', Georgia, serif;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--color-ink);
+  color: #e7e3f4;
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  overscroll-behavior: none;
+}

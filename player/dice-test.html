@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dice Test</title>
+    <script>
+      // Test harness only.
+      //
+      // `?raf=timer` drives the render loop from timers instead of the
+      // compositor. Headless and non-compositing browsers suspend
+      // requestAnimationFrame, which stops dice-box's loop dead and makes the
+      // dice impossible to inspect. This must run before any module is
+      // evaluated — ES imports are hoisted, so doing it inside the entry
+      // module would be too late.
+      if (new URLSearchParams(location.search).get('raf') === 'timer') {
+        window.requestAnimationFrame = function (cb) {
+          return setTimeout(function () {
+            cb(performance.now())
+          }, 16)
+        }
+        window.cancelAnimationFrame = function (h) {
+          clearTimeout(h)
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/dice-test.tsx"></script>
+  </body>
+</html>

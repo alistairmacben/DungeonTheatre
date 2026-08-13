@@ -1,0 +1,36 @@
+@import 'tailwindcss';
+
+/* The stage components live outside the renderer root, so Tailwind's automatic
+ * source detection misses them. Same reason as in the player app. */
+@source "../../../stage-ui";
+
+@theme {
+  --color-ink: #0b0a10;
+  --color-ink-soft: #14121c;
+  --color-ink-line: #262234;
+  --color-ember: #e0a458;
+  --color-arcane: #8b7ee8;
+  --font-display: 'Cinzel', Georgia, serif;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--color-ink);
+  color: #e7e3f4;
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  overflow: hidden;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-ink-line);
+  border-radius: 999px;
+}

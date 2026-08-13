@@ -1,0 +1,43 @@
+{
+  "name": "dungeon-theatre",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "start": "electron-vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "node test/run.mjs",
+    "doctor": "node scripts/doctor.mjs",
+    "dev:player": "vite --config player/vite.config.ts",
+    "build:player": "vite build --config player/vite.config.ts"
+  },
+  "keywords": ["dnd", "ttrpg", "discord", "vtt", "electron"],
+  "author": "",
+  "license": "UNLICENSED",
+  "description": "A cinematic stage for Discord D&D games. Watches who is speaking in your voice channel and puts the right character on screen, with scenes, weather and 3D dice.",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.112.3",
+    "cannon-es": "^0.20.0",
+    "motion": "^13.1.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "sharp": "^0.35.3",
+    "tailwindcss": "^4.3.3",
+    "three": "^0.185.1",
+    "zustand": "^5.0.14"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^26.2.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@types/three": "^0.185.4",
+    "@vitejs/plugin-react": "^5.2.0",
+    "electron": "^43.4.0",
+    "electron-vite": "^5.0.0",
+    "typescript": "^7.0.2",
+    "vite": "^7.3.6"
+  }
+}
