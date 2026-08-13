@@ -288,3 +288,111 @@ a static class property.
 - **Pooled, divisible effects** — *Preserve Life*: a pool of 5 × level HP
   divided freely among chosen targets, capped at half maximum each. Targeting
   is not always one-target-one-value.
+
+---
+
+## Classes — remaining eight (Fighter, Monk, Paladin, Ranger, Rogue, Sorcerer, Warlock, Wizard)
+
+### The reaction window is now unambiguous
+
+Five separate features let someone alter a roll **after the dice land, before
+the outcome applies**: Bardic Inspiration, Cutting Words, Peerless Skill,
+Ranger's *Foe Slayer* ("before or after the roll, but before any effects of the
+roll are applied"), and Warlock's *Dark One's Own Luck* ("after seeing the
+initial roll but before any of the roll's effects occur").
+
+This is not an edge case. It is a core, repeated pattern and the roll pipeline
+must be built around it.
+
+### Metamagic makes casting parameterised, not fixed
+
+**[EXTENDS]** A spell cast is not "spell X at level N". Sorcerer Metamagic can,
+at cast time, alter: **range** (Distant), **duration** (Extended), **casting
+time** (Quickened, action → bonus action), **components** (Subtle, removes V
+and S), **target count** (Twinned), **damage dice** (Empowered, reroll up to
+CHA modifier dice), and **save outcomes** (Careful — chosen creatures auto-
+succeed; Heightened — disadvantage on the first save).
+
+So the cast operation needs a modifier/option layer of its own, and several
+class features outside sorcerer do the same thing (Sculpt Spells, Potent
+Cantrip, Empowered Evocation, Overchannel).
+
+### All four casting models confirmed
+
+| Model | Classes | Shape |
+|---|---|---|
+| **Known** | Bard, Ranger, Sorcerer, Warlock | fixed count, swap one per level-up |
+| **Prepared** | Cleric, Druid, Paladin | ability mod + level (or **half** level for paladin), from the whole list, changed on a long rest |
+| **Spellbook** | Wizard | book is the known-set; prepare INT + level *from the book*; spells copyable at cost |
+| **Pact magic** | Warlock | few slots, **all the same level**, **short-rest recharge** |
+
+Ritual casting has **three different gating rules**: known (bard), prepared
+(cleric, druid), in-spellbook-but-not-prepared (wizard).
+
+Spell slots are not the only casting currency: **Mystic Arcanum**, **Signature
+Spells**, **Spell Mastery** and many **invocations** cast spells *without*
+expending a slot, on their own recharge.
+
+### Resources: conversions, pools, and exchange rates
+
+- **Sorcery points ↔ spell slots** with an explicit cost table, and slots
+  created this way **expire on a long rest** — a resource with provenance.
+- **Lay on Hands**: a pool measured in **hit points** (5 × level), spendable in
+  arbitrary amounts, and convertible at **5 HP = cure one disease**.
+- **Arcane Recovery / Natural Recovery**: recover slots totalling half level.
+- **Temporary hit points** (Dark One's Blessing) — a separate HP pool with its
+  own rules.
+
+### More roll and outcome manipulation
+
+- **Minimum die result** — *Reliable Talent*: treat a d20 of 9 or lower as 10.
+- **Outcome override** — *Stroke of Luck*: turn a miss into a hit; treat a
+  failed check as a natural 20.
+- **Deny advantage to attackers** — *Elusive*.
+- **Crit range** — *Improved/Superior Critical*: 19–20, then 18–20. Crit
+  threshold is a derived stat.
+- **Half proficiency, two different roundings** — Jack of All Trades rounds
+  **down**, Remarkable Athlete rounds **up**.
+- **Maximise damage** — *Overchannel*, and its self-damage **ignores resistance
+  and immunity**, so damage application needs a bypass flag.
+
+### Unarmoured AC has four competing formulas
+
+`10 + DEX` (default) · `10 + DEX + CON` (barbarian, shield allowed) ·
+`10 + DEX + WIS` (monk, **no shield**) · `13 + DEX` (draconic sorcerer).
+Conclusively confirms AC as competing **base providers** rather than one
+formula with exceptions.
+
+### Damage needs source properties, not just a type
+
+*Fiendish Resilience* is bypassed by **magical or silver** weapons.
+*Ki-Empowered Strikes* and the **pact weapon** "count as magical for the
+purpose of overcoming resistance and immunity to nonmagical attacks". So a
+damage instance carries: type, magical/nonmagical, and material (silver,
+adamantine).
+
+### Auras: effects that radiate to other creatures
+
+*Aura of Protection* (+CHA to allies' saves within 10 ft, 30 ft at L18),
+*Aura of Courage*, *Aura of Devotion*, *Draconic Presence*. These require the
+source to be **conscious**, have a **level-scaled radius**, and apply to
+**friendly creatures** — targeting by relationship, not just distance.
+
+### Prerequisite-gated modular grants
+
+Eldritch Invocations are functionally **feats**: a pool of options, each with
+optional prerequisites (class level, a specific cantrip, a pact boon),
+swappable on level-up. Whatever models feats should model these too.
+
+### Subclass features can themselves be choices
+
+Ranger's Hunter picks one of three at each of L3/7/11/15. So the progression
+tree has choice nodes inside subclass nodes.
+
+### Retroactive derived values
+
+**[EXTENDS]** "When your Constitution modifier increases by 1, your hit point
+maximum increases by 1 **for each level you have attained**." HP maximum is not
+an accumulated running total — it is a function of (levels, hit dice, CON
+modifier) and must be recomputed retroactively. Storing HP max as a scalar
+would silently break on any CON change.

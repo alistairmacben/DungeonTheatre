@@ -22,8 +22,8 @@ with the whole picture in hand.
 |---|---|---|---|
 | 1–2 | Legal / attribution | — | read |
 | 3–7 | Races | `01-races.md` | **complete** |
-| 8–56 | Classes (12) | `02-classes.md` | in progress |
-| 56–61 | Beyond 1st level, multiclassing | `03-progression.md` | pending |
+| 8–56 | Classes (12) | `02-classes.md` | **complete** |
+| 56–61 | Beyond 1st level, multiclassing | `03-progression.md` | p56 done |
 | 62–74 | Equipment | `04-equipment.md` | pending |
 | 75 | Feats | `05-feats.md` | pending |
 | 76–89 | Using ability scores, adventuring | `06-core-rules.md` | pending |
@@ -39,16 +39,16 @@ with the whole picture in hand.
 |---|---|---|---|
 | Barbarian | 8–10 | none | complete |
 | Bard | 11–14 | known, any-list at L10 | complete |
-| Cleric | 15–18 | prepared (divine) | pending |
-| Druid | 19–23 | prepared | pending |
-| Fighter | 24–25 | none (Eldritch Knight subclass absent from SRD?) | pending |
-| Monk | 26–29 | none (ki) | pending |
-| Paladin | 30–34 | prepared, half-caster | pending |
-| Ranger | 35–38 | known, half-caster | pending |
-| Rogue | 39–41 | none | pending |
-| Sorcerer | 42–45 | known + sorcery points | pending |
-| Warlock | 46–51 | known + pact magic (short-rest slots) | pending |
-| Wizard | 52–55 | spellbook + prepared | pending |
+| Cleric | 15–18 | prepared (divine) | complete |
+| Druid | 19–23 | prepared | complete |
+| Fighter | 24–25 | none (Eldritch Knight subclass absent from SRD?) | complete |
+| Monk | 26–29 | none (ki) | complete |
+| Paladin | 30–34 | prepared, half-caster | complete |
+| Ranger | 35–38 | known, half-caster | complete |
+| Rogue | 39–41 | none | complete |
+| Sorcerer | 42–45 | known + sorcery points | complete |
+| Warlock | 46–51 | known + pact magic (short-rest slots) | complete |
+| Wizard | 52–55 | spellbook + prepared | complete |
 
 The casting models are the architecturally important variable: **known**,
 **prepared**, **spellbook**, and **pact magic** are four genuinely different
