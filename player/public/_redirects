@@ -1,0 +1,4 @@
+# Single-page app: serve index.html for any path rather than 404ing.
+# Discord bounces back to the site root after sign-in, so this mainly guards
+# against a player bookmarking or refreshing on some other path.
+/*  /index.html  200

@@ -114,6 +114,41 @@ re-simulating until the right answer came up would take unbounded time.
 
 ---
 
+## Hosting the player view
+
+The player app is a static site that talks to Supabase directly — it does not
+need the GM's machine to be reachable. Deploy it once and players get a
+permanent link they can bookmark.
+
+**Cloudflare Pages**, connected to this repo:
+
+| Setting | Value |
+|---|---|
+| Build command | `npm run build:player` |
+| Output directory | `dist/player` |
+| Node version | 20 or newer |
+
+The `VITE_SUPABASE_*` values come from the committed `.env`, so no build
+environment variables are needed. Vite bakes them in at build time — which is
+why that file is committed rather than ignored.
+
+**After the first deploy**, add the site's URL to
+Supabase → Authentication → URL Configuration → Redirect URLs, alongside the
+local development entries. Sign-in silently falls back to the Site URL if the
+address it was sent to is not on that list, which looks like a hang rather than
+an error.
+
+### What players do
+
+1. Open the link, once. Bookmark it.
+2. **Sign in with Discord** — the same account they play on.
+3. Enter the campaign's invite code, once ever. Their character is picked up
+   automatically from the GM's casting, because the Discord account they signed
+   in with is the same identity the GM cast.
+
+From then on they just open the bookmark. The GM app has to be running for live
+speaking and scene changes, but the page itself is always reachable.
+
 ## Backend
 
 See [docs/backend.md](docs/backend.md) for the schema, the row-level-security
