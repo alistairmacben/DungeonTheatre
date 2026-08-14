@@ -21,7 +21,8 @@ for (const [src, out] of [
   ['src/shared/stage.ts', 'stage.mjs'],
   ['src/stage-ui/layout.ts', 'layout.mjs'],
   ['src/main/campaign/store.ts', 'store.mjs'],
-  ['src/shared/dice.ts', 'dice.mjs']
+  ['src/shared/dice.ts', 'dice.mjs'],
+  ['src/rules/index.ts', 'rules.mjs']
 ]) {
   await esbuild.build({
     entryPoints: [join(root, src)],
@@ -44,7 +45,9 @@ for (const suite of [
   'test-stage.mjs',
   'test-layout.mjs',
   'test-campaign.mjs',
-  'test-dice.mjs'
+  'test-dice.mjs',
+  'test-rules-operations.mjs',
+  'test-rules-resolution.mjs'
 ]) {
   console.log(`\n───── ${suite} ─────`)
   try {
