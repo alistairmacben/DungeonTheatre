@@ -1240,3 +1240,345 @@ turn**.
 *(Targets an **item**, and its effect depends on who is **wearing or wielding**
 that item — the inventory model must support "who has this equipped" as a
 queryable relation.)*
+
+**Hellish Rebuke** — 1st evocation · **1 reaction, taken in response to being
+damaged by a creature within 60 ft that you can see** · 60 ft · V, S ·
+Instantaneous. save DEX, **2d10 fire**, half on success. ↑ **+1d10** per slot
+above 1st.
+
+**Heroes' Feast** — 6th conjuration · **10 minutes** · 30 ft · V, S, **M\*\***
+(gem-encrusted bowl **≥1,000 gp, consumed**) · Instantaneous.
+**Takes 1 hour to consume; benefits begin only when the hour is over.**
+Up to **twelve other creatures**. Each: **cured of all diseases and poison**,
+**immune to poison and to being frightened**, **advantage on all WIS saves**,
+and **hit point maximum +2d10 with the same number of hit points gained**.
+**Lasts 24 hours.**
+
+**Heroism** — 1st enchantment · 1 action · Touch · V, S · **conc, 1 minute**.
+**Immune to being frightened**, and gains **temporary HP equal to your
+spellcasting ability modifier at the start of each of its turns**. Remaining
+temporary HP from this spell is **lost when it ends**. ↑ one additional target
+per slot above 1st.
+*(Temporary HP that **refreshes every round** and is **tagged to its source** so
+it can be stripped — the tempHP field needs provenance, not just a number.)*
+
+**Hideous Laughter** — 1st enchantment · 1 action · 30 ft · V, S, M · **conc,
+1 minute**. save WIS or **fall prone, incapacitated, and unable to stand**.
+**No effect on INT ≤ 4.** New WIS save **at the end of each of its turns and
+each time it takes damage** — **with advantage if the save was triggered by
+damage**.
+
+**Hold Monster** — 5th enchantment · 1 action · 90 ft · V, S, M · **conc,
+1 minute**. save WIS or **paralyzed**. **No effect on undead.** WIS save at the
+end of each of its turns to end. ↑ one additional target per slot above 5th,
+**all within 30 ft of each other**.
+
+**Hold Person** — 2nd enchantment · 1 action · 60 ft · V, S, M · **conc,
+1 minute**. **Humanoid** only; otherwise identical to *Hold Monster*.
+↑ one additional humanoid per slot above 2nd, **all within 30 ft of each other**.
+
+**Holy Aura** — 8th abjuration · 1 action · Self · V, S, **M\*** (reliquary
+**≥1,000 gp** containing a sacred relic) · **conc, 1 minute**. Chosen creatures
+within **30 ft** at cast time shed **dim light 5 ft**, have **advantage on all
+saving throws**, and **others have disadvantage on attack rolls against them**.
+When a **fiend or undead hits an affected creature with a melee attack**, it
+saves **CON or is blinded until the spell ends**.
+
+**Hunter's Mark** — 1st **divination** · **1 bonus action** · 90 ft · **V only**
+· **conc, 1 hour**. **+1d6 damage whenever you hit the target with a weapon
+attack**, and **advantage on WIS (Perception) and WIS (Survival) checks to find
+it**. **If the target drops to 0 HP you may re-mark a new creature as a bonus
+action.** ↑ **3rd–4th → conc 8 hours · 5th+ → conc 24 hours** (duration only —
+the damage never scales).
+
+**Hypnotic Pattern** — 3rd illusion · 1 action · 120 ft · **S, M** (no verbal) ·
+**conc, 1 minute**. A **30-ft cube**; creatures **that see it** save WIS or are
+**charmed, incapacitated, and speed 0**. **Ends for a creature that takes any
+damage, or if another creature uses its action to shake it out of it.**
+
+---
+
+## I
+
+**Ice Storm** — 4th evocation · 1 action · 300 ft · V, S, M · Instantaneous.
+A **20-ft-radius, 40-ft-high cylinder**. save DEX, **2d8 bludgeoning *and*
+4d6 cold**, half on success. **Difficult terrain until the end of your next
+turn.** ↑ **bludgeoning +1d8** per slot above 4th (**the cold does not scale**).
+
+**Identify** — 1st divination **(R)** · **1 minute** · Touch · **M\*** (pearl
+**≥100 gp** and an owl feather — **not consumed**) · Instantaneous.
+On an object: **its properties and how to use them, whether it needs attunement,
+how many charges it has**, what spells affect it, and **which spell created it**.
+On a creature: **what spells are currently affecting it**.
+*(The natural "inspect item" action in a HUD — and it names exactly the fields a
+magic item record must expose.)*
+
+**Illusory Script** — 1st illusion **(R)** · 1 minute · Touch · **S, M\*\***
+(lead-based ink **≥10 gp, consumed**) · **10 days**. Writing legible to you and
+designated creatures; **unintelligible to everyone else**, or **replaced by a
+different message in a different hand and a language you know**.
+**Dispelling destroys both the original script and the illusion.**
+**Truesight reads the hidden message.**
+
+**Imprisonment** — 9th abjuration · **1 minute** · 30 ft · V, S, **M\***
+(a likeness of the target, plus a version-specific component worth **≥500 gp per
+Hit Die of the target** — a component cost that **scales with the target**) ·
+**Until dispelled**. save WIS or bound; **a success grants permanent immunity to
+your future castings**. While bound: **no need to breathe, eat or drink; does not
+age; undetectable by divination**. Versions: *Burial* (a sphere of force deep
+underground; mithral orb) · *Chaining* (**restrained**, immovable; fine chain of
+precious metal) · *Hedged Prison* (a warded demiplane; jade miniature) ·
+*Minimus Containment* (**shrunk to 1 inch inside a gemstone** that light passes
+through but nothing else, and **cannot be cut or broken**; a large transparent
+gem) · *Slumber* (asleep and unwakeable; rare soporific herbs).
+**Ending condition** authored at cast time — the GM must agree it is reasonable
+and plausible; it **may reference name, identity or deity** but otherwise must
+rest on **observable actions or qualities, never intangibles like level, class
+or hit points**. **Only a 9th-level *dispel magic*** on the prison or the
+component ends it. **One prison per component**; reusing it frees the previous
+prisoner.
+
+**Incendiary Cloud** — 8th conjuration · 1 action · 150 ft · V, S · **conc,
+1 minute**. **20-ft-radius sphere**, spreads around corners, **heavily
+obscured**; **dispersed by wind ≥10 mph**. save DEX, **10d8 fire**, half on
+success, **on appearing, on entering first time on a turn, and on ending a turn
+there**. **Moves 10 ft directly away from you** at the start of each of your
+turns, in a direction you choose.
+
+**Inflict Wounds** — 1st necromancy · 1 action · Touch · V, S · Instantaneous.
+Melee spell atk, **3d10 necrotic**. ↑ **+1d10** per slot above 1st.
+
+**Insect Plague** — 5th conjuration · 1 action · 300 ft · V, S, M · **conc,
+10 minutes**. **20-ft-radius sphere**, spreads around corners, **lightly
+obscured** and **difficult terrain**. save CON, **4d10 piercing**, half on
+success, on appearing / entering / ending a turn there. ↑ **+1d10** per slot
+above 5th.
+
+**Instant Summons** — 6th conjuration **(R)** · 1 minute · Touch · V, S, **M\***
+(sapphire worth **1,000 gp** — **a different one per casting**) · **Until
+dispelled**. Mark an object **≤10 lb and ≤6 ft in its longest dimension**.
+Later, **action** to speak its name and **crush the sapphire**: it appears in
+your hand **across any distance or plane**. **If another creature holds it, it
+does not come — instead you learn who has it and roughly where they are.**
+*(A multiplayer inventory interaction with a built-in theft-detection
+consolation prize.)*
+
+**Invisibility** — 2nd illusion · 1 action · Touch · V, S, M · **conc, 1 hour**.
+Target and carried gear invisible. **Ends for a target that attacks or casts a
+spell.** ↑ one additional creature per slot above 2nd.
+
+**Irresistible Dance** — 6th enchantment · 1 action · 30 ft · **V only** ·
+**conc, 1 minute**. **Creatures that can't be charmed are immune.** The target
+**uses all its movement to dance in place**, has **disadvantage on DEX saves and
+attack rolls**, and **others have advantage on attack rolls against it**.
+**Action to make a WIS save to end it.**
+*(Note there is **no save on the initial application** — only an ongoing one.)*
+
+---
+
+## J–K
+
+**Jump** — 1st transmutation · 1 action · Touch · V, S, M · **1 minute**.
+**Jump distance tripled.** *(A multiplier on the derived long/high jump stats
+from `06-core-rules.md` §7.)*
+
+**Knock** — 2nd transmutation · 1 action · 60 ft · **V only** · Instantaneous.
+Unlocks, unsticks or unbars a target; **only one lock if there are several**;
+**suppresses *arcane lock* for 10 minutes**. **A loud knock audible up to 300 ft
+away.**
+
+---
+
+## L
+
+**Legend Lore** — 5th divination · **10 minutes** · Self · V, S, **M\*\***
+(incense **≥250 gp, consumed**, plus **four ivory strips ≥50 gp each**) ·
+Instantaneous. A summary of significant lore about a named person, place or
+object. **Nothing if it is not of legendary importance.** **The more you already
+know, the more precise the answer**; accurate but possibly figurative.
+
+**Lesser Restoration** — 2nd abjuration · 1 action · Touch · V, S ·
+Instantaneous. End **one disease** or **one condition** from:
+**blinded, deafened, paralyzed, poisoned**.
+
+**Levitate** — 2nd transmutation · 1 action · 60 ft · V, S, M · **conc,
+10 minutes**. A creature or object **up to 500 lb** rises **up to 20 ft** and
+hangs there. **Unwilling creatures save CON to negate.** The target moves only
+by pushing or pulling against a fixed surface, **as if climbing**. You may
+change its altitude by **20 ft** on your turn — as part of your move if you are
+the target, otherwise with your **action**, and it must stay in range.
+**Floats gently down when the spell ends.**
+
+**Light** — Evocation cantrip · 1 action · Touch · **V, M** (no somatic) ·
+**1 hour**. An object **≤10 ft in any dimension** sheds **bright light 20 ft,
+dim 20 ft more**, in a colour you choose. **Blocked by opaque covering.** Ends
+if recast or dismissed as an action. **An object held or worn by a hostile
+creature allows a DEX save to avoid it.**
+
+**Lightning Bolt** — 3rd evocation · 1 action · **Self (100-ft line, 5 ft
+wide)** · V, S, M · Instantaneous. save DEX, **8d6 lightning**, half on success.
+Ignites unattended flammables. ↑ **+1d6** per slot above 3rd.
+
+**Locate Animals or Plants** — 2nd divination **(R)** · 1 action · Self ·
+V, S, M · Instantaneous. **Direction and distance to the nearest** creature or
+plant of a named kind **within 5 miles**.
+
+**Locate Creature** — 4th divination · 1 action · Self · V, S, M · **conc,
+1 hour**. **Direction** (and direction of movement) to a familiar creature
+within **1,000 ft**. Either a **specific creature you know**, or the **nearest of
+a kind you have seen within 30 ft at least once**. **Fails if the creature is in
+a different form** (e.g. *polymorph*ed) or if **running water ≥10 ft wide**
+blocks the path.
+
+**Locate Object** — 2nd divination · 1 action · Self · V, S, M · **conc,
+10 minutes**. As above for an object within **1,000 ft**; specific-and-seen or
+nearest-of-a-kind. **Blocked by any thickness of lead.**
+
+**Longstrider** — 1st transmutation · 1 action · Touch · V, S, M · **1 hour**.
+**Speed +10 ft.** ↑ one additional creature per slot above 1st.
+
+---
+
+## M
+
+**Mage Armor** — 1st abjuration · 1 action · Touch · V, S, M · **8 hours**.
+A willing creature **not wearing armour**: **base AC becomes 13 + DEX
+modifier**. **Ends if the target dons armour** or you dismiss it as an action.
+*(A **competing AC base provider** — the fifth so far, alongside armour,
+Unarmoured Defense (barbarian), Unarmoured Defense (monk), and Draconic
+Resilience. Confirms AC needs a "highest base wins" resolution.)*
+
+**Mage Hand** — Conjuration cantrip · 1 action · 30 ft · V, S · **1 minute**.
+A spectral hand; vanishes beyond 30 ft or on a recast. **Action to control**;
+move it **30 ft** per use. Can manipulate an object, open an **unlocked** door or
+container, stow or retrieve from an **open** container, pour out a vial.
+**Cannot attack, activate magic items, or carry more than 10 lb.**
+
+**Magic Circle** — 3rd abjuration · **1 minute** · 10 ft · V, S, **M\*\***
+(holy water or powdered silver and iron **≥100 gp, consumed**) · **1 hour**.
+A **10-ft-radius, 20-ft-tall cylinder**. Against chosen types (**celestials,
+elementals, fey, fiends, undead**): **cannot willingly enter by nonmagical
+means** (teleport/planar entry requires a **CHA save**); **disadvantage on attack
+rolls against targets inside**; targets inside **cannot be charmed, frightened or
+possessed** by them. **Reversible** — trap them in and protect those outside.
+↑ **+1 hour** per slot above 3rd.
+
+**Magic Jar** — 6th necromancy · **1 minute** · Self · V, S, **M\*** (ornamental
+container **≥500 gp**) · **Until dispelled**. Your body falls catatonic; your
+soul enters the container, aware but **unable to move or use reactions**. Your
+only action is to **project up to 100 ft** — either back to your body (ending
+the spell) or to **possess a humanoid** (save CHA; **success grants 24-hour
+immunity**). **Warded by *protection from evil and good* or *magic circle***.
+While possessing: **their statistics, your alignment and INT/WIS/CHA**, **your
+class features but not theirs**; the host's soul sits in the container, sensing
+but unable to act. If the host body **dies**, so does the host, and you make a
+**CHA save against your own spell save DC** — success returns you to the
+container within 100 ft, **failure kills you**. If the container is destroyed or
+the spell ends your soul returns; **you die if your body is over 100 ft away or
+dead**. **When the spell ends the container is destroyed.**
+
+**Magic Missile** — 1st evocation · 1 action · 120 ft · V, S · Instantaneous.
+**Three darts**, each **1d4 + 1 force**, **no attack roll and no save**,
+distributed as you like; **all strike simultaneously**. ↑ **+1 dart** per slot
+above 1st.
+*(The canonical "automatic hit" shape — the roll pipeline must support an attack
+with neither an attack roll nor a save.)*
+
+**Magic Mouth** — 2nd illusion **(R)** · 1 minute · 30 ft · V, S, **M\*\***
+(honeycomb and **jade dust ≥10 gp, consumed**) · **Until dispelled**.
+A **≤25-word** message (deliverable over up to 10 minutes) implanted in an
+unattended object, spoken in your voice and volume when a trigger fires.
+**One-shot or repeating**, your choice. The trigger may be as general or
+detailed as you like but must rest on **visual or audible conditions within
+30 ft of the object**.
+*(A second player-authored trigger, after *Glyph of Warding*, with an explicit
+**sensory scope** constraint on the predicate.)*
+
+**Magic Weapon** — 2nd transmutation · **1 bonus action** · Touch · V, S ·
+**conc, 1 hour**. A nonmagical weapon becomes magical with **+1 to attack and
+damage rolls**. ↑ **4th → +2 · 6th → +3** — a **tiered**, not linear, upcast.
+
+**Magnificent Mansion** — 7th conjuration · 1 minute · 300 ft · V, S, **M\***
+(three items **≥5 gp each**) · **24 hours**. An extradimensional dwelling with
+one **5 × 10 ft** shimmering entrance, openable and closable from within 30 ft
+and **invisible while closed**. Up to **50 cubes of 10 ft per side**, furnished
+as you choose, with **food for a nine-course banquet for 100** and **100
+near-transparent obedient servants** who can do anything a human servant could
+but **cannot attack or directly harm**, and **cannot leave**. **Objects created
+by the spell dissipate if removed.** Occupants are **expelled to the nearest
+open space** when it ends.
+
+**Major Image** — 3rd illusion · 1 action · 120 ft · V, S, M · **conc,
+10 minutes**. An image up to a **20-ft cube**, with **sound, smell and
+temperature**, but **never enough to deal damage, deafen, or sicken**.
+**Action to move it** anywhere in range and alter its appearance and sounds to
+match. **Physical interaction reveals it**; an **action to examine** plus an
+**INT (Investigation) check vs. your spell save DC** discerns it, after which the
+creature **sees through it**. ↑ **6th+ → lasts until dispelled, no
+concentration**.
+
+**Mass Cure Wounds** — 5th evocation · 1 action · 60 ft · V, S · Instantaneous.
+**Up to six creatures** in a **30-ft-radius sphere**, each **3d8 + your
+spellcasting ability modifier**. No effect on undead or constructs.
+↑ **+1d8** per slot above 5th.
+
+**Mass Heal** — 9th evocation · 1 action · 60 ft · V, S · Instantaneous.
+**Restore up to 700 hit points, divided as you choose** among any number of
+creatures in range; also **cures all diseases and any blindness or deafness**.
+No effect on undead or constructs.
+*(A **divisible healing pool** — the caster allocates a budget across targets,
+which is an interactive allocation UI, not a simple roll.)*
+
+**Mass Healing Word** — 3rd evocation · **1 bonus action** · 60 ft · **V only**
+· Instantaneous. **Up to six creatures**, each **1d4 + your spellcasting ability
+modifier**. ↑ **+1d4** per slot above 3rd.
+
+**Mass Suggestion** — 6th enchantment · 1 action · 60 ft · **V, M** (no somatic)
+· **24 hours**. Up to **twelve** creatures that can **hear and understand** you;
+**immune if they can't be charmed**. A **one-or-two-sentence** course of action
+that must **sound reasonable** — **an obviously harmful command automatically
+negates the spell**. save WIS or pursue it; **ends early when the task is
+finished**. May include a **conditional trigger** ("give your money to the first
+beggar you meet"); **unmet conditions simply never fire**. **Damage from you or
+your companions ends it for that creature.** ↑ **7th → 10 days · 8th → 30 days ·
+9th → a year and a day**.
+
+**Maze** — 8th conjuration · 1 action · 60 ft · V, S · **conc, 10 minutes**.
+Banish a creature to a labyrinthine demiplane. **Action to attempt escape:
+DC 20 INT check** (minotaurs and goristro demons **succeed automatically**). On
+ending it reappears in the space it left, or the nearest free one.
+*(No saving throw at all — an unavoidable effect resisted only by escaping.)*
+
+**Meld into Stone** — 3rd transmutation **(R)** · 1 action · Touch · V, S ·
+**8 hours**. Merge with a stone object large enough to contain you, along with
+your equipment; **undetectable by nonmagical senses**. You **cannot see out**,
+**hear at disadvantage**, remain aware of time, and **can cast spells on
+yourself**. Leaving ends the spell; you **cannot otherwise move**. **Partial
+destruction or reshaping expels you for 6d6 bludgeoning; complete destruction or
+transmutation expels you for 50 bludgeoning**, and you **fall prone**.
+
+**Mending** — Transmutation cantrip · **1 minute** · Touch · V, S, M ·
+Instantaneous. Repairs **one break or tear ≤1 foot in any dimension**, leaving
+no trace. **Can physically repair a magic item or construct but cannot restore
+its magic.**
+
+**Message** — Transmutation cantrip · 1 action · 120 ft · V, S, M · **1 round**.
+A whispered message to one target, who **can reply in a whisper only you hear**.
+Works through solid objects if you know the target is beyond them. **Blocked by
+magical silence, 1 ft stone, 1 inch common metal, a thin sheet of lead, or 3 ft
+wood.** **Travels around corners** — it need not follow a straight line.
+
+**Meteor Swarm** — 9th evocation · 1 action · **1 mile** · V, S ·
+Instantaneous. **Four** separate **40-ft-radius spheres**, spreading around
+corners. save DEX, **20d6 fire *and* 20d6 bludgeoning**, half on success.
+**A creature in more than one burst is affected only once.** Ignites unattended
+flammables.
+
+**Mind Blank** — 8th abjuration · 1 action · Touch · V, S · **24 hours**.
+Immune to **psychic damage**, **any emotion-sensing or thought-reading effect**,
+**divination spells**, and the **charmed** condition. **Explicitly foils *wish***
+and comparable effects aimed at the target's mind or information about them.
+
+**Minor Illusion** — Illusion cantrip · 1 action · 30 ft · **S, M** (no verbal)
+· **1 minute**. **Either** a sound **or** an image of an object (not both).
+Sound ranges from a whisper to a scream, continuous or in discrete bursts.
