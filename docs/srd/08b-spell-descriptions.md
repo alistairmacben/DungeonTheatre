@@ -917,4 +917,326 @@ vanishes; recasting summons **the same steed at full HP**. Telepathy within
 **conc, up to 1 day**. The shortest physical route to a **specific fixed
 location you are familiar with on the same plane**. **Fails** for another plane,
 a moving destination, or a non-specific one ("a green dragon's lair"). You know
-its distance and direction.
+its distance and direction, and **automatically pick the shortest path** at
+every choice (**not necessarily the safest**).
+
+**Find Traps** — 2nd divination · 1 action · 120 ft · V, S · Instantaneous.
+Senses the **presence** of any trap **in line of sight** within range — defined
+as anything **specifically intended by its creator** to cause a sudden harmful
+effect (so *alarm*, *glyph of warding*, a pit trap — **but not** a weak floor,
+an unstable ceiling or a sinkhole). **Does not reveal locations**, only the
+general nature of the danger.
+
+**Finger of Death** — 7th necromancy · 1 action · 60 ft · V, S · Instantaneous.
+save CON, **7d8 + 30 necrotic**, half on success. **A humanoid killed rises at
+the start of your next turn as a zombie permanently under your command.**
+
+**Fireball** — 3rd evocation · 1 action · 150 ft · V, S, M · Instantaneous.
+**20-ft-radius sphere**, spreads around corners. save DEX, **8d6 fire**, half on
+success. Ignites unattended flammables. ↑ **+1d6** per slot above 3rd.
+
+**Fire Bolt** — Evocation cantrip · 1 action · 120 ft · V, S · Instantaneous.
+Ranged spell atk against a creature **or object**, **1d10 fire**; ignites
+unattended flammable objects. [cantrip-scale] 2d10/3d10/4d10.
+
+**Fire Shield** — 4th evocation · 1 action · Self · V, S, M · **10 minutes**
+(no concentration). Sheds **bright light 10 ft, dim 10 ft more**; action to
+dismiss. Choose **warm shield** (**resistance to cold**) or **chill shield**
+(**resistance to fire**). **Whenever a creature within 5 ft hits you with a
+melee attack it takes 2d8** — fire from a warm shield, cold from a chill shield.
+*(A retaliation trigger: an effect that fires on *being hit*.)*
+
+**Fire Storm** — 7th evocation · 1 action · 150 ft · V, S · Instantaneous.
+**Up to ten 10-ft cubes**, freely arranged, **each sharing a face with another**.
+save DEX, **7d10 fire**, half on success. Ignites unattended flammables.
+**You may choose to leave plant life unaffected.**
+*(A **caster-composed area** — the shape is authored at cast time from unit
+cubes with an adjacency constraint, not a fixed geometric primitive.)*
+
+**Flame Blade** — 2nd evocation · **1 bonus action** · Self · V, S, M · **conc,
+10 minutes**. A scimitar-like fiery blade in a free hand; **disappears if you
+let go, re-evoked as a bonus action**. **Action** for a melee spell atk,
+**3d6 fire**. Sheds bright light 10 ft, dim 10 ft more.
+↑ **+1d6 per *two* slot levels above 2nd** — a **non-linear upcast step**.
+
+**Flame Strike** — 5th evocation · 1 action · 60 ft · V, S, M · Instantaneous.
+A **10-ft-radius, 40-ft-high cylinder**. save DEX, **4d6 fire *and* 4d6
+radiant**, half on success. ↑ **+1d6 to fire *or* radiant (your choice)** per
+slot above 5th.
+*(Two damage types in one effect, each resisted separately — damage is a **list
+of typed components**, not a single value.)*
+
+**Flaming Sphere** — 2nd conjuration · 1 action · 60 ft · V, S, M · **conc,
+1 minute**. A **5-ft-diameter** sphere. Any creature **ending its turn within
+5 ft** saves DEX, **2d6 fire**, half on success. **Bonus action to move it
+30 ft**; ramming a creature forces the save and **stops the sphere's movement**.
+Crosses barriers up to 5 ft tall and pits up to 10 ft wide. Ignites unattended
+flammables; bright light 20 ft, dim 20 ft more. ↑ **+1d6** per slot above 2nd.
+
+**Flesh to Stone** — 6th transmutation · 1 action · 60 ft · V, S, M · **conc,
+1 minute**. Flesh-bodied creature, save CON: failure → **restrained**.
+**CON save at the end of each of its turns; three successes end the spell,
+three failures mean petrified for the duration** (non-consecutive; track both).
+**Physical breakage while petrified causes matching deformities on reverting.**
+**Concentrating for the full duration makes the petrification permanent** until
+removed.
+*(A third three-strikes counter, after death saves and *Contagion*. Worth one
+shared primitive.)*
+
+**Floating Disk** — 1st conjuration **(R)** · 1 action · 30 ft · V, S, M ·
+**1 hour**. A **3-ft-diameter, 1-inch-thick** plane of force floating 3 ft up,
+carrying **up to 500 lb** — **exceeding it ends the spell** and everything
+falls. Immobile while you are within 20 ft; otherwise it follows to stay within
+20 ft. **Cannot cross an elevation change of 10 ft or more.** Ends if you move
+**more than 100 ft** from it.
+
+**Fly** — 3rd transmutation · 1 action · Touch · V, S, M · **conc, 10 minutes**.
+**Flying speed 60 ft**; **the target falls when it ends** if still aloft.
+↑ one additional creature per slot above 3rd.
+
+**Fog Cloud** — 1st conjuration · 1 action · 120 ft · V, S · **conc, 1 hour**.
+**20-ft-radius sphere**, spreads around corners, **heavily obscured**.
+**Dispersed by wind of ≥10 mph.** ↑ **radius +20 ft** per slot above 1st.
+
+**Forbiddance** — 6th abjuration **(R)** · **10 minutes** · Touch · V, S,
+**M\*** (holy water, rare incense and **powdered ruby ≥1,000 gp**) · **1 day**.
+Wards up to **40,000 sq ft of floor, 30 ft high** against **teleportation,
+portals and all planar travel** (Astral, Ethereal, Feywild, Shadowfell,
+*plane shift*). Choose one or more of **celestials, elementals, fey, fiends,
+undead**: they take **5d10 radiant or necrotic (your choice at cast time)** on
+entering first time on a turn or starting there. **A password exempts a speaker
+from the damage.** **Cannot overlap another *forbiddance*.** **Cast daily for
+30 days → permanent**, consuming the components on the last casting.
+
+**Forcecage** — 7th evocation · 1 action · 100 ft · V, S, **M\*** (ruby dust
+worth **1,500 gp**) · **1 hour**. Choose a **cage** (up to 20 ft per side, ½-inch
+bars ½ inch apart) or a **solid box** (up to 10 ft per side, blocking all matter
+and all spells in or out). Creatures **fully inside** are trapped; those
+partially inside or too large are **pushed out**. Escape by teleport or planar
+travel requires a **CHA save**; **failure wastes the effect**. **Extends into
+the Ethereal Plane.** **Cannot be dispelled by *dispel magic*.**
+
+**Foresight** — 9th divination · **1 minute** · Touch · V, S, M · **8 hours**
+(no concentration). The target **cannot be surprised**, has **advantage on
+attack rolls, ability checks and saving throws**, and **other creatures have
+disadvantage on attack rolls against it**. **Ends immediately if you cast it
+again.**
+
+**Freedom of Movement** — 4th abjuration · 1 action · Touch · V, S, M ·
+**1 hour**. Movement **unaffected by difficult terrain**; magic **cannot reduce
+the target's speed or paralyse or restrain it**; **5 ft of movement automatically
+escapes nonmagical restraints** (manacles, a grapple); **no underwater penalties
+to movement or attacks**.
+*(An immunity expressed as "effects of category X cannot apply" — the condition
+system needs prevention, not only removal.)*
+
+**Freezing Sphere** — 6th evocation · 1 action · 300 ft · V, S, M ·
+Instantaneous. **60-ft-radius sphere**, save CON, **10d6 cold**, half on
+success. Striking water **freezes it 6 inches deep over a 30-ft square for
+1 minute**, trapping surface swimmers (escape: action, **STR check vs. your
+spell save DC**). **You may hold the globe instead** — it can be thrown 40 ft or
+slung at normal sling range, detonating on impact, or **set down; it explodes on
+its own after 1 minute**. ↑ **+1d6** per slot above 6th.
+*(A spell whose effect can be **stored as a physical object and handed to
+another player** — a genuine multiplayer inventory interaction.)*
+
+---
+
+## G
+
+**Gaseous Form** — 3rd transmutation · 1 action · Touch · V, S, M · **conc,
+1 hour**. A willing creature and its gear become a misty cloud; **ends at 0 HP**;
+**no effect on incorporeal creatures**. **Flying speed 10 ft only**; may occupy
+another creature's space; **resistance to nonmagical damage**; **advantage on
+STR, DEX and CON saves**; passes through cracks but **treats liquids as solid**;
+**cannot fall** and hovers even while incapacitated. **Cannot talk, manipulate
+objects, attack or cast spells**, and carried objects are inaccessible.
+
+**Gate** — 9th conjuration · 1 action · 60 ft · V, S, **M\*** (diamond
+**≥5,000 gp**) · **conc, 1 minute**. A **5–20 ft diameter** portal to a precise
+location on another plane, oriented as you choose. **Travel only through the
+front.** **Deities and planar rulers can prevent it opening in their domains.**
+Naming a **specific creature** (no pseudonyms or titles) on another plane
+**draws it through**; **you gain no power over it**.
+
+**Geas** — 5th enchantment · **1 minute** · 60 ft · **V only** · **30 days**.
+A creature **that can understand you**, save WIS or **charmed**. It takes
+**5d10 psychic each time it acts directly counter to your instructions, at most
+once per day**. **A suicidal command ends the spell.** Ended by your action, or
+by *remove curse*, *greater restoration* or *wish*.
+↑ **7th–8th → 1 year · 9th → until ended by one of those spells**.
+
+**Gentle Repose** — 2nd necromancy **(R)** · 1 action · Touch · V, S, M
+(**salt and a copper piece on each eye, which must remain for the duration**) ·
+**10 days**. Protects remains from decay and from becoming undead, and **days
+under this spell do not count against the time limit of *raise dead***.
+*(An effect that pauses another effect's clock — the raise-dead deadline is a
+countdown that can be suspended.)*
+
+**Giant Insect** — 4th transmutation · 1 action · 30 ft · V, S · **conc,
+10 minutes**. Transform **ten centipedes, three spiders, five wasps, or one
+scorpion** into giant versions. They **obey verbal commands and act on your turn
+each round**. Ends per creature at 0 HP or by your action.
+
+**Glibness** — 8th transmutation · 1 action · Self · **V only** · **1 hour**.
+**When you make a Charisma check you may replace the roll with a 15.**
+**Magic that detects lies always reports you as truthful.**
+*(A **roll replacement**, distinct from a bonus, a reroll or advantage — a
+fourth kind of roll modification.)*
+
+**Globe of Invulnerability** — 6th abjuration · 1 action · **Self (10-ft
+radius)** · V, S, M (a bead that **shatters when the spell ends**) · **conc,
+1 minute**. **Any spell of 5th level or lower cast from outside cannot affect
+anything inside** — **even if cast with a higher slot** (i.e. the comparison is
+against the **spell's own level**, not the slot). Areas are excluded from the
+interior. ↑ **blocks one level higher** per slot above 6th.
+*(Contrast *Counterspell* and *Dispel Magic*, which compare against the **slot**
+used. Both "spell level" and "slot level" are separately meaningful, so a cast
+record must carry both.)*
+
+**Glyph of Warding** — 3rd abjuration · **1 hour** · Touch · V, S, **M\*\***
+(incense and **powdered diamond ≥200 gp, consumed**) · **Until dispelled or
+triggered**. Inscribe on a surface (**≤10 ft across**) or inside a closable
+object (**moved more than 10 ft → the glyph breaks and the spell ends
+untriggered**). Found only with an **INT (Investigation) check vs. your spell
+save DC**. You author the **trigger** — touching, standing on, uncovering,
+approaching within a distance, opening, reading — and may refine it by
+**physical characteristics (height, weight), creature kind, or alignment**, and
+set **password exemptions**.
+*Explosive Runes* — **20-ft-radius sphere**, spreads around corners, save DEX,
+**5d8 acid, cold, fire, lightning or thunder (chosen at creation)**, half on
+success.
+*Spell Glyph* — store a **prepared spell of 3rd level or lower** (cast, and its
+slot spent, as part of creating the glyph) that targets **a single creature or
+an area**. On trigger it is cast at the triggering creature or centred on it;
+**summons and traps appear next to the intruder and attack**; **a concentration
+spell runs its full duration** without anyone concentrating.
+↑ explosive runes **+1d8** per slot above 3rd; a spell glyph may store **any
+spell of level ≤ the slot used**.
+*(The single strongest evidence for a general **trigger/condition language** —
+this is a player-authored event handler with a predicate and a stored payload.)*
+
+**Goodberry** — 1st transmutation · 1 action · Touch · V, S, M ·
+Instantaneous. **Ten berries**; eating one is an **action** and restores
+**1 hit point** and **a full day's nourishment**. **Lose potency after
+24 hours.**
+*(Directly feeds the food clock from `06-core-rules.md` §8.)*
+
+**Grease** — 1st conjuration · 1 action · 60 ft · V, S, M · **1 minute** (no
+concentration). A **10-ft square** of difficult terrain. Creatures there when it
+appears, **and any creature entering or ending its turn there**, save DEX or
+fall **prone**.
+
+**Greater Invisibility** — 4th illusion · 1 action · Touch · V, S · **conc,
+1 minute**. The target and its carried gear become invisible. *(No "ends when
+you attack" clause — unlike *Invisibility*.)*
+
+**Greater Restoration** — 5th abjuration · 1 action · Touch · V, S, **M\*\***
+(diamond dust **≥100 gp, consumed**) · Instantaneous. **Reduce exhaustion by one
+level**, or end **one** of:
+· one effect that **charmed or petrified** the target
+· one **curse**, including **attunement to a cursed magic item**
+· **any reduction to an ability score**
+· one effect **reducing the hit point maximum**
+*(Enumerates four distinct debuff categories the state model must be able to
+name and remove individually.)*
+
+**Guardian of Faith** — 4th conjuration · 1 action · 30 ft · **V only** ·
+**8 hours**. A Large spectral guardian. A hostile creature **moving within 10 ft
+for the first time on a turn** saves DEX, **20 radiant** (a **flat value**, not
+dice), half on success. **Vanishes after dealing a total of 60 damage.**
+*(A **damage budget** as the termination condition — an effect with a
+cumulative-output resource.)*
+
+**Guards and Wards** — 6th abjuration · **10 minutes** · Touch · V, S, **M\***
+(various, plus a **silver rod ≥10 gp**) · **24 hours**. Wards **2,500 sq ft of
+floor, up to 20 ft tall**, freely shaped and divisible across storeys.
+Designate exempt individuals and a **password**. Effects:
+· *Corridors* — fog, **heavily obscured**; **50% chance** at each junction that a
+  creature believes it is going the opposite way
+· *Doors* — magically locked as *arcane lock*; **up to ten** disguised as walls
+  (as *minor illusion*'s illusory object)
+· *Stairs* — filled with webs as *web*; **regrow in 10 minutes** if burned or
+  torn
+· *Other Spell Effect* — **one** of: *dancing lights* in four corridors with a
+  repeating program; *magic mouth* in two locations; *stinking cloud* in two
+  locations (**returning within 10 minutes** if dispersed); a constant *gust of
+  wind* in one corridor; a *suggestion* delivered to anyone entering a chosen
+  **5-ft square**
+The whole area radiates magic; **a successful *dispel magic* removes only the
+one effect targeted**. **Cast daily for one year → permanent.**
+
+**Guidance** — Divination cantrip · 1 action · Touch · V, S · **conc,
+1 minute**. **Once** before it ends, the target adds **1d4 to one ability check
+of its choice**, and **may roll the die before or after making the check**.
+Then the spell ends.
+*(Explicitly permits deciding **after** seeing the d20 — the post-roll
+modification window from `99-open-questions.md` Q3 applies to a **cantrip**, not
+just class features. It is unavoidable.)*
+
+**Guiding Bolt** — 1st evocation · 1 action · 120 ft · V, S · **1 round**.
+Ranged spell atk, **4d6 radiant**, and **the next attack roll against the target
+before the end of your next turn has advantage**. ↑ **+1d6** per slot above 1st.
+
+**Gust of Wind** — 2nd evocation · 1 action · **Self (60-ft line, 10 ft wide)**
+· V, S, M · **conc, 1 minute**. Creatures **starting their turn** in the line
+save STR or are **pushed 15 ft** along it. Moving toward you costs **2 ft per
+foot**. Disperses gas and vapour; **extinguishes unprotected flames**, and
+**50% chance** for protected ones. **Bonus action to change the direction.**
+
+---
+
+## H
+
+**Hallow** — 5th evocation · **24 hours** · Touch · V, S, **M\*\*** (herbs, oils
+and incense **≥1,000 gp, consumed**) · **Until dispelled**. Radius up to
+**60 ft**; **fails if it would overlap another *hallow***.
+**Base effect:** celestials, elementals, fey, fiends and undead **cannot enter**,
+nor **charm, frighten or possess** anyone inside, and existing such effects
+**end on entering**. You may **exclude** any of those types.
+**Plus one bound extra effect**, applicable to all creatures, to followers of a
+deity or leader, or to a specified sort. An affected creature entering first time
+on a turn or starting there may make a **CHA save to ignore the extra effect
+until it leaves**. Options: *Courage* (cannot be frightened) · *Darkness*
+(**normal light and magical light from lower-level spells than your slot cannot
+illuminate**) · *Daylight* (converse) · *Energy Protection* (**resistance to one
+damage type except bludgeoning/piercing/slashing**) · *Energy Vulnerability*
+(converse) · *Everlasting Rest* (interred bodies cannot become undead) ·
+*Extradimensional Interference* · *Fear* · *Silence* · *Tongues*.
+
+**Hallucinatory Terrain** — 4th illusion · **10 minutes** · 300 ft · V, S, M ·
+**24 hours**. Make natural terrain in a **150-ft cube** look, sound and smell
+like other natural terrain. **Structures, equipment and creatures are
+unchanged**, and **tactile characteristics are unchanged**. Disbelief:
+**INT (Investigation) check vs. your spell save DC**.
+
+**Harm** — 6th necromancy · 1 action · 60 ft · V, S · Instantaneous.
+save CON, **14d6 necrotic**, half on success. **Cannot reduce the target below
+1 HP.** On a failed save the target's **hit point maximum is reduced by the
+damage taken for 1 hour**; **anything that removes a disease restores it
+early**.
+
+**Haste** — 3rd transmutation · 1 action · 30 ft · V, S, M · **conc, 1 minute**.
+A willing creature: **speed doubled**, **+2 AC**, **advantage on DEX saves**, and
+**one additional action each turn** usable only for **Attack (one weapon attack
+only), Dash, Disengage, Hide, or Use an Object**. **When it ends the target
+cannot move or act until after its next turn.**
+
+**Heal** — 6th evocation · 1 action · 60 ft · V, S · Instantaneous.
+**Regain 70 hit points** (a flat value). **Ends blindness, deafness and any
+diseases.** **No effect on constructs or undead.** ↑ **+10** per slot above 6th.
+
+**Healing Word** — 1st evocation · **1 bonus action** · 60 ft · **V only** ·
+Instantaneous. **1d4 + your spellcasting ability modifier** HP. No effect on
+undead or constructs. ↑ **+1d4** per slot above 1st.
+
+**Heat Metal** — 2nd transmutation · 1 action · 60 ft · V, S, M · **conc,
+1 minute**. A manufactured metal object (a weapon, medium or heavy metal
+armour). Anyone **in physical contact** takes **2d8 fire** on casting, and again
+whenever you spend a **bonus action** on later turns. A creature holding or
+wearing it saves **CON or drops it**; **if it does not drop it, it has
+disadvantage on attack rolls and ability checks until the start of your next
+turn**.
+*(Targets an **item**, and its effect depends on who is **wearing or wielding**
+that item — the inventory model must support "who has this equipped" as a
+queryable relation.)*
