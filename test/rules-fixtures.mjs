@@ -4,7 +4,7 @@
 // SRD dataset. Every builder produces content of the *same type* regardless of
 // provenance, which is what the unification test relies on.
 
-import { createContentIndex } from './bundle/rules.mjs'
+import { createContentIndex } from './bundle/engine.mjs'
 
 let seq = 0
 const uid = (p) => `${p}-${++seq}`

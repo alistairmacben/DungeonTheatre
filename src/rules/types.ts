@@ -356,9 +356,20 @@ export type RefreshRule =
   | { kind: 'cumulativeDuration'; totalSeconds: number; regainSeconds?: number; perSeconds?: number }
   | { kind: 'never' }
 
+/**
+ * A rendering hint carried by the content, not a rule. The UI renders whatever
+ * hint it is given and falls back to 'uses' if none — which is what keeps
+ * `if (class === 'sorcerer')` out of the interface.
+ */
+export type ResourceDisplay = 'uses' | 'pips' | 'pool' | 'dice' | 'slots'
+
 export interface ResourceDefinition {
   id: ResourceId
   name: string
+  display?: ResourceDisplay
+  /** Visual grouping only, e.g. "Spell Slots". Never a rules concept. */
+  group?: string
+  order?: number
   /** A stat path resolved for this character, or a constant. */
   max: number | StatPath
   refresh: RefreshRule
@@ -384,9 +395,14 @@ export interface TargetSpec {
   restrictions?: Predicate
 }
 
+export type ActionKind = 'attack' | 'cast' | 'ability' | 'item' | 'movement' | 'basic'
+
 export interface ActionDefinition {
   id: string
   name: string
+  /** How the UI facets this action. Data, so a new kind needs no menu change. */
+  kind?: ActionKind
+  description?: string
   cost: ActionCost
   /** Everything that must hold for this to be usable. Drives "why is this greyed out?". */
   requirements: Predicate

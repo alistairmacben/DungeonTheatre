@@ -3,7 +3,7 @@
 // These are the tests that fail first if anyone reorders the pipeline or
 // "simplifies" an operation into a plain sum.
 
-import { createResolution, checkStatValueInvariants } from './bundle/rules.mjs'
+import { createResolution, checkStatValueInvariants } from './bundle/engine.mjs'
 import {
   makeChecker, makeCharacter, makeContent, makeSource, valueMod, suppressMod, termFor
 } from './rules-fixtures.mjs'
@@ -153,7 +153,7 @@ const resolveWith = (modifiers, characterOverrides = {}) => {
     })
   ])
   const r = createResolution(makeCharacter(), content)
-  const roll = (await import('./bundle/rules.mjs')).resolveRoll(r, {
+  const roll = (await import('./bundle/engine.mjs')).resolveRoll(r, {
     kind: 'check', ability: 'dex', skill: 'stealth'
   })
   check.eq('suppress: reaches across channels (value suppresses roll)', roll.advantage, 'normal')

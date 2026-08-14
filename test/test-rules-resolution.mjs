@@ -5,7 +5,7 @@ import {
   createResolution, resolveRoll, resolvePassive, applyOutcome, applyDamage,
   assignTemporaryHitPoints, checkRollInvariants, validateCharacter,
   validateEffectSource, exhaustionSource, MAX_PASSES
-} from './bundle/rules.mjs'
+} from './bundle/engine.mjs'
 import {
   makeChecker, makeCharacter, makeContent, makeSource,
   valueMod, suppressMod, rollMod, capMod, profGrant, skillProf

@@ -340,6 +340,24 @@ export function rollTargetPath(kind: string): StatPath | undefined {
   }
 }
 
+// --- resource maxima -------------------------------------------------------
+// A resource maximum is an ordinary derived stat, so it is explainable like any
+// other number and a class never stores it. Font of Magic adds its level to
+// resource.sorceryPoints.max through the same modifier machinery as anything
+// else.
+
+export const resourceMaxPath = (resourceId: string): StatPath => `resource.${resourceId}.max`
+
+export function declareResourceMax(resourceId: string): StatPath {
+  const path = resourceMaxPath(resourceId)
+  if (!registry.has(path)) {
+    declare({
+      path, dependsOn: [], rounding: 'floor', multiplyComposition: 'product', intrinsicBase: 0
+    })
+  }
+  return path
+}
+
 // --- registry access -------------------------------------------------------
 
 export function getStatPathDefinition(path: StatPath): StatPathDefinition | undefined {

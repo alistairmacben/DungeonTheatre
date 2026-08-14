@@ -14,8 +14,8 @@ import {
   createResolution, resolveCheck, resolvePassiveCheck, resolveAttack,
   applyAttackOutcome, applyOutcome, resolveResources, applyRest,
   checkStatValueInvariants, validateCharacter
-} from './bundle/rules.mjs'
-import { loadContent } from './bundle/content.mjs'
+} from './bundle/engine.mjs'
+import { loadContent } from './bundle/engine.mjs'
 import { makeChecker } from './rules-fixtures.mjs'
 
 const check = makeChecker()
