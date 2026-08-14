@@ -29,10 +29,14 @@ export function Hud({
   const weaponAction = view.actions.find((a) => a.kind === 'attack')
 
   // The HUD shows a handful of actions, not all of them. Attacks first, then
-  // whatever costs a resource — those are the decisions a player actually makes.
+  // whatever costs a resource — those are the decisions a player actually
+  // makes. Unavailable ones are excluded rather than greyed: a bar of things
+  // you cannot do is worse than a shorter bar, and the full list with its
+  // reasons is one click away in the menu.
+  const usable = view.actions.filter((a) => a.available)
   const pinned = [
-    ...view.actions.filter((a) => a.kind === 'attack'),
-    ...view.actions.filter((a) => a.kind !== 'attack' && a.costs.length > 0)
+    ...usable.filter((a) => a.kind === 'attack'),
+    ...usable.filter((a) => a.kind !== 'attack' && a.costs.length > 0)
   ].slice(0, 5)
 
   return (

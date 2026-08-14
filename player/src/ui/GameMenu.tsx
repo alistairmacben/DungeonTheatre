@@ -6,15 +6,20 @@
 // classify game content — the coupling the whole architecture avoids.
 
 import React, { useState } from 'react'
-import type { ActionView, EffectView, ItemView, PlayerCommand, PlayerView } from '@engine'
+import type {
+  ActionView, EffectView, ItemView, PlayerCommand, PlayerView, SpellView
+} from '@engine'
 import { BreakdownList, Value } from './Readouts'
 
-export type MenuTab = 'character' | 'inventory' | 'actions' | 'effects'
+export type MenuTab = 'character' | 'inventory' | 'actions' | 'spells' | 'effects'
 
 const TABS: { id: MenuTab; label: string }[] = [
   { id: 'character', label: 'Character' },
   { id: 'inventory', label: 'Inventory' },
   { id: 'actions', label: 'Actions' },
+  // Filtered out entirely for a non-caster: a fighter keeps the four-category
+  // IA rather than growing an empty fifth tab.
+  { id: 'spells', label: 'Spells' },
   { id: 'effects', label: 'Effects' }
 ]
 
@@ -67,7 +72,7 @@ export function GameMenu({
         </header>
 
         <nav className="flex gap-1 border-b border-white/10 px-6">
-          {TABS.map((t) => (
+          {TABS.filter((t) => t.id !== 'spells' || view.spellcasting).map((t) => (
             <button
               key={t.id}
               type="button"
@@ -87,6 +92,9 @@ export function GameMenu({
           {tab === 'character' && <CharacterTab view={view} />}
           {tab === 'inventory' && <InventoryTab view={view} dispatch={dispatch} />}
           {tab === 'actions' && <ActionsTab view={view} dispatch={dispatch} />}
+          {tab === 'spells' && view.spellcasting && (
+            <SpellsTab view={view} dispatch={dispatch} />
+          )}
           {tab === 'effects' && <EffectsTab view={view} />}
         </div>
       </div>
@@ -420,6 +428,168 @@ function ActionRow({ action, dispatch }: {
 }
 
 // ---------------------------------------------------------------------------
+
+/**
+ * Spells.
+ *
+ * Grouped by level because that is how a caster thinks about them, and because
+ * the level is also what a slot pays for. Everything shown is a field on
+ * SpellView — this component computes nothing and knows no spell by name.
+ */
+function SpellsTab({ view, dispatch }: {
+  view: PlayerView
+  dispatch(command: PlayerCommand): string[] | undefined
+}): React.JSX.Element {
+  const casting = view.spellcasting!
+  const byLevel = new Map<number, SpellView[]>()
+  for (const s of casting.spells) {
+    byLevel.set(s.level, [...(byLevel.get(s.level) ?? []), s])
+  }
+  const levels = [...byLevel.keys()].sort((a, b) => a - b)
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-end gap-6">
+        <Stat label="Spell save DC"><Value readout={casting.saveDc} size="lg" /></Stat>
+        <Stat label="Spell attack"><Value readout={casting.attackBonus} size="lg" /></Stat>
+        <Stat label="Prepared">
+          <span className="text-xl tabular-nums text-parchment">
+            {casting.preparedCount}
+            <span className="text-sm text-parchment/40"> / {casting.preparedMax}</span>
+          </span>
+        </Stat>
+        {casting.concentratingOn && (
+          <Stat label="Concentrating">
+            <button
+              type="button"
+              onClick={() => dispatch({ type: 'endConcentration', characterId: view.meta.characterId })}
+              className="rounded-lg border border-arcane/50 bg-arcane/10 px-2.5 py-1 text-sm text-parchment transition hover:bg-arcane/20"
+            >
+              {casting.concentratingOn.label} — release
+            </button>
+          </Stat>
+        )}
+      </div>
+
+      {casting.slots.length > 0 && (
+        <Section title="Slots">
+          <div className="flex flex-wrap gap-5">
+            {casting.slots.map((slot) => (
+              <div key={slot.resourceId} className="flex flex-col gap-1">
+                <span className="text-[10px] uppercase tracking-wide text-parchment/45">
+                  Level {slot.level}
+                </span>
+                <span className="text-sm tabular-nums text-parchment/80">{slot.remaining}</span>
+              </div>
+            ))}
+          </div>
+        </Section>
+      )}
+
+      {levels.map((level) => (
+        <Section key={level} title={level === 0 ? 'Cantrips' : `Level ${level}`}>
+          <ul className="space-y-2">
+            {byLevel.get(level)!.map((s) => (
+              <SpellRow key={s.id} spell={s} dispatch={dispatch} />
+            ))}
+          </ul>
+        </Section>
+      ))}
+    </div>
+  )
+}
+
+function SpellRow({ spell, dispatch }: {
+  spell: SpellView
+  dispatch(command: PlayerCommand): string[] | undefined
+}): React.JSX.Element {
+  const [open, setOpen] = useState(false)
+  const [rejected, setRejected] = useState<string[] | null>(null)
+
+  return (
+    <li
+      className={`rounded-xl border px-4 py-3 ${
+        spell.available ? 'border-white/10 bg-white/[0.03]' : 'border-white/5 bg-transparent opacity-60'
+      }`}
+    >
+      <button type="button" onClick={() => setOpen((v) => !v)} className="flex w-full items-start gap-3 text-left">
+        <div className="min-w-0 flex-1">
+          <p className="flex flex-wrap items-center gap-2 text-sm text-parchment">
+            {spell.label}
+            <span className="rounded bg-white/5 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-parchment/45">
+              {spell.school}
+            </span>
+            {spell.ritual && (
+              <span className="rounded bg-arcane/15 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-arcane">
+                ritual
+              </span>
+            )}
+            {spell.concentration && (
+              <span className="rounded bg-ember/15 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-ember">
+                concentration
+              </span>
+            )}
+            {spell.alwaysAvailable && (
+              <span className="text-[10px] uppercase tracking-wide text-parchment/30">always ready</span>
+            )}
+          </p>
+          <p className="mt-0.5 text-[12px] text-parchment/50">
+            {spell.castingTimeLabel} · {spell.rangeLabel} · {spell.componentsLabel}
+            {spell.durationLabel ? ` · ${spell.durationLabel}` : ''}
+          </p>
+          {!spell.available && (
+            <p className="mt-1 text-[12px] text-ember">
+              Unavailable — {spell.unavailableReasons.join(' · ')}
+            </p>
+          )}
+        </div>
+      </button>
+
+      {open && (
+        <div className="mt-3 space-y-2 border-t border-white/10 pt-3">
+          {spell.description && (
+            <p className="text-[13px] leading-relaxed text-parchment/70">{spell.description}</p>
+          )}
+          {spell.effects.length > 0 && (
+            <ul className="space-y-0.5">
+              {spell.effects.map((line, i) => (
+                <li key={i} className="text-[13px] text-parchment/55">· {line}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      {spell.available && (
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setRejected(dispatch(spell.command) ?? null)}
+            className="rounded-lg border border-arcane/50 bg-arcane/10 px-3 py-1 text-xs text-parchment transition hover:bg-arcane/20"
+          >
+            Cast
+          </button>
+          {/* More than one viable slot is exactly what upcasting is, so the
+              higher slots are offered rather than hidden behind a stepper. */}
+          {spell.slotOptions.filter((s) => s.remaining > 0).slice(1).map((slot) => (
+            <button
+              key={slot.resourceId}
+              type="button"
+              onClick={() => setRejected(
+                dispatch({ ...spell.command, slotResourceId: slot.resourceId } as PlayerCommand) ?? null)}
+              className="rounded-lg border border-white/15 px-2.5 py-1 text-[11px] text-parchment/70 transition hover:border-arcane/50 hover:text-parchment"
+            >
+              at level {slot.level}
+            </button>
+          ))}
+          {rejected && rejected.length > 0 && (
+            <span className="text-[12px] text-ember">{rejected.join(' · ')}</span>
+          )}
+        </div>
+      )}
+    </li>
+  )
+}
 
 function EffectsTab({ view }: { view: PlayerView }): React.JSX.Element {
   // What is happening to you now, and what is permanently true of you. The

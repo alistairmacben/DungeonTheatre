@@ -193,6 +193,46 @@ export function declareSkill(id: string, defaultAbility: Ability): void {
   })
 }
 
+// --- spellcasting ----------------------------------------------------------
+
+/**
+ * Spell save DC and spell attack bonus are stats, not a formula living inside
+ * a caster.
+ *
+ * The whole point: a Rod of the Pact Keeper raising the DC by 1 is `add`, and
+ * needs no code. The class feature declaring `base(SPELL_SAVE_DC, 8)` plus its
+ * ability modifier plus the proficiency bonus is the SRD formula expressed in
+ * the ordinary vocabulary, so there is nothing spell-specific to resolve.
+ *
+ * Multiclassing has one DC per class. v1 is single-class and this is one stat;
+ * see architecture.md §14 for the debt.
+ */
+export const SPELL_SAVE_DC: StatPath = 'spell.saveDc'
+export const SPELL_ATTACK: StatPath = 'spell.attack'
+/** How many spells may be prepared. Class features add to it; feats can too. */
+export const SPELLS_PREPARED_MAX: StatPath = 'spell.preparedMax'
+
+declare({
+  path: SPELL_SAVE_DC,
+  dependsOn: [PROFICIENCY_BONUS],
+  rounding: 'floor',
+  multiplyComposition: 'product'
+})
+
+declare({
+  path: SPELL_ATTACK,
+  dependsOn: [PROFICIENCY_BONUS],
+  rounding: 'floor',
+  multiplyComposition: 'product'
+})
+
+declare({
+  path: SPELLS_PREPARED_MAX,
+  dependsOn: [],
+  rounding: 'floor',
+  multiplyComposition: 'product'
+})
+
 // --- carrying, jumping -----------------------------------------------------
 
 export const CARRYING_CAPACITY: StatPath = 'carryingCapacity'

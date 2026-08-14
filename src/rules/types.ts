@@ -378,6 +378,14 @@ export interface ResourceDefinition {
    * degrades the item. Declared, not special-cased.
    */
   burnout?: { onRoll: number[]; outcome: 'destroy' | 'degrade'; onRollRestore?: number[] }
+  /**
+   * Marks this resource as a spell slot of a given level.
+   *
+   * Explicit rather than inferred from the id, so a warlock's single pool of
+   * high-level slots, a wizard's ladder and a DM-invented "blood magic" slot
+   * are all discoverable without parsing names.
+   */
+  spellSlot?: { group: string; level: number }
 }
 
 // ---------------------------------------------------------------------------
@@ -501,8 +509,53 @@ export interface EffectSource extends Identity {
   actions?: ActionDefinition[]
   triggers?: TriggerDefinition[]
   resources?: ResourceDefinition[]
+  /** Spells this source makes castable. See SpellGrant. */
+  spells?: SpellGrant[]
   narrative?: NarrativeClause[]
   completeness: Completeness
+}
+
+/**
+ * How a source hands a character access to spells.
+ *
+ * One shape covers every route into a spell list, because they differ only in
+ * two axes: where the list comes from, and whether it must be prepared first.
+ * A tiefling's innate *thaumaturgy*, a cleric's domain spells, a wizard's
+ * spellbook and a sorcerer's known spells are all this type — which is what
+ * keeps the caster from needing class-specific code.
+ */
+export interface SpellGrant {
+  /** Explicit spell ids. Empty when the player chooses via `selectionId`. */
+  spellIds?: string[]
+  /**
+   * A selection the player has answered, holding the chosen spell ids. This is
+   * the same selection machinery feats already use — choosing spells at
+   * level-up is not a different kind of choice from choosing a skill.
+   */
+  selectionId?: string
+  /**
+   * Every spell in the content set on this list, up to `maxLevel`. Prepared
+   * casters draw from a whole list rather than a fixed set.
+   */
+  fromList?: { listId: string; maxLevel: ValueExpr }
+  /**
+   * 'always' — castable without preparing: cantrips, domain spells, innate
+   * racial magic. 'prepared' — must be on the character's prepared list.
+   */
+  availability: 'always' | 'prepared'
+  /**
+   * Resource group whose slots pay for the cast. Absent means the spell costs
+   * no slot at all, which is what makes a cantrip a cantrip and an innate
+   * once-a-day spell a resource with its own refresh.
+   */
+  slotGroup?: string
+  /** Fixed resource cost, for innate spells that do not use slots. */
+  costs?: Record<ResourceId, number>
+  /**
+   * The ability powering save DCs and attack rolls for these spells. The DC
+   * itself is a stat, so this only selects which modifier feeds it.
+   */
+  ability: Ability
 }
 
 // ---------------------------------------------------------------------------
@@ -592,6 +645,8 @@ export interface FeatDefinition extends Identity {
 
 export interface SpellDefinition extends Identity {
   level: number
+  /** Class lists this spell appears on, for grants that take a whole list. */
+  lists?: string[]
   school: string
   ritual: boolean
   castingTime: ActionCost
@@ -703,6 +758,19 @@ export interface Character {
    * Adept's damage type all live here — so a selectable feat needs no code.
    */
   selections?: Record<string, Record<string, string[]>>
+
+  /**
+   * Spells prepared today. Genuine state: it is a choice, it survives until
+   * the next long rest, and nothing derives it. Spells that are always
+   * available are not listed here — being always available is a property of
+   * the grant, not a preparation.
+   */
+  spellsPrepared?: string[]
+  /**
+   * The effect instance the character is concentrating on. One at a time, so
+   * casting another concentration spell ends this one.
+   */
+  concentratingOn?: string
 }
 
 // ---------------------------------------------------------------------------

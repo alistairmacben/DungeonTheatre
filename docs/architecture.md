@@ -749,6 +749,25 @@ Storing a single number makes one of them permanently wrong.
 
 ### Moderate — worth a design note now
 
+**14.18 One spell save DC per character, not per class.**
+`spell.saveDc` and `spell.attack` are single stats. That is correct for a
+single-class character and wrong the moment anyone multiclasses, because a
+cleric/wizard has two DCs computed from two abilities. The fix is to make the
+paths per-class — `spell.saveDc.srd:class.wizard` — which is a mechanical
+change to `statPaths.ts` and the two class features that declare them, not a
+redesign; the operations, the resolver and the view are unaffected because the
+DC was deliberately made an ordinary stat. Cost rises with the number of caster
+classes in content, so it should be done before the sixth one, not the second.
+
+**14.19 Spell effects are described but not resolved.**
+A spell that deals damage carries narrative text, not a damage expression the
+engine rolls. Attack and damage resolution exist and work for weapons; wiring
+spell attacks and saving-throw damage into them is real work, and until it is
+done a cast changes resources and durations but never hit points. This is
+deliberate for the theatre-of-the-mind design — the DM adjudicates damage — but
+it is a gap, not a decision, and it should be recorded as one.
+
+
 **14.14 Deferring subclass and multiclass so hard they become impossible.**
 You've deprioritised both, correctly. But **the shape must exist**: a subclass
 is a slot on a class, and multiclassing means class levels are a *list*, not a

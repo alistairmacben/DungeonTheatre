@@ -12,6 +12,7 @@
 import type { Character, ContentIndex, GameEvent } from '../rules/types.js'
 import { createResolution } from '../rules/resolve.js'
 import { resolveResources, applyRest } from '../rules/resources.js'
+import { cheapestSlot, resolveSpellcasting } from '../rules/spells.js'
 import type { PlayerCommand } from './types.js'
 import { buildPlayerView } from './build.js'
 
@@ -35,6 +36,7 @@ export type DomainEventType =
   | 'ToggleChanged'
   | 'ShortRestTaken' | 'LongRestTaken'
   | 'AbilityUsed'
+  | 'SpellCast' | 'SpellsPrepared' | 'ConcentrationBroken'
   | 'CommandRejected'
 
 const MAX_ATTUNED = 3
@@ -69,6 +71,9 @@ export function applyCommand(
     case 'endAttunement': return endAttunement(character, command)
     case 'useItem': return useItem(character, command, content)
     case 'useAbility': return useAbility(character, command, content)
+    case 'castSpell': return castSpell(character, command, content)
+    case 'prepareSpells': return prepareSpells(character, command, content)
+    case 'endConcentration': return endConcentration(character)
     case 'spendResource': return spendResource(character, command, content)
     case 'restoreResource': return restoreResource(character, command)
     case 'applyCondition': return applyCondition(character, command, content)
@@ -266,6 +271,156 @@ function useAbility(
   }
 
   return { character: next, events }
+}
+
+/**
+ * Casts a spell.
+ *
+ * Which slot to spend is the player's decision when they have one to make, so
+ * the command may name a slot; when it does not, the cheapest that will do the
+ * job is spent. Upcasting is therefore not a separate command — it is the same
+ * command with a different slot.
+ */
+function castSpell(
+  character: Character,
+  command: Extract<PlayerCommand, { type: 'castSpell' }>,
+  content: ContentIndex
+): CommandResult {
+  const casting = resolveSpellcasting(createResolution(character, content), content)
+  const target = casting.accessible.find((s) => s.spell.id === command.spellId)
+  if (!target) return reject(character, ['you do not have access to that spell'])
+  if (!target.available) return reject(character, target.unavailableReasons)
+
+  // A named slot must exist, be high enough and have a charge left. Saying
+  // which of the three failed is the difference between a usable error and a
+  // shrug.
+  let slot = cheapestSlot(target)
+  if (command.slotResourceId) {
+    const chosen = target.slotOptions.find((s) => s.resourceId === command.slotResourceId)
+    if (!chosen) {
+      return reject(character, [`${target.spell.name} cannot be cast from that slot`])
+    }
+    if (chosen.remaining < 1) return reject(character, [`no ${chosen.label} remaining`])
+    slot = chosen
+  }
+
+  const next = clone(character)
+  const events: DomainEvent[] = []
+
+  // Concentration is exclusive, and losing the old spell is a thing that
+  // happened to the character — the theatre should be able to show it.
+  if (target.spell.concentration && next.concentratingOn) {
+    const previous = next.effectInstances.find((e) => e.instanceId === next.concentratingOn)
+    next.effectInstances = next.effectInstances.filter(
+      (e) => e.instanceId !== next.concentratingOn)
+    events.push(event('ConcentrationBroken', next, {
+      reason: 'a new concentration spell was cast',
+      endedInstanceId: next.concentratingOn,
+      endedDefinitionId: previous?.definitionId
+    }))
+    delete next.concentratingOn
+  }
+
+  if (target.spell.level > 0 && slot) {
+    next.resourcesSpent[slot.resourceId] = (next.resourcesSpent[slot.resourceId] ?? 0) + 1
+    events.push(event('ResourceSpent', next, {
+      resourceId: slot.resourceId, label: slot.label,
+      amount: 1, remaining: slot.remaining - 1
+    }))
+    if (slot.remaining - 1 === 0) {
+      events.push(event('LastUseSpent', next, {
+        resourceId: slot.resourceId, label: slot.label
+      }))
+    }
+  }
+
+  for (const cost of target.costs) {
+    next.resourcesSpent[cost.resourceId] = (next.resourcesSpent[cost.resourceId] ?? 0) + cost.amount
+    events.push(event('ResourceSpent', next, {
+      resourceId: cost.resourceId, label: cost.label,
+      amount: cost.amount, remaining: cost.remaining - cost.amount
+    }))
+  }
+
+  // A spell that lasts becomes an effect instance, resolved by exactly the
+  // machinery that resolves a condition or a potion.
+  const lasts = target.spell.concentration || (target.spell.durationSeconds ?? 0) > 0
+  if (lasts) {
+    const instanceId = `ei-${target.spell.id}-${next.effectInstances.length}`
+    next.effectInstances.push({
+      instanceId,
+      definitionId: target.spell.id,
+      contentVersion: target.spell.contentVersion,
+      appliedAtSeconds: 0
+    })
+    if (target.spell.concentration) next.concentratingOn = instanceId
+  }
+
+  events.unshift(event('SpellCast', next, {
+    spellId: target.spell.id,
+    label: target.spell.name,
+    level: target.spell.level,
+    castAtLevel: slot?.level ?? target.spell.level,
+    upcast: slot !== undefined && slot.level > target.spell.level,
+    concentration: target.spell.concentration,
+    saveDc: casting.saveDc.total,
+    attackBonus: casting.attackBonus.total
+  }))
+
+  return { character: next, events }
+}
+
+/**
+ * Sets the prepared list wholesale rather than one spell at a time, because
+ * preparation is a single decision the player makes about the whole day.
+ */
+function prepareSpells(
+  character: Character,
+  command: Extract<PlayerCommand, { type: 'prepareSpells' }>,
+  content: ContentIndex
+): CommandResult {
+  const casting = resolveSpellcasting(createResolution(character, content), content)
+  const preparable = new Set(
+    casting.accessible.filter((s) => !s.alwaysAvailable).map((s) => s.spell.id))
+
+  const unknown = command.spellIds.filter((id) => !preparable.has(id))
+  if (unknown.length > 0) {
+    return reject(character, unknown.map((id) =>
+      `${content.spells.get(id)?.name ?? id} is not a spell you can prepare`))
+  }
+  if (command.spellIds.length > casting.preparedMax) {
+    return reject(character, [
+      `you can prepare ${casting.preparedMax} spells, not ${command.spellIds.length}`
+    ])
+  }
+
+  const next = clone(character)
+  next.spellsPrepared = [...command.spellIds]
+  return {
+    character: next,
+    events: [event('SpellsPrepared', next, {
+      spellIds: next.spellsPrepared,
+      count: next.spellsPrepared.length,
+      maximum: casting.preparedMax
+    })]
+  }
+}
+
+function endConcentration(character: Character): CommandResult {
+  if (!character.concentratingOn) {
+    return reject(character, ['you are not concentrating on anything'])
+  }
+  const next = clone(character)
+  const ended = next.effectInstances.find((e) => e.instanceId === next.concentratingOn)
+  next.effectInstances = next.effectInstances.filter(
+    (e) => e.instanceId !== next.concentratingOn)
+  delete next.concentratingOn
+  return {
+    character: next,
+    events: [event('ConcentrationBroken', next, {
+      reason: 'released', endedDefinitionId: ended?.definitionId
+    })]
+  }
 }
 
 function spendResource(

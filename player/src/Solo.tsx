@@ -10,19 +10,52 @@ import { useState } from 'react'
 import { StageView } from '@stage-ui/StageView'
 import { EMPTY_SNAPSHOT } from '@shared/types'
 import { parseNotation, rollValues, totalOf, type DiceRoll } from '@shared/dice'
+import type { Character } from '@engine'
 import { useGameState } from './game/useGameState'
+import { PARTY } from './game/character'
 import { Hud } from './ui/Hud'
 import { GameMenu, type MenuTab } from './ui/GameMenu'
 
 export function Solo(): React.JSX.Element {
-  const game = useGameState()
+  // Switching characters is a harness affordance, not a product feature: the
+  // point is to see how different archetypes render through one HUD.
+  const [who, setWho] = useState(0)
+
+  return (
+    <div className="relative h-full w-full">
+      {/* Keyed on the character, because the game state is seeded from it and
+          a fresh character means a fresh game, not a re-render. */}
+      <SoloCharacter key={PARTY[who]!.id} character={PARTY[who]!} />
+
+      <div className="pointer-events-auto absolute left-4 top-4 flex gap-1">
+        {PARTY.map((c, i) => (
+          <button
+            key={c.id}
+            type="button"
+            onClick={() => setWho(i)}
+            className={`rounded-lg border px-3 py-1.5 text-xs transition ${
+              i === who
+                ? 'border-arcane/60 bg-arcane/10 text-parchment'
+                : 'border-white/10 bg-ink/70 text-parchment/50 hover:text-parchment/80'
+            }`}
+          >
+            {c.name}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function SoloCharacter({ character }: { character: Character }): React.JSX.Element {
+  const game = useGameState(character)
   const [menuTab, setMenuTab] = useState<MenuTab | null>(null)
   const [note, setNote] = useState<string | null>(null)
   const [roll, setRoll] = useState<DiceRoll | null>(null)
   const [rollSeq, setRollSeq] = useState(1)
 
   return (
-    <div className="relative h-full w-full">
+    <>
       <StageView
         snapshot={EMPTY_SNAPSHOT}
         resolveAsset={() => null}
@@ -47,7 +80,8 @@ export function Solo(): React.JSX.Element {
               return
             }
             if (action.kind === 'attack' && action.preview?.attackBonusDisplay) {
-              const parsed = parseNotation(`1d20${action.preview.attackBonusDisplay}`)
+              const notation = `1d20${action.preview.attackBonusDisplay}`
+              const parsed = parseNotation(notation)
               if (parsed) {
                 const dice = rollValues(parsed)
                 setRoll({
@@ -57,7 +91,7 @@ export function Solo(): React.JSX.Element {
                   characterId: game.view.meta.characterId,
                   rollerName: game.view.meta.name,
                   color: '#c9a227',
-                  notation: `1d20${action.preview.attackBonusDisplay}`,
+                  notation,
                   dice,
                   modifier: parsed.modifier,
                   total: totalOf(dice, parsed.modifier),
@@ -85,6 +119,6 @@ export function Solo(): React.JSX.Element {
           dispatch={game.dispatch}
         />
       )}
-    </div>
+    </>
   )
 }

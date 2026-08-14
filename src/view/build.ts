@@ -8,7 +8,7 @@
 
 import type {
   Ability, ActionDefinition, ClassDefinition, ContentIndex, EffectSource,
-  ItemDefinition, ResourceDefinition, StatValue, Term
+  ItemDefinition, ResourceDefinition, SpellDefinition, StatValue, Term
 } from '../rules/types.js'
 import { ABILITIES } from '../rules/types.js'
 import type { Resolution } from '../rules/resolve.js'
@@ -17,6 +17,7 @@ import { describeProficiency, evaluate } from '../rules/predicates.js'
 import { resolveCheck, resolvePassiveCheck } from '../rules/check.js'
 import { resolveAttack } from '../rules/attack.js'
 import { resolveResources, type ResourceValue } from '../rules/resources.js'
+import { resolveSpellcasting, type CastableSpell, type SlotOption } from '../rules/spells.js'
 import {
   abilityModifierPath, abilityScorePath, ARMOR_CLASS, HP_MAX, INITIATIVE,
   PROFICIENCY_BONUS, speedPath
@@ -25,7 +26,8 @@ import { SRD_SKILLS } from '../rules/index.js'
 import type {
   AbilityView, ActionView, Breakdown, DetailLevel, EffectView,
   EquipmentSlotView, ItemGroup, ItemView, NoticeView, PlayerView,
-  ProgressionView, ProficiencyState, Readout, ResourceView, SkillView, VitalsView
+  ProgressionView, ProficiencyState, Readout, ResourceView, SkillView,
+  SpellcastingView, SpellView, VitalsView
 } from './types.js'
 
 const ABILITY_LABEL: Record<Ability, string> = {
@@ -200,10 +202,16 @@ function describeScope(m: { scope?: { kinds?: string[]; skills?: string[]; abili
 
 function buildVitals(r: Resolution, detail: DetailLevel): VitalsView {
   const c = r.character
+  const max = r.stat(HP_MAX)
   return {
     hitPoints: {
-      current: c.hitPointsCurrent,
-      max: readout(r.stat(HP_MAX), 'Maximum Hit Points', detail),
+      // Current hit points are stored and the maximum is derived, so the two
+      // can legitimately disagree — a lost Constitution belt lowers the maximum
+      // without anyone editing the current total. Reporting a number above the
+      // maximum would be showing the player an impossible character, so the
+      // view clamps. The stored value is left alone; the authority reconciles.
+      current: Math.min(c.hitPointsCurrent, max.total),
+      max: readout(max, 'Maximum Hit Points', detail),
       temporary: c.hitPointsTemp
     },
     armorClass: readout(r.stat(ARMOR_CLASS), 'Armour Class', detail),
@@ -560,6 +568,31 @@ function buildActions(
     }
   }
 
+  // --- castable spells ------------------------------------------------------
+  // A spell is an action. Making it one here is what lets the HUD, the action
+  // list, the facet pills and the availability reasons all work on spells
+  // without a line of spell-specific presentation code.
+  for (const c of resolveSpellcasting(r, content).accessible) {
+    const cheapest = c.slotOptions.find((s: SlotOption) => s.remaining > 0)
+    out.push({
+      id: `cast:${c.spell.id}`,
+      label: c.spell.name,
+      ...(c.spell.effects.narrative?.[0]
+        ? { description: c.spell.effects.narrative[0].text }
+        : {}),
+      kind: 'cast',
+      cost: costView(c.spell.castingTime),
+      costs: cheapest
+        ? [{ resourceId: cheapest.resourceId, amount: 1, label: `1 ${cheapest.label}` }]
+        : c.costs.map((x: CastableSpell['costs'][number]) => ({ resourceId: x.resourceId, amount: x.amount, label: x.label })),
+      available: c.available,
+      unavailableReasons: c.unavailableReasons,
+      command: { type: 'castSpell', characterId, spellId: c.spell.id },
+      sourceId: c.grantSourceId,
+      sourceLabel: c.grantSourceName
+    })
+  }
+
   // --- consumables ----------------------------------------------------------
   for (const inst of r.character.inventory.instances) {
     const def = content.items.get(inst.definitionId)
@@ -604,6 +637,103 @@ function buildActions(
 }
 
 // ---------------------------------------------------------------------------
+
+const LEVEL_LABEL = [
+  'Cantrip', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th'
+]
+
+function durationLabel(seconds: number | undefined, concentration: boolean): string | undefined {
+  if (seconds === undefined) return concentration ? 'Concentration' : undefined
+  const body = seconds >= 3600
+    ? `${seconds / 3600} hour${seconds === 3600 ? '' : 's'}`
+    : seconds >= 60
+      ? `${seconds / 60} minute${seconds === 60 ? '' : 's'}`
+      : `${seconds} second${seconds === 1 ? '' : 's'}`
+  return concentration ? `Concentration, up to ${body}` : body
+}
+
+function rangeLabel(spell: SpellDefinition): string {
+  switch (spell.rangeKind) {
+    case 'self': return 'Self'
+    case 'touch': return 'Touch'
+    case 'sight': return 'Sight'
+    case 'unlimited': return 'Unlimited'
+    case 'special': return 'Special'
+    default: return spell.rangeFeet !== undefined ? feet(spell.rangeFeet) : 'Ranged'
+  }
+}
+
+function componentsLabel(c: SpellDefinition['components']): string {
+  const parts: string[] = []
+  if (c.verbal) parts.push('V')
+  if (c.somatic) parts.push('S')
+  if (c.material) parts.push(`M (${c.material}${c.consumed ? ', consumed' : ''})`)
+  else if (c.materialCostCp !== undefined) parts.push('M')
+  return parts.join(', ') || '—'
+}
+
+/**
+ * The spellcasting view.
+ *
+ * Returned undefined rather than empty when the character has no magic, so the
+ * UI's test is "is there spellcasting" rather than "is this list empty" — a
+ * fighter should not render a spell tab with nothing in it.
+ */
+function buildSpellcasting(
+  r: Resolution, content: ContentIndex, detail: DetailLevel, characterId: string
+): SpellcastingView | undefined {
+  const casting = resolveSpellcasting(r, content)
+  if (!casting.active) return undefined
+
+  const spells: SpellView[] = casting.accessible.map((c: CastableSpell) => ({
+    id: c.spell.id,
+    label: c.spell.name,
+    level: c.spell.level,
+    levelLabel: LEVEL_LABEL[c.spell.level] ?? `${c.spell.level}th`,
+    school: c.spell.school,
+    castingTimeLabel: costView(c.spell.castingTime).label,
+    rangeLabel: rangeLabel(c.spell),
+    ...(durationLabel(c.spell.durationSeconds, c.spell.concentration)
+      ? { durationLabel: durationLabel(c.spell.durationSeconds, c.spell.concentration)! }
+      : {}),
+    concentration: c.spell.concentration,
+    ritual: c.spell.ritual,
+    componentsLabel: componentsLabel(c.spell.components),
+    ...(c.spell.effects.narrative?.[0]
+      ? { description: c.spell.effects.narrative[0].text }
+      : {}),
+    effects: describeSource(c.spell.effects, r, content),
+    prepared: c.prepared,
+    alwaysAvailable: c.alwaysAvailable,
+    available: c.available,
+    unavailableReasons: c.unavailableReasons,
+    slotOptions: c.slotOptions,
+    command: { type: 'castSpell', characterId, spellId: c.spell.id },
+    sourceLabel: c.grantSourceName
+  }))
+
+  const concentrating = r.character.concentratingOn
+  const concentratingDef = concentrating
+    ? r.character.effectInstances.find((e) => e.instanceId === concentrating)
+    : undefined
+
+  return {
+    saveDc: readout(casting.saveDc, 'Spell save DC', detail),
+    attackBonus: readout(casting.attackBonus, 'Spell attack', detail, signed),
+    preparedCount: casting.preparedCount,
+    preparedMax: casting.preparedMax,
+    slots: casting.slots,
+    spells,
+    ...(concentrating && concentratingDef
+      ? {
+        concentratingOn: {
+          instanceId: concentrating,
+          label: content.spells.get(concentratingDef.definitionId)?.name ?? 'a spell'
+        }
+      }
+      : {})
+  }
+}
 
 function buildEffects(r: Resolution, content: ContentIndex): EffectView[] {
   const out: EffectView[] = []
@@ -743,6 +873,7 @@ export function buildPlayerView(
 ): PlayerView {
   const detail = options.detail ?? 'summary'
   const c = resolution.character
+  const spellcasting = buildSpellcasting(resolution, content, detail, c.id)
   const resources = buildResources(resolution, detail)
   const { items, slots } = buildInventory(resolution, content, detail)
 
@@ -763,6 +894,7 @@ export function buildPlayerView(
     equipment: slots,
     inventory: items,
     actions: buildActions(resolution, content, detail, resources),
+    ...(spellcasting ? { spellcasting } : {}),
     effects: buildEffects(resolution, content),
     notices: buildNotices(resolution),
     progression: buildProgression(resolution, content, detail)

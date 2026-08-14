@@ -201,6 +201,51 @@ export interface EffectView {
   removable: boolean
 }
 
+/**
+ * One spell, already explained.
+ *
+ * Every string here is derived. The UI renders a spell card without knowing
+ * what a spell is, which is the same bargain every other view makes.
+ */
+export interface SpellView {
+  id: string
+  label: string
+  level: number
+  /** "Cantrip", "1st", "2nd" — the form a player reads, not the integer. */
+  levelLabel: string
+  school: string
+  castingTimeLabel: string
+  rangeLabel: string
+  durationLabel?: string
+  concentration: boolean
+  ritual: boolean
+  /** "V, S, M (a pinch of soot and salt)" */
+  componentsLabel: string
+  description?: string
+  /** Plain-language consequences, from the spell's effect source. */
+  effects: string[]
+  prepared: boolean
+  /** True for cantrips, domain and innate spells: preparation does not apply. */
+  alwaysAvailable: boolean
+  available: boolean
+  unavailableReasons: string[]
+  /** Slots that could pay, cheapest first. More than one means upcasting. */
+  slotOptions: { resourceId: string; label: string; level: number; remaining: number }[]
+  /** Casts at the cheapest viable slot; name a slot to upcast. */
+  command: PlayerCommand
+  sourceLabel: string
+}
+
+export interface SpellcastingView {
+  saveDc: Readout
+  attackBonus: Readout
+  preparedCount: number
+  preparedMax: number
+  slots: { resourceId: string; label: string; level: number; remaining: number }[]
+  spells: SpellView[]
+  concentratingOn?: { instanceId: string; label: string }
+}
+
 export interface NoticeView {
   id: string
   label: string
@@ -242,6 +287,8 @@ export interface PlayerView {
   equipment: EquipmentSlotView[]
   inventory: ItemView[]
   actions: ActionView[]
+  /** Absent when the character has no spell access — not an empty object. */
+  spellcasting?: SpellcastingView
   effects: EffectView[]
   notices: NoticeView[]
   progression: ProgressionView
@@ -261,7 +308,9 @@ export type PlayerCommand =
   | { type: 'makeCheck'; characterId: string; checkType: 'ability' | 'skill'; ability?: Ability; skill?: SkillId }
   | { type: 'makeSave'; characterId: string; ability: Ability; dc?: number }
   | { type: 'useAbility'; characterId: string; actionId: string; sourceId: string }
-  | { type: 'castSpell'; characterId: string; spellId: string; slotLevel?: number }
+  | { type: 'castSpell'; characterId: string; spellId: string; slotResourceId?: string }
+  | { type: 'prepareSpells'; characterId: string; spellIds: string[] }
+  | { type: 'endConcentration'; characterId: string }
   | { type: 'spendResource'; characterId: string; resourceId: string; amount: number }
   | { type: 'restoreResource'; characterId: string; resourceId: string; amount: number }
   | { type: 'applyCondition'; characterId: string; conditionId: ConditionId; sourceId: string; durationSeconds?: number }
