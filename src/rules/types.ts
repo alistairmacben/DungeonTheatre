@@ -165,13 +165,15 @@ export type CapabilityKey =
   | 'castSpells' | 'concentrate' | 'breathe'
   | 'benefitFromSpeedBonus' | 'standUp'
   | 'beCharmed' | 'beFrightened' | 'ageNormally'
+  | 'beSurprised' | 'beCriticallyHit'
 
 export const CAPABILITY_KEYS: readonly CapabilityKey[] = [
   'takeActions', 'takeReactions', 'takeBonusActions',
   'move', 'speak', 'see', 'hear',
   'castSpells', 'concentrate', 'breathe',
   'benefitFromSpeedBonus', 'standUp',
-  'beCharmed', 'beFrightened', 'ageNormally'
+  'beCharmed', 'beFrightened', 'ageNormally',
+  'beSurprised', 'beCriticallyHit'
 ]
 
 // ---------------------------------------------------------------------------
@@ -495,8 +497,44 @@ export type EquipmentSlotId =
   | 'armor' | 'shield' | 'mainHand' | 'offHand' | 'head' | 'cloak'
   | 'boots' | 'gloves' | 'bracers' | 'amulet' | 'ring1' | 'ring2' | 'belt'
 
+/**
+ * The mechanical facts about a weapon, held on the definition. The attack
+ * resolver reads these; the weapon never computes anything itself.
+ */
+export interface WeaponProfile {
+  category: WeaponCategory
+  /** 'melee' or 'ranged' — which ability the attack defaults to. */
+  reach: 'melee' | 'ranged'
+  damage: DiceExpr
+  damageType: DamageType
+  /** finesse, thrown, heavy, light, loading, two-handed, versatile, reach, ammunition */
+  properties: string[]
+  /** The two-handed die for a versatile weapon. */
+  versatileDamage?: DiceExpr
+  normalRangeFeet?: number
+  longRangeFeet?: number
+}
+
+export interface ArmorProfile {
+  category: ArmorCategory
+  baseAc: number
+  /**
+   * How much Dexterity the armour lets through. Light armour has no cap, medium
+   * caps at 2 (3 with Medium Armor Master), heavy admits none. A stat rather
+   * than a constant so a feat or item can change it.
+   */
+  dexCap: number | null
+  /** Minimum Strength score, below which speed drops by 10. */
+  strengthRequirement?: number
+  stealthDisadvantage?: boolean
+}
+
 export interface ItemDefinition extends Identity {
   category: 'weapon' | 'armor' | 'shield' | 'gear' | 'tool' | 'consumable' | 'wondrous'
+  weapon?: WeaponProfile
+  armor?: ArmorProfile
+  /** '2014' | '2024' — kept so rulesets can coexist without contaminating each other. */
+  rulesetVersion?: string
   rarity?: 'common' | 'uncommon' | 'rare' | 'veryRare' | 'legendary' | 'artifact'
   weight?: number
   costCp?: number
@@ -714,8 +752,38 @@ export interface RollRequest {
   requiresSenses?: Sense[]
   /** DC, AC, or the opposing side of a contest. */
   target?: { kind: 'dc' | 'ac'; value: number } | { kind: 'contest' }
+  /**
+   * Proficiency categories this roll may draw on that the scope cannot imply.
+   *
+   * Skills, tools and saves imply their own scope, but weapon proficiency
+   * depends on *which weapon* is swung — a fact the roll scope does not carry.
+   * The attack resolver supplies the weapon's category and the weapon itself,
+   * so the ordinary proficiency machinery applies with no attack-specific
+   * branch inside it.
+   */
+  proficiencyCategories?: ProficiencyCategory[]
   /** DM fiat is a first-class input to every roll, not an escape hatch. */
   dmAdvantage?: AdvantageState
+  /**
+   * Ids of ActionOptions the actor elected before rolling — Great Weapon
+   * Master's -5/+10, a Battle Master manoeuvre. Their modifiers join the
+   * pipeline like any other, so an option needs no code of its own.
+   */
+  electedOptions?: string[]
+  /**
+   * Modifiers contributed by the *other* side of the roll: a defender's
+   * conditions, cover, the attacker's own position. Supplied by resolveAttack;
+   * a plain check leaves it empty.
+   */
+  externalModifiers?: ExternalModifier[]
+}
+
+/** A modifier contributed by something other than the rolling character. */
+export interface ExternalModifier {
+  sourceId: string
+  sourceName: string
+  provenance: Provenance
+  modifier: Modifier
 }
 
 export interface RollResolution {
@@ -731,6 +799,8 @@ export interface RollResolution {
   disadvantageSources: Term[]
   autoFail: Term[]
   autoSucceed: Term[]
+  /** Effects that turn any hit into a critical (paralyzed, unconscious, within 5 ft). */
+  autoCritical: Term[]
   rerollOn: number[]
   critRange: number
   incomplete: boolean

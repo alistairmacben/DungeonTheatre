@@ -9,14 +9,15 @@
 // on the server for truth, and it is why every test here is deterministic.
 
 import type {
-  AdvantageState, DiceExpr, RollOutcome, RollRequest, RollResolution,
-  RollResult, RollScope, Term, StatPath
+  AdvantageState, DiceExpr, Modifier, RollOutcome, RollRequest,
+  RollResolution, RollResult, RollScope, Term, StatPath
 } from './types.js'
 import type { Resolution } from './resolve.js'
 import { scopeMatches } from './resolve.js'
 import { sortTerms } from './operations.js'
 import {
-  abilityModifierPath, CRIT_RANGE, savePath, skillPath, PROFICIENCY_BONUS
+  abilityModifierPath, CRIT_RANGE, savePath, skillPath, PROFICIENCY_BONUS,
+  rollTargetPath
 } from './statPaths.js'
 
 
@@ -66,7 +67,7 @@ export function resolveRoll(resolution: Resolution, request: RollRequest): RollR
 
   // --- proficiency ----------------------------------------------------------
   if (request.kind !== 'damage' && request.kind !== 'death') {
-    const prof = resolution.proficiency(scope)
+    const prof = resolution.proficiency(scope, request.proficiencyCategories)
     if (prof.term !== 0 || prof.terms.length > 0) {
       modifierTotal += prof.term
       modifierTerms.push({
@@ -109,10 +110,54 @@ export function resolveRoll(resolution: Resolution, request: RollRequest): RollR
   const disadvantageSources: Term[] = []
   const autoFail: Term[] = []
   const autoSucceed: Term[] = []
+  const autoCritical: Term[] = []
   const rerollOn: number[] = []
   const pendingDice: RollResolution['pendingDice'] = []
 
-  for (const entry of resolution.entries) {
+  // Elected options and the other side's modifiers join the same list as the
+  // character's own, so there is exactly one place where roll-channel effects
+  // are interpreted.
+  const extra: { modifier: Modifier; sourceId: string; sourceName: string; provenance: Term['provenance']; gatePassed: boolean; gateReason: string; incomplete: boolean }[] = []
+
+  for (const source of resolution.sources.active) {
+    for (const option of source.options ?? []) {
+      if (!(request.electedOptions ?? []).includes(option.id)) continue
+      if (option.scope && !scopeMatches(option.scope, scope)) continue
+      for (const m of option.modifiers) {
+        extra.push({
+          modifier: m, sourceId: option.id, sourceName: `${source.name}: ${option.label}`,
+          provenance: source.provenance, gatePassed: true, gateReason: '', incomplete: false
+        })
+      }
+    }
+  }
+
+  for (const ext of request.externalModifiers ?? []) {
+    extra.push({
+      modifier: ext.modifier, sourceId: ext.sourceId, sourceName: ext.sourceName,
+      provenance: ext.provenance, gatePassed: true, gateReason: '', incomplete: false
+    })
+  }
+
+  // Flat value-channel modifiers carried by options apply to the roll total,
+  // but only those aimed at this kind of roll — Great Weapon Master's -5 is on
+  // attack.roll and its +10 is on damage.weapon, so the attack roll takes one
+  // and the damage calculation takes the other.
+  const rollPath = rollTargetPath(request.kind)
+  for (const e of extra) {
+    const m = e.modifier
+    if (m.channel !== 'value' || m.op !== 'add') continue
+    if (m.target !== rollPath) continue
+    const value = resolution.evaluateValue(m.value)
+    modifierTotal += value
+    modifierTerms.push({
+      sourceId: e.sourceId, sourceName: e.sourceName, provenance: e.provenance,
+      op: 'add', value, applied: true, stage: 'add',
+      ...(m.note ? { note: m.note } : {})
+    })
+  }
+
+  for (const entry of [...resolution.entries, ...extra]) {
     const m = entry.modifier
     if (entry.incomplete) incomplete = true
     if (m.channel !== 'roll' || !m.rollOp) continue
@@ -130,7 +175,7 @@ export function resolveRoll(resolution: Resolution, request: RollRequest): RollR
 
     // A value-channel `suppress` can remove a roll-channel modifier. One
     // mechanism, both channels — no parallel suppression system.
-    const suppressedBy = resolution.isSuppressed(entry)
+    const suppressedBy = resolution.isSuppressed(entry as never)
     if (suppressedBy) {
       const removed = {
         ...base, applied: false, stage: 'suppressed' as const,
@@ -153,6 +198,7 @@ export function resolveRoll(resolution: Resolution, request: RollRequest): RollR
       case 'disadvantage': disadvantageSources.push(base); break
       case 'autoFail': autoFail.push(base); break
       case 'autoSucceed': autoSucceed.push(base); break
+      case 'autoCritical': autoCritical.push(base); break
       case 'reroll': if (typeof m.rollValue === 'number') rerollOn.push(m.rollValue); break
       case 'critRange': break // handled via the critRange stat path
       case 'replaceRoll': break
@@ -188,6 +234,7 @@ export function resolveRoll(resolution: Resolution, request: RollRequest): RollR
     disadvantageSources: sortTerms(disadvantageSources),
     autoFail: sortTerms(autoFail),
     autoSucceed: sortTerms(autoSucceed),
+    autoCritical: sortTerms(autoCritical),
     rerollOn: [...new Set(rerollOn)].sort((a, b) => a - b),
     critRange: resolution.stat(CRIT_RANGE).total,
     incomplete,
@@ -276,6 +323,8 @@ export function applyOutcome(resolution: RollResolution, outcome: RollOutcome): 
   let critical = false
   let criticalMiss = false
 
+  const forcedCritical = resolution.autoCritical.some((t) => t.applied)
+
   if (resolution.request.kind === 'attack') {
     // Natural 20 always hits and natural 1 always misses — attack rolls only.
     // The SRD does not extend this to ability checks or saving throws.
@@ -285,6 +334,9 @@ export function applyOutcome(resolution: RollResolution, outcome: RollOutcome): 
     if (critical) success = true
     else if (criticalMiss) success = false
     else if (target && target.kind === 'ac') success = total >= target.value
+    // "Any attack that hits is a critical hit if the attacker is within 5 feet"
+    // — paralyzed and unconscious. A forced critical only applies on a hit.
+    if (forcedCritical && success === true) critical = true
   } else {
     const target = resolution.request.target
     if (target && target.kind === 'dc') success = total >= target.value

@@ -60,7 +60,7 @@ export interface Resolution {
    */
   partialSources: EffectSource[]
   stat(path: StatPath): StatValue
-  proficiency(scope: RollScope): ProficiencyValue
+  proficiency(scope: RollScope, categories?: ProficiencyCategory[]): ProficiencyValue
   capability(key: CapabilityKey): CapabilityValue
   hasCondition(id: ConditionId): boolean
   /** Non-fatal problems: cycles, unknown paths, content version drift. */
@@ -367,17 +367,23 @@ export function createResolution(
   }
 
   // --- proficiency ----------------------------------------------------------
-  function proficiencyFrom(scope: RollScope): ProficiencyValue {
+  function proficiencyFrom(scope: RollScope, categories?: ProficiencyCategory[]): ProficiencyValue {
     const grants: { grant: ProficiencyGrant; source: EffectSource }[] = []
     for (const source of sources.active) {
       for (const g of source.proficiencies ?? []) {
         // A grant matches a roll when the scope implied by its category matches,
         // and when any explicit narrowing ("only to climb or swim") also does.
-        const implied = expandSelections(source, g)
+        const expanded = expandSelections(source, g)
+        const implied = expanded
           .map(scopeOfCategory)
           .filter((sc): sc is RollScope => sc !== undefined)
-        if (implied.length === 0) continue
-        if (!implied.some((sc) => scopeMatches(sc, scope))) continue
+
+        // Either the category implies a scope that matches this roll, or the
+        // caller named the category explicitly (a weapon's own proficiency).
+        const impliedMatch = implied.some((sc) => scopeMatches(sc, scope))
+        const explicitMatch = (categories ?? []).some(
+          (wanted) => expanded.some((held) => sameCategory(held, wanted)))
+        if (!impliedMatch && !explicitMatch) continue
         if (g.scope && !scopeMatches(g.scope, scope)) continue
         grants.push({ grant: g, source })
       }

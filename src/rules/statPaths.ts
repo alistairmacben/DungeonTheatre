@@ -115,6 +115,48 @@ for (const m of ['walk', 'fly', 'swim', 'climb', 'burrow'] as SpeedMode[]) {
   })
 }
 
+// --- C1: movement costs ----------------------------------------------------
+// Expressed as the number of feet of movement one foot of travel costs, so
+// "climbing doesn't cost you extra movement" is a `set` to 1 rather than a
+// bespoke flag. Difficult terrain, crawling and squeezing all live here too.
+
+export type MovementCostKind = 'climb' | 'swim' | 'crawl' | 'difficultTerrain' | 'standUp'
+export const movementCostPath = (k: MovementCostKind): StatPath => `movementCost.${k}`
+
+for (const k of ['climb', 'swim', 'crawl', 'difficultTerrain'] as MovementCostKind[]) {
+  declare({
+    path: movementCostPath(k),
+    dependsOn: [],
+    rounding: 'none',
+    multiplyComposition: 'product',
+    intrinsicBase: 2
+  })
+}
+// Standing up costs half your speed; Athlete reduces it to a flat 5 feet.
+declare({
+  path: movementCostPath('standUp'),
+  dependsOn: [speedPath('walk')],
+  rounding: 'floor',
+  multiplyComposition: 'product',
+  compute: (ctx) => Math.floor(ctx.get(speedPath('walk')) / 2)
+})
+
+// --- C2/C3: damage reduction and resistance bypass -------------------------
+
+export const damageReductionPath = (t: string): StatPath => `damageReduction.${t}`
+export const resistanceBypassPath = (t: string): StatPath => `resistanceBypass.${t}`
+
+// --- C4: how much Dexterity armour admits ----------------------------------
+
+export const ARMOR_DEX_CAP: StatPath = 'armorDexCap'
+declare({
+  path: ARMOR_DEX_CAP,
+  dependsOn: [],
+  rounding: 'floor',
+  multiplyComposition: 'product',
+  intrinsicBase: 99
+})
+
 // --- skills, saves, passives ----------------------------------------------
 
 export const skillPath = (id: string): StatPath => `skill.${id}`
@@ -243,10 +285,12 @@ export const RESISTANCE_RESISTANT = 1
 export const RESISTANCE_IMMUNE = 2
 export const RESISTANCE_VULNERABLE = -1
 
-for (const t of [
+export const DAMAGE_TYPE_PATHS = [
   'all', 'acid', 'bludgeoning', 'cold', 'fire', 'force', 'lightning',
   'necrotic', 'piercing', 'poison', 'psychic', 'radiant', 'slashing', 'thunder'
-]) {
+]
+
+for (const t of DAMAGE_TYPE_PATHS) {
   declare({
     path: resistancePath(t),
     dependsOn: [],
@@ -254,6 +298,46 @@ for (const t of [
     multiplyComposition: 'product',
     intrinsicBase: RESISTANCE_NONE
   })
+  declare({
+    path: damageReductionPath(t),
+    dependsOn: [],
+    rounding: 'floor',
+    multiplyComposition: 'product',
+    intrinsicBase: 0
+  })
+  declare({
+    path: resistanceBypassPath(t),
+    dependsOn: [],
+    rounding: 'none',
+    multiplyComposition: 'product',
+    intrinsicBase: 0
+  })
+}
+
+// --- the roll itself -------------------------------------------------------
+// Elected options and situational effects that modify a roll's total target
+// these paths, so "-5 to hit" is an ordinary modifier rather than a special
+// case inside the attack resolver.
+
+export const ATTACK_ROLL: StatPath = 'attack.roll'
+export const CHECK_ROLL: StatPath = 'check.roll'
+export const SAVE_ROLL: StatPath = 'save.roll'
+export const DAMAGE_WEAPON: StatPath = 'damage.weapon'
+
+for (const path of [ATTACK_ROLL, CHECK_ROLL, SAVE_ROLL, DAMAGE_WEAPON]) {
+  declare({ path, dependsOn: [], rounding: 'floor', multiplyComposition: 'product', intrinsicBase: 0 })
+}
+
+/** Which roll-total path a roll of this kind reads. */
+export function rollTargetPath(kind: string): StatPath | undefined {
+  switch (kind) {
+    case 'attack': return ATTACK_ROLL
+    case 'save': return SAVE_ROLL
+    case 'check':
+    case 'initiative': return CHECK_ROLL
+    case 'damage': return DAMAGE_WEAPON
+    default: return undefined
+  }
 }
 
 // --- registry access -------------------------------------------------------
