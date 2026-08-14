@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { StageView } from '@stage-ui/StageView'
 import { DiceTray } from '@stage-ui/DiceTray'
+import { parseNotation, rollValues, totalOf } from '@shared/dice'
 import { supabase, storageUrl } from './supabase'
 import { useMemberships, useSession } from './useSession'
 import { useCampaignStage } from './useCampaignStage'
@@ -8,6 +9,11 @@ import { useDice } from './useDice'
 import { usePlayerIdentity } from './usePlayerIdentity'
 
 const LAST_CAMPAIGN_KEY = 'dungeon-stage:last-campaign'
+
+import { useGameState } from './game/useGameState'
+import { Hud } from './ui/Hud'
+import { GameMenu, type MenuTab } from './ui/GameMenu'
+import { Solo } from './Solo'
 
 export function App(): React.JSX.Element {
   const { session, ready } = useSession()
@@ -24,6 +30,9 @@ export function App(): React.JSX.Element {
   useEffect(() => {
     if (campaignId) localStorage.setItem(LAST_CAMPAIGN_KEY, campaignId)
   }, [campaignId])
+
+  // The vertical-slice harness, before auth: the theatre and HUD with no table.
+  if (window.location.hash === '#solo') return <Solo />
 
   if (!ready) return <Centered>Loading…</Centered>
   if (!session) return <SignIn />
@@ -68,6 +77,13 @@ function Stage({
   const [chromeVisible, setChromeVisible] = useState(true)
   const [trayOpen, setTrayOpen] = useState(false)
 
+  // The player's own game state. The engine is pure and portable, so the client
+  // runs the same resolver the server will — see architecture.md §6. Swapping
+  // to server-authoritative later changes where `view` comes from, nothing else.
+  const game = useGameState()
+  const [menuTab, setMenuTab] = useState<MenuTab | null>(null)
+  const [actionNote, setActionNote] = useState<string | null>(null)
+
   // The stage is the point, so the UI gets out of the way on its own.
   useEffect(() => {
     if (!chromeVisible) return
@@ -95,6 +111,61 @@ function Stage({
         idleMessage={live ? 'The table is quiet…' : 'Waiting for your DM…'}
         roll={roll}
       />
+
+      {/* The HUD sits over the theatre and never competes with it. */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center gap-2 p-4">
+        {actionNote && (
+          <p className="pointer-events-auto rounded-lg border border-white/10 bg-ink/85 px-3 py-1.5 text-xs text-parchment/80 backdrop-blur">
+            {actionNote}
+          </p>
+        )}
+        <Hud
+          view={game.view}
+          onOpenMenu={(tab) => setMenuTab((tab as MenuTab) ?? 'character')}
+          onAction={(actionId) => {
+            const action = game.view.actions.find((a) => a.id === actionId)
+            if (!action) return
+            if (!action.available) {
+              setActionNote(action.unavailableReasons.join(' · '))
+              return
+            }
+            // An attack goes to the dice roller the app already has, so it lands
+            // on the shared table like any other roll. The engine supplies the
+            // bonus; the tray's own helpers supply the randomness.
+            if (action.kind === 'attack' && action.preview?.attackBonusDisplay) {
+              const notation = `1d20${action.preview.attackBonusDisplay}`
+              const parsed = parseNotation(notation)
+              if (parsed) {
+                const dice = rollValues(parsed)
+                send(
+                  {
+                    notation,
+                    dice,
+                    modifier: parsed.modifier,
+                    total: totalOf(dice, parsed.modifier),
+                    visibility: 'public'
+                  },
+                  identity.diceTheme
+                )
+                setActionNote(`${action.label} — ${action.preview.damageLabel} on a hit`)
+              }
+            } else {
+              const rejected = game.dispatch(action.command)
+              setActionNote(rejected ? rejected.join(' · ') : `${action.label} used`)
+            }
+          }}
+        />
+      </div>
+
+      {menuTab && (
+        <GameMenu
+          view={game.view}
+          tab={menuTab}
+          onTab={setMenuTab}
+          onClose={() => setMenuTab(null)}
+          dispatch={game.dispatch}
+        />
+      )}
 
       <header
         className={`pointer-events-none absolute inset-x-0 top-0 flex items-center gap-2 bg-gradient-to-b from-black/70 to-transparent p-3 transition-opacity duration-500 ${

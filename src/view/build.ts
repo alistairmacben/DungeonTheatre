@@ -13,7 +13,7 @@ import type {
 import { ABILITIES } from '../rules/types.js'
 import type { Resolution } from '../rules/resolve.js'
 import { createResolution, characterLevel } from '../rules/resolve.js'
-import { evaluate } from '../rules/predicates.js'
+import { describeProficiency, evaluate } from '../rules/predicates.js'
 import { resolveCheck, resolvePassiveCheck } from '../rules/check.js'
 import { resolveAttack } from '../rules/attack.js'
 import { resolveResources, type ResourceValue } from '../rules/resources.js'
@@ -96,25 +96,73 @@ function readout(
  * modifiers themselves, so a DM-authored item explains itself without the DM
  * writing marketing copy — and cannot lie about what it does.
  */
-function describeSource(source: EffectSource, resolution: Resolution): string[] {
+function describeSource(
+  source: EffectSource, resolution: Resolution, content?: ContentIndex
+): string[] {
   const out: string[] = []
   for (const m of source.modifiers) {
-    if (m.note) { out.push(m.note); continue }
+    // A note annotates the mechanics; it does not stand in for them. Letting it
+    // replace them is how a shield ends up describing itself as "shield" and
+    // never mentioning the +2.
+    const mech: string[] = []
     if (m.channel === 'value' && m.target && m.op) {
       const n = resolution.evaluateValue(m.value, source.id)
       const stat = prettyPath(m.target)
-      if (m.op === 'add') out.push(`${signed(n)} ${stat}`)
-      else if (m.op === 'base') out.push(`${stat} ${n}`)
-      else if (m.op === 'set') out.push(`${stat} becomes ${n}`)
-      else if (m.op === 'min') out.push(`${stat} at least ${n}`)
-      else if (m.op === 'max') out.push(`${stat} at most ${n}`)
-      else if (m.op === 'multiply') out.push(`${stat} × ${n}`)
+      if (m.op === 'add') mech.push(`${signed(n)} ${stat}`)
+      else if (m.op === 'base') mech.push(`${stat} ${n}`)
+      else if (m.op === 'set') {
+        // `resistance.poison` is a flag wearing a number's clothes; "becomes 1"
+        // is arithmetically true and useless to read.
+        mech.push(m.target.startsWith('resistance.')
+          ? (n > 0 ? `resistance to ${m.target.slice(11)}` : `no resistance to ${m.target.slice(11)}`)
+          : `${stat} becomes ${n}`)
+      }
+      else if (m.op === 'min') mech.push(`${stat} at least ${n}`)
+      else if (m.op === 'max') mech.push(`${stat} at most ${n}`)
+      else if (m.op === 'multiply') mech.push(`${stat} × ${n}`)
     } else if (m.channel === 'roll' && m.rollOp) {
-      out.push(`${m.rollOp} on ${describeScope(m)}`)
+      mech.push(`${m.rollOp} on ${describeScope(m)}`)
     } else if (m.channel === 'capability' && m.capability) {
-      out.push(m.capOp === 'revoke' ? `cannot ${m.capability}` : `can ${m.capability}`)
+      mech.push(m.capOp === 'revoke' ? `cannot ${m.capability}` : `can ${m.capability}`)
     }
+
+    if (mech.length === 0) {
+      // Nothing mechanical to say — suppression and the like. The note is all
+      // there is, and it is the whole point of the modifier.
+      if (m.note) out.push(m.note)
+      continue
+    }
+    // The note qualifies the last clause: "+1 AC while wearing armour".
+    if (m.note) mech[mech.length - 1] = `${mech[mech.length - 1]} (${m.note})`
+
+    // A trait that is currently doing nothing must not read as if it were.
+    // Heavy armour suppresses the baseline's Dexterity term; listing it plainly
+    // would make the explanation disagree with the number it explains.
+    const entry = resolution.entries.find((e) => e.modifier.id === m.id)
+    const off = entry && (resolution.isSuppressed(entry) || !entry.gatePassed)
+    if (off) {
+      const why = entry && !entry.gatePassed && entry.gateReason
+        ? entry.gateReason
+        : 'suppressed'
+      out.push(...mech.map((line) => `${line} — not applying: ${why}`))
+      continue
+    }
+    out.push(...mech)
   }
+
+  // Proficiencies are effects too. Omitting them is why a class's proficiency
+  // source could describe itself purely in terms of hit points.
+  for (const p of source.proficiencies ?? []) {
+    // Content may grant proficiency in an item this deployment has not loaded.
+    // The id's last segment is still a readable word, and a readable word beats
+    // showing the player a database key.
+    const label = describeProficiency(
+      p.category, (id) => content?.items.get(id)?.name ?? id.split('.').pop() ?? id)
+    out.push(p.level === 'expertise' ? `expertise in ${label}`
+      : p.level === 'half' ? `half proficiency in ${label}`
+        : `proficient in ${label}`)
+  }
+
   return out
 }
 
@@ -322,7 +370,7 @@ function buildInventory(
       requiresAttunement: def.requiresAttunement === true,
       attuned: attuned.has(inst.instanceId),
       identified: inst.identified,
-      effectSummary: describeSource(def.effects, r),
+      effectSummary: describeSource(def.effects, r, content),
       canEquip: def.slot !== undefined && !isEquipped,
       equipReasons: !isEquipped && reason ? [reason] : [],
       ...(def.weapon
@@ -347,7 +395,7 @@ function buildInventory(
         label: SLOT_LABEL[slot] ?? slot,
         ...(instanceId ? { instanceId } : {}),
         ...(def ? { itemId: def.id, itemLabel: def.name, provenance: def.provenance } : {}),
-        effectSummary: def ? describeSource(def.effects, r) : [],
+        effectSummary: def ? describeSource(def.effects, r, content) : [],
         ...(instanceId && attuned.has(instanceId) ? { attuned: true } : {})
       }
     })
@@ -475,7 +523,10 @@ function buildActions(
         isAttunedTo: () => false,
         resourceRemaining: (id) => remaining.get(id) ?? 0,
         toggle: (id) => r.character.toggles[id] === true,
-        dmFlag: (id) => r.character.dmFlags?.[id] === true
+        dmFlag: (id) => r.character.dmFlags?.[id] === true,
+        nameOf: (id) => resources.find((x) => x.id === id)?.label
+          ?? content.items.get(id)?.name
+          ?? id
       })
       if (!gate.value) reasons.push(gate.reason)
 
@@ -571,9 +622,27 @@ function buildEffects(r: Resolution, content: ContentIndex): EffectView[] {
       label: source.name,
       kind: source.provenance === 'system' ? 'temporary' : 'condition',
       sourceLabel: source.name,
-      effects: describeSource(source, r),
+      effects: describeSource(source, r, content),
       ...(count !== undefined && count > 1 ? { instanceCount: count } : {}),
       removable: def !== undefined,
+      ...(source.narrative?.[0] ? { description: source.narrative[0].text } : {})
+    })
+  }
+
+  // Everything permanently shaping the character: species traits, class
+  // features, feats. Items are excluded — they are explained where they are
+  // held, and repeating them here would say the same thing twice.
+  for (const source of r.sources.active) {
+    if (source.kind === 'condition' || source.kind === 'item' || source.kind === 'spell') continue
+    const described = describeSource(source, r, content)
+    if (described.length === 0 && !source.narrative?.[0]) continue
+    out.push({
+      id: source.id,
+      label: source.name,
+      kind: 'passive',
+      sourceLabel: source.name,
+      effects: described,
+      removable: false,
       ...(source.narrative?.[0] ? { description: source.narrative[0].text } : {})
     })
   }
@@ -587,7 +656,7 @@ function buildEffects(r: Resolution, content: ContentIndex): EffectView[] {
       label: source.name,
       kind: 'temporary',
       sourceLabel: source.name,
-      effects: describeSource(source, r),
+      effects: describeSource(source, r, content),
       ...(inst.durationSeconds ? { durationLabel: `${inst.durationSeconds}s` } : {}),
       removable: true
     })

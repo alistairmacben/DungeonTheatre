@@ -233,8 +233,13 @@ const view = (c, detail = 'inspect') => playerViewOf(c, content, { detail })
   const drained = { ...SORCERER, resourcesSpent: { 'sorcerer.sorceryPoints': 5 } }
   const createSlot = view(drained).actions.find((a) => a.id === 'sorcerer.create-slot')
   check('actions: an unaffordable action is unavailable', createSlot.available === false)
-  check('actions: and says why',
-    createSlot.unavailableReasons.some((r) => r.includes('sorceryPoints')),
+  // The reason names the resource the way a player knows it. An id in a
+  // player-facing string is a leak, so asserting the name is the point.
+  check('actions: and says why, naming the resource not its id',
+    createSlot.unavailableReasons.some((r) => r.includes('Sorcery Points')),
+    createSlot.unavailableReasons.join('; '))
+  check('actions: and no reason leaks a content id',
+    createSlot.unavailableReasons.every((r) => !r.includes('sorceryPoints')),
     createSlot.unavailableReasons.join('; '))
 }
 
@@ -519,6 +524,102 @@ const view = (c, detail = 'inspect') => playerViewOf(c, content, { detail })
   const serialised = JSON.stringify(views)
   check('unification: the contract mentions no class in a structural position',
     !/"(sorcerer|paladin|fighter)(Points|Pool|Uses)"/.test(serialised))
+}
+
+// ---------------------------------------------------------------------------
+// Using an ability
+//
+// The loop the player actually performs: spend, be told why you cannot spend
+// again, rest, spend again. Nothing here names Second Wind's mechanics — the
+// action declares its own costs and the reducer honours them.
+// ---------------------------------------------------------------------------
+
+{
+  const view0 = playerViewOf(FIGHTER, content)
+  const secondWind = view0.actions.find((a) => a.label === 'Second Wind')
+  check('useAbility: the action is present and available', !!secondWind && secondWind.available)
+
+  const used = applyCommand(FIGHTER, secondWind.command, content)
+  check('useAbility: it is not rejected', used.rejected === undefined,
+    used.rejected && used.rejected.reasons.join('; '))
+  check('useAbility: it emits AbilityUsed',
+    used.events.some((e) => e.type === 'AbilityUsed'))
+  check('useAbility: and spends the declared resource',
+    used.events.some((e) => e.type === 'ResourceSpent' && e.payload.remaining === 0))
+  check('useAbility: the last use is announced for the theatre',
+    used.events.some((e) => e.type === 'LastUseSpent'))
+
+  const view1 = playerViewOf(used.character, content)
+  const again = view1.actions.find((a) => a.label === 'Second Wind')
+  check('useAbility: the action is now unavailable', again.available === false)
+  check('useAbility: and says so by name, not by id',
+    again.unavailableReasons.some((r) => r.includes('Second Wind'))
+    && again.unavailableReasons.every((r) => !r.includes('fighter.second-wind')),
+    again.unavailableReasons.join('; '))
+
+  // The reason a command is refused is the reason the button was disabled.
+  const refused = applyCommand(used.character, secondWind.command, content)
+  check('useAbility: a second use is rejected with the same reasons',
+    refused.rejected !== undefined
+    && refused.rejected.reasons.join('|') === again.unavailableReasons.join('|'),
+    refused.rejected && refused.rejected.reasons.join('; '))
+  check('useAbility: and the character is unchanged',
+    refused.character === used.character)
+
+  const rested = applyCommand(used.character, { type: 'shortRest', characterId: FIGHTER.id }, content)
+  const view2 = playerViewOf(rested.character, content)
+  check('useAbility: a short rest makes it available again',
+    view2.actions.find((a) => a.label === 'Second Wind').available === true)
+
+  // Action Surge declares a resource *and* an action, like every other feature.
+  check('useAbility: every resource with no way to spend it is a content gap',
+    view0.resources.every((r) =>
+      view0.actions.some((a) => a.costs.some((c) => c.resourceId === r.id))),
+    view0.resources.filter((r) =>
+      !view0.actions.some((a) => a.costs.some((c) => c.resourceId === r.id)))
+      .map((r) => r.label).join(', '))
+}
+
+// ---------------------------------------------------------------------------
+// Explaining the character
+//
+// Effects are what is happening to you *and* what is permanently true of you.
+// The important claim is the second one: an explanation must never assert an
+// effect that the resolver is not applying.
+// ---------------------------------------------------------------------------
+
+{
+  const view = playerViewOf(FIGHTER, content)
+  const passive = view.effects.filter((e) => e.kind === 'passive')
+  check('effects: permanent traits are listed', passive.length > 0)
+  check('effects: the species trait is among them',
+    passive.some((e) => e.label === 'Dwarf'))
+  check('effects: the feat is among them',
+    passive.some((e) => e.label === 'Tough'))
+
+  // Chain mail suppresses the baseline's Dexterity term. Saying "+1 AC" here
+  // would make the explanation disagree with the AC it explains.
+  const baseline = passive.find((e) => e.label === 'Baseline')
+  const dexLine = baseline.effects.find((l) => l.includes('Dexterity'))
+  check('effects: a suppressed term is marked, not silently listed',
+    dexLine !== undefined && dexLine.includes('not applying'), dexLine)
+
+  // The sum of what is claimed must equal what is resolved. Breakdowns only
+  // ship above the glance tier, so this is the inspect view.
+  const inspect = playerViewOf(FIGHTER, content, { detail: 'inspect' })
+  const acLines = inspect.vitals.armorClass.breakdown.lines.filter((l) => l.applied)
+  check('effects: the AC breakdown sums to the AC',
+    acLines.reduce((n, l) => n + (l.amount ?? 0), 0) === inspect.vitals.armorClass.value,
+    `${acLines.map((l) => `${l.source} ${l.amount}`).join(' + ')} != ${inspect.vitals.armorClass.value}`)
+
+  // Proficiencies are effects. A source that grants only proficiencies must
+  // still be able to say what it does.
+  const fighterProfs = passive.find((e) => e.label.includes('Fighter'))
+  check('effects: granted proficiencies are described',
+    fighterProfs.effects.some((l) => l.startsWith('proficient in')))
+  check('effects: and no description leaks a content id',
+    passive.every((e) => e.effects.every((l) => !l.includes('srd:') && !l.includes('dm:'))),
+    passive.flatMap((e) => e.effects).filter((l) => /(srd|dm):/.test(l)).join('; '))
 }
 
 check.report()

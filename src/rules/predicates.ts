@@ -27,6 +27,15 @@ export interface PredicateEnv {
   resourceRemaining(resourceId: string): number
   toggle(id: string): boolean
   dmFlag(id: string): boolean
+  /**
+   * Turns a content id into the name a player would recognise.
+   *
+   * Failure reasons are player-facing text, so `fighter.second-wind: 0
+   * remaining` is a leak. The environment already holds the content the
+   * predicate does not; naming is its job. Defaults to the id when the caller
+   * supplies nothing, which keeps every existing environment valid.
+   */
+  nameOf?(id: string): string
 }
 
 export interface PredicateResult {
@@ -35,14 +44,25 @@ export interface PredicateResult {
   reason: string
 }
 
-export function describeProficiency(c: ProficiencyCategory): string {
+function name(env: PredicateEnv, id: string): string {
+  return env.nameOf?.(id) ?? id
+}
+
+/**
+ * `nameOf` turns a content id into a name. Without it the weapon case reads
+ * "the srd:weapon.battleaxe weapon", which is a description of the database
+ * rather than of the character.
+ */
+export function describeProficiency(
+  c: ProficiencyCategory, nameOf: (id: string) => string = (id) => id
+): string {
   switch (c.kind) {
     case 'skill': return `the ${c.id} skill`
     case 'tool': return `${c.id}`
     case 'save': return `${c.ability.toUpperCase()} saving throws`
     case 'armor': return `${c.category} armour`
     case 'weaponCategory': return `${c.category} weapons`
-    case 'weapon': return `the ${c.itemId} weapon`
+    case 'weapon': return nameOf(c.itemId)
   }
 }
 
@@ -132,17 +152,23 @@ export function evaluate(pred: Predicate | undefined, env: PredicateEnv): Predic
   }
 
   if ('isEquipped' in pred) {
-    return env.isEquipped(pred.isEquipped) ? ok : fail(`${pred.isEquipped} is not equipped`)
+    return env.isEquipped(pred.isEquipped)
+      ? ok
+      : fail(`${name(env, pred.isEquipped)} is not equipped`)
   }
 
   if ('isAttunedTo' in pred) {
-    return env.isAttunedTo(pred.isAttunedTo) ? ok : fail(`not attuned to ${pred.isAttunedTo}`)
+    return env.isAttunedTo(pred.isAttunedTo)
+      ? ok
+      : fail(`not attuned to ${name(env, pred.isAttunedTo)}`)
   }
 
   if ('resourceAtLeast' in pred) {
     const [resourceId, min] = pred.resourceAtLeast
     const left = env.resourceRemaining(resourceId)
-    return left >= min ? ok : fail(`${resourceId}: ${left} remaining, needs ${min}`)
+    return left >= min
+      ? ok
+      : fail(`${name(env, resourceId)}: ${left} remaining, needs ${min}`)
   }
 
   if ('playerToggle' in pred) {

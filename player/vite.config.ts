@@ -15,7 +15,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@shared': resolve(__dirname, '../src/shared'),
-      '@stage-ui': resolve(__dirname, '../src/stage-ui')
+      '@stage-ui': resolve(__dirname, '../src/stage-ui'),
+      '@engine': resolve(__dirname, '../src/engine.ts')
     }
   },
   server: { port: 5273 },

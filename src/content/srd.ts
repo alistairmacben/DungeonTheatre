@@ -197,6 +197,11 @@ export const FIGHTER: ClassDefinition = {
         id: 'srd:class.fighter.action-surge', name: 'Action Surge',
         resources: [{
           id: 'fighter.action-surge', name: 'Action Surge', max: 1, refresh: { kind: 'shortRest' }
+        }],
+        actions: [{
+          id: 'fighter.action-surge.use', name: 'Action Surge', cost: 'free',
+          requirements: { resourceAtLeast: ['fighter.action-surge', 1] },
+          costs: { 'fighter.action-surge': 1 }
         }]
       })
     }
@@ -258,8 +263,13 @@ export const HANDAXE = weapon('srd:weapon.handaxe', 'Handaxe', {
 function armor(
   aid: string, name: string, profile: ArmorProfile, modifiers: Modifier[] = []
 ): ItemDefinition {
+  // A shield sets no base AC — it adds to whatever the body armour established.
+  // Emitting base 0 would be inert in the resolver but would still surface as a
+  // meaningless "AC 0" line wherever the item explains itself.
   const mods: Modifier[] = [
-    { id: id(), channel: 'value', target: ARMOR_CLASS, op: 'base', value: profile.baseAc, permanence: 'persistent' },
+    ...(profile.category === 'shield'
+      ? []
+      : [{ id: id(), channel: 'value', target: ARMOR_CLASS, op: 'base', value: profile.baseAc, permanence: 'persistent' } as Modifier]),
     ...modifiers
   ]
 

@@ -18,6 +18,7 @@
     "paths": {
       "@shared/*": ["./src/shared/*"],
       "@stage-ui/*": ["./src/stage-ui/*"],
+      "@engine": ["./src/engine.ts"],
       "@/*": ["./src/renderer/src/*"]
     }
   },

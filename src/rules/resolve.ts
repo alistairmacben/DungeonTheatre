@@ -203,7 +203,8 @@ export function createResolution(
     toggle: (id) => character.toggles[id] === true,
     dmFlag: (id) => character.dmFlags?.[id] === true,
     hasProficiency: (category) => hasProficiency(category),
-    canCastSpells: () => canCastSpells()
+    canCastSpells: () => canCastSpells(),
+    nameOf: (id) => nameOf(id)
   }
 
   // "The ability to cast at least one spell" is the prerequisite shared by
@@ -273,6 +274,23 @@ export function createResolution(
         return Number.isNaN(n) ? undefined : n
       }
     })
+  }
+
+  /**
+   * The player-facing name behind a content id.
+   *
+   * Requirement failures are read by players, so an id in one is a leak. Items,
+   * declared resources and effect sources all share one id space here, which is
+   * why one lookup answers for all three.
+   */
+  function nameOf(id: string): string {
+    const item = content.items.get(id)
+    if (item) return item.name
+    for (const source of sources.active) {
+      if (source.id === id) return source.name
+      for (const r of source.resources ?? []) if (r.id === id) return r.name
+    }
+    return id
   }
 
   function resourceMax(resourceId: string): number {

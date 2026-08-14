@@ -2,12 +2,15 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "player",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev:player"],
+      "port": 5273
+    },
+    {
       "name": "dev",
       "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "run",
-        "dev"
-      ],
+      "runtimeArgs": ["run", "dev"],
       "port": 3000
     }
   ]

@@ -13,6 +13,7 @@ import type { Character, ContentIndex, GameEvent } from '../rules/types.js'
 import { createResolution } from '../rules/resolve.js'
 import { resolveResources, applyRest } from '../rules/resources.js'
 import type { PlayerCommand } from './types.js'
+import { buildPlayerView } from './build.js'
 
 export interface CommandResult {
   character: Character
@@ -67,6 +68,7 @@ export function applyCommand(
     case 'attuneItem': return attuneItem(character, command, content)
     case 'endAttunement': return endAttunement(character, command)
     case 'useItem': return useItem(character, command, content)
+    case 'useAbility': return useAbility(character, command, content)
     case 'spendResource': return spendResource(character, command, content)
     case 'restoreResource': return restoreResource(character, command)
     case 'applyCondition': return applyCondition(character, command, content)
@@ -215,6 +217,52 @@ function useItem(
       contentVersion: def.contentVersion,
       appliedAtSeconds: 0
     })
+  }
+
+  return { character: next, events }
+}
+
+/**
+ * Uses an ability declared by any effect source.
+ *
+ * Availability is not re-derived here. The view already decides whether an
+ * action can be taken, and asking it again is what guarantees the reason a
+ * button was disabled is exactly the reason a command is refused — one rule,
+ * one place. Costs come from the action's own `costs` map, so a class feature,
+ * a feat and a DM-authored ability all spend through the same code.
+ */
+function useAbility(
+  character: Character,
+  command: Extract<PlayerCommand, { type: 'useAbility' }>,
+  content: ContentIndex
+): CommandResult {
+  const view = buildPlayerView(createResolution(character, content), content, { detail: 'summary' })
+  const action = view.actions.find((a) => a.id === command.actionId)
+  if (!action) return reject(character, ['you do not have that ability'])
+  if (!action.available) return reject(character, action.unavailableReasons)
+
+  const next = clone(character)
+  const events: DomainEvent[] = [
+    event('AbilityUsed', next, {
+      actionId: action.id, label: action.label, sourceId: command.sourceId
+    })
+  ]
+
+  const resources = resolveResources(createResolution(character, content))
+  for (const cost of action.costs) {
+    const resource = resources.find((x) => x.id === cost.resourceId)
+    next.resourcesSpent[cost.resourceId] =
+      (next.resourcesSpent[cost.resourceId] ?? 0) + cost.amount
+    const left = (resource?.remaining ?? cost.amount) - cost.amount
+    events.push(event('ResourceSpent', next, {
+      resourceId: cost.resourceId, label: resource?.name ?? cost.resourceId,
+      amount: cost.amount, remaining: left
+    }))
+    if (left === 0) {
+      events.push(event('LastUseSpent', next, {
+        resourceId: cost.resourceId, label: resource?.name ?? cost.resourceId
+      }))
+    }
   }
 
   return { character: next, events }
