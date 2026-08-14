@@ -23,10 +23,10 @@ with the whole picture in hand.
 | 1–2 | Legal / attribution | — | read |
 | 3–7 | Races | `01-races.md` | **complete** |
 | 8–56 | Classes (12) | `02-classes.md` | **complete** |
-| 56–61 | Beyond 1st level, multiclassing | `03-progression.md` | p56 done |
-| 62–74 | Equipment | `04-equipment.md` | pending |
-| 75 | Feats | `05-feats.md` | pending |
-| 76–89 | Using ability scores, adventuring | `06-core-rules.md` | pending |
+| 56–61 | Beyond 1st level, multiclassing | `03-progression.md` | **complete** |
+| 62–74 | Equipment | `04-equipment.md` | **complete** |
+| 75 | Feats | `05-feats.md` | **complete** (1 feat only) |
+| 76–89 | Using ability scores, adventuring | `06-core-rules.md` | **complete** |
 | 90–104 | Combat, spellcasting rules | `07-combat-spellcasting.md` | pending |
 | 105–113 | Spell lists | `08-spells.md` | pending |
 | 114–193 | Spell descriptions (~320) | `08-spells.md` | pending |
