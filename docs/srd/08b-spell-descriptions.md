@@ -623,3 +623,298 @@ instead** and the spell ends. Also **negates one instantaneous-death effect that
 deals no damage**, then ends.
 *(A pre-emptive interceptor on the damage pipeline — the damage application
 model must have a hook point before HP reaches 0.)*
+
+**Delayed Blast Fireball** — 7th evocation · 1 action · 150 ft · V, S, M ·
+**conc, 1 minute**. A bead lingers; **when the spell ends** (concentration broken
+or you dismiss it) it explodes in a **20-ft-radius sphere** that spreads around
+corners. save DEX, **fire damage equal to the total accumulated damage**, half
+on success. **Base 12d6, +1d6 at the end of each of your turns it has not
+detonated.** Touching the bead: save DEX — **failure detonates it immediately**,
+**success lets that creature throw it up to 40 ft**. Ignites unattended
+flammables. ↑ base **+1d6** per slot above 7th.
+*(An effect whose damage **accumulates over time as state** — a damage value
+that is neither fixed nor rolled at cast time.)*
+
+**Demiplane** — 8th conjuration · 1 action · 60 ft · **S only** · **1 hour**.
+A shadowy door to an empty **30-ft cube** room. **When the spell ends anything
+inside is trapped there.** Later castings can reconnect to a demiplane you
+made before, or to another caster's if you know its nature and contents.
+
+**Detect Evil and Good** — 1st divination · 1 action · Self · V, S · **conc,
+10 minutes**. Know the presence and location of **aberration, celestial,
+elemental, fey, fiend or undead** within 30 ft, and of consecrated or
+desecrated places/objects. **Blocked by 1 ft stone, 1 inch common metal, a thin
+sheet of lead, or 3 ft wood or dirt.**
+
+**Detect Magic** — 1st divination **(R)** · 1 action · Self · V, S · **conc,
+10 minutes**. Sense magic within 30 ft; **action to see the aura and learn its
+school**. Same barrier rule.
+
+**Detect Poison and Disease** — 1st divination **(R)** · 1 action · Self ·
+V, S, M · **conc, 10 minutes**. Sense and **identify** poisons, poisonous
+creatures and diseases within 30 ft. Same barrier rule.
+
+**Detect Thoughts** — 2nd divination · 1 action · Self · V, S, M · **conc,
+1 minute**. **Action** to focus on a creature within 30 ft. **No effect on INT
+≤ 3 or creatures with no language.** Surface thoughts initially; **action to
+probe deeper → save WIS**: failure reveals reasoning, emotional state and
+something looming large; success **ends the spell**. **The target always knows**,
+and may spend its action on an **INT check contested by your INT check** to end
+it. Also detects unseen thinking creatures within 30 ft; **blocked by 2 ft rock,
+2 inches of non-lead metal, or a thin sheet of lead**.
+
+**Dimension Door** — 4th conjuration · 1 action · **500 ft** · **V only** ·
+Instantaneous. Teleport to a spot you can see, visualise, **or describe by
+distance and direction**. Carry objects up to your capacity, plus **one willing
+creature of your size or smaller** within 5 ft carrying up to its own capacity.
+**Arriving in an occupied space: 4d6 force to each traveller and the teleport
+fails.**
+
+**Disguise Self** — 1st illusion · 1 action · Self · V, S · **1 hour**.
+Change your and your gear's appearance; **±1 foot of height**, any build, **same
+body type and limb arrangement**. **Fails physical inspection.** Detected by an
+**INT (Investigation) check vs. your spell save DC**, as an action.
+
+**Disintegrate** — 6th transmutation · 1 action · 60 ft · V, S, M ·
+Instantaneous. A creature, object, or **creation of magical force**. save DEX,
+**10d6 + 40 force**. **If reduced to 0 HP the target is disintegrated** —
+it and everything it wears and carries **except magic items** become dust, and
+**only *true resurrection* or *wish* can restore it**. **Automatically
+disintegrates** a Large-or-smaller nonmagical object or force creation; a **10-ft
+cube** of anything Huge or larger. **Magic items are unaffected.**
+↑ **+3d6** per slot above 6th.
+
+**Dispel Evil and Good** — 5th abjuration · 1 action · Self · V, S, M · **conc,
+1 minute**. **Celestials, elementals, fey, fiends and undead have disadvantage
+on attack rolls against you.** End it early with either:
+*Break Enchantment* (action, touch — end charmed/frightened/possessed **by one
+of those creature types**), or *Dismissal* (action, melee spell atk; on a hit
+save CHA or be **sent to its home plane** — undead to the Shadowfell, fey to the
+Feywild).
+
+**Dispel Magic** — 3rd abjuration · 1 action · 120 ft · V, S · Instantaneous.
+**Ends any spell of 3rd level or lower** on the target automatically. For each
+spell of **4th or higher**, an **ability check with your spellcasting ability,
+DC = 10 + the spell's level**. ↑ automatic for spells **of level ≤ the slot
+used**.
+
+**Divination** — 4th divination **(R)** · 1 action · Self · V, S, **M\*\***
+(incense and an offering, together **≥25 gp, consumed**) · Instantaneous.
+**One question** about something within **7 days**; a truthful reply as a short
+phrase, cryptic rhyme or omen. **Cumulative 25% chance of a random reading** per
+casting after the first before a long rest.
+
+**Divine Favor** — 1st evocation · **1 bonus action** · Self · V, S · **conc,
+1 minute**. **Your weapon attacks deal +1d4 radiant on a hit.**
+
+**Divine Word** — 7th evocation · **1 bonus action** · 30 ft · **V only** ·
+Instantaneous. Any number of creatures **that can hear you**, save CHA.
+**Effect depends on the target's current hit points:**
+
+| Current HP | Effect |
+|---|---|
+| ≤ 50 | deafened 1 minute |
+| ≤ 40 | deafened and blinded 10 minutes |
+| ≤ 30 | blinded, deafened and stunned 1 hour |
+| ≤ 20 | **killed instantly** |
+
+Regardless of HP, a failing **celestial, elemental, fey or fiend** is forced to
+its home plane and **cannot return for 24 hours** short of *wish*.
+*(A second HP-threshold effect after *Color Spray* — current HP is an input to
+effect selection, not merely a resource.)*
+
+**Dominate Beast** — 4th enchantment · 1 action · 60 ft · V, S · **conc,
+1 minute**. save WIS (**with advantage if you or your allies are fighting it**)
+or charmed. **Telepathic link on the same plane**; issue general commands with
+**no action required**. **Action to take total precise control until the end of
+your next turn**, including spending **your own reaction** to make it use its
+reaction. **A new WIS save each time it takes damage** ends the spell on a
+success. ↑ **5th → conc 10 min · 6th → 1 hour · 7th+ → 8 hours**.
+
+**Dominate Monster** — 8th enchantment · same structure, **any creature**,
+base **conc, 1 hour**. ↑ **9th → 8 hours**.
+
+**Dominate Person** — 5th enchantment · same structure, **humanoid**, base
+**conc, 1 minute**. ↑ **6th → 10 min · 7th → 1 hour · 8th+ → 8 hours**.
+
+**Dream** — 5th illusion · **1 minute** · **Special** · V, S, M · 8 hours.
+A creature known to you on the same plane. **Creatures that don't sleep (elves)
+cannot be contacted.** You or a willing touched creature enters a trance as the
+**messenger** — aware but unable to act or move — and appears in the target's
+dream, able to converse and shape the dreamscape. **The target recalls the dream
+perfectly.** If the target is awake the messenger may wait or end the spell.
+**Nightmare option:** appear monstrous, deliver **≤10 words**, then save WIS —
+failure means the target **gains no benefit from that rest** and takes **3d6
+psychic** on waking. **Disadvantage on the save if you have a body part, hair,
+or nail clipping of the target.**
+*(A "sympathetic material grants disadvantage" pattern — the components a caster
+possesses can alter a target's save.)*
+
+**Druidcraft** — Transmutation cantrip · 1 action · 30 ft · V, S ·
+Instantaneous. One of: a **24-hour weather prediction** sensory effect lasting
+1 round; make a flower bloom or seed pod open; a harmless sensory effect within
+a **5-ft cube** (falling leaves, a puff of wind, an animal sound, an odour);
+**light or snuff a candle, torch or small campfire**.
+*(The weather-prediction and sensory-effect options map directly onto the
+existing theatrical scene-effect system.)*
+
+---
+
+## E
+
+**Earthquake** — 8th evocation · 1 action · 500 ft · V, S, M · **conc,
+1 minute**. A **100-ft-radius circle** of ground becomes difficult terrain.
+**Every concentrating creature on the ground makes a CON save or loses
+concentration.** On casting and **at the end of each turn you concentrate**,
+every creature on the ground makes a **DEX save or is knocked prone**.
+*Fissures* — at the start of your next turn, **1d6** fissures, each
+**1d10 × 10 ft deep, 10 ft wide**, spanning the area; DEX save or fall in;
+a successful save moves you with the edge. A fissure under a structure
+**collapses it automatically**.
+*Structures* — **50 bludgeoning to every structure** on casting and at the start
+of each of your turns. A collapsing structure forces creatures within **half its
+height** to save DEX or take **5d6 bludgeoning, be knocked prone and buried**
+(escape: action, **DC 20 STR (Athletics)**, GM-adjustable).
+
+**Eldritch Blast** — Evocation cantrip · 1 action · **120 ft** · V, S ·
+Instantaneous. Ranged spell atk, **1d10 force**. **[cantrip-scale] by beam
+count: 2 at 5th, 3 at 11th, 4 at 17th** — **separate attack roll each**, at the
+same or different targets.
+*(The cantrip scaling axis is not always damage dice. It can be **number of
+attacks**, which changes the dice request shape entirely.)*
+
+**Enhance Ability** — 2nd transmutation · 1 action · Touch · V, S, M · **conc,
+1 hour**. Choose one:
+· *Bear's Endurance* — advantage on **CON checks**, **+2d6 temporary HP** (lost
+  when the spell ends)
+· *Bull's Strength* — advantage on **STR checks**, **carrying capacity doubles**
+· *Cat's Grace* — advantage on **DEX checks**, **no damage from falls of 20 ft
+  or less** while not incapacitated
+· *Eagle's Splendor* — advantage on **CHA checks**
+· *Fox's Cunning* — advantage on **INT checks**
+· *Owl's Wisdom* — advantage on **WIS checks**
+↑ one additional creature per slot above 2nd.
+*(Note: **checks only**, not saves or attacks — advantage is scoped to a roll
+*kind* as well as an ability.)*
+
+**Enlarge/Reduce** — 2nd transmutation · 1 action · 30 ft · V, S, M · **conc,
+1 minute**. A creature or an unworn/uncarried object; **unwilling creatures save
+CON to negate**. Worn and carried gear changes with it; **dropped items revert
+immediately**.
+*Enlarge* — **double all dimensions, ×8 weight, size +1 category**; advantage on
+**STR checks and STR saves**; weapons grow and deal **+1d4** damage.
+*Reduce* — **halve all dimensions, ⅛ weight, size −1 category**; disadvantage on
+STR checks and saves; weapons deal **−1d4** (**never below 1**).
+*(Size is a mutable derived stat here, feeding carrying capacity, weapon
+restrictions, grapple eligibility and squeezing.)*
+
+**Entangle** — 1st conjuration · 1 action · 90 ft · V, S · **conc, 1 minute**.
+A **20-ft square** becomes difficult terrain; creatures in it at cast time save
+**STR** or are **restrained**. Escape: action, **STR check vs. your spell save
+DC**.
+
+**Enthrall** — 2nd enchantment · 1 action · 60 ft · V, S · **1 minute**.
+Creatures **that can hear you**, save WIS — **automatic success if it can't be
+charmed**, **advantage if you or your companions are fighting it**. Failure:
+**disadvantage on WIS (Perception) checks to perceive anyone other than you**.
+**Ends if you are incapacitated or can no longer speak.**
+
+**Etherealness** — 7th transmutation · 1 action · Self · V, S · **up to
+8 hours**. Enter the **Border Ethereal**. Vertical movement costs **1 extra foot
+per foot**. See and hear the origin plane in grey out to 60 ft; **interact only
+with ethereal creatures**; **move through objects**. On return, if you occupy a
+solid object you are **shunted to the nearest free space and take force damage
+equal to twice the feet moved**. **No effect if cast on the Ethereal Plane or a
+plane that doesn't border it.** ↑ **up to three willing creatures within 10 ft
+per slot above 7th**.
+
+**Expeditious Retreat** — 1st transmutation · **1 bonus action** · Self · V, S ·
+**conc, 10 minutes**. **Bonus action each turn to take the Dash action.**
+
+**Eyebite** — 6th necromancy · 1 action · Self · V, S · **conc, 1 minute**.
+One creature within 60 ft, save WIS. **Action each turn to target another**, but
+**never one that has already saved against this casting**. Effects:
+· *Asleep* — **unconscious**; wakes on any damage or if a creature uses its
+  action to shake it
+· *Panicked* — **frightened of you**; must **Dash away** each turn by the safest
+  route; ends if it gets **60 ft away and out of sight**
+· *Sickened* — **disadvantage on attack rolls and ability checks**; **WIS save at
+  the end of each of its turns** to end
+
+---
+
+## F
+
+**Fabricate** — 4th transmutation · **10 minutes** · 120 ft · V, S ·
+Instantaneous. Convert raw materials into finished products **of the same
+material**. Up to **Large (a 10-ft cube, or eight connected 5-ft cubes)**;
+**Medium (one 5-ft cube) for metal, stone or mineral**. **Quality matches the
+raw material.** **Cannot create creatures or magic items.** High-craftsmanship
+items (jewellery, weapons, glass, armour) require **proficiency with the
+relevant artisan's tools**.
+*(A spell gated on a **tool proficiency** — reinforcing that tool proficiency is
+a first-class character property, not just a check bonus.)*
+
+**Faerie Fire** — 1st evocation · 1 action · 60 ft · **V only** · **conc,
+1 minute**. Objects in a **20-ft cube** are outlined; creatures there save DEX
+or are outlined too. Outlined things shed **dim light in a 10-ft radius**,
+**attacks against them have advantage if the attacker can see them**, and they
+**cannot benefit from invisibility**.
+
+**Faithful Hound** — 4th conjuration · 1 action · 30 ft · V, S, M · **8 hours**.
+An **invisible, unharmable** watchdog; ends if you move **more than 100 ft**
+from it or dismiss it. Barks when a **Small or larger** creature comes within
+30 ft without the **password**. **Sees invisible creatures and into the Ethereal
+Plane; ignores illusions.** At the start of each of your turns it bites one
+hostile creature within 5 ft: **attack bonus = your spellcasting modifier +
+proficiency bonus**, **4d8 piercing**.
+
+**False Life** — 1st necromancy · 1 action · Self · V, S, M · **1 hour**.
+**1d4 + 4 temporary hit points.** ↑ **+5** per slot above 1st.
+
+**Fear** — 3rd illusion · 1 action · **Self (30-ft cone)** · V, S, M · **conc,
+1 minute**. save WIS or **drop what you are holding** and be **frightened**.
+Must **Dash away** each turn by the safest route. **WIS save to end at the end
+of any turn it ends without line of sight to you.**
+
+**Feather Fall** — 1st transmutation · **1 reaction, taken when you or a
+creature within 60 ft falls** · 60 ft · **V, M** (no somatic) · 1 minute.
+Up to **five** falling creatures descend at **60 ft per round**; on landing they
+take **no falling damage**, land on their feet, and the spell ends for them.
+
+**Feeblemind** — 8th enchantment · 1 action · 150 ft · V, S, M · Instantaneous.
+**4d6 psychic** and save INT. Failure: **INT and CHA become 1**; cannot cast
+spells, activate magic items, understand language or communicate. Can still
+recognise, follow and protect friends. **Repeats the save every 30 days.**
+Also ended by *greater restoration*, *heal* or *wish*.
+*(An instantaneous-duration spell with an **indefinite** ongoing effect — proof
+that "duration" and "how long the consequences last" are separate fields.)*
+
+**Find Familiar** — 1st conjuration **(R)** · **1 hour** · 10 ft · V, S,
+**M\*\*** (**10 gp** of charcoal, incense and herbs, **consumed by fire in a
+brass brazier**) · Instantaneous. A familiar in one of: **bat, cat, crab, frog
+(toad), hawk, lizard, octopus, owl, poisonous snake, fish (quipper), rat,
+raven, sea horse, spider, weasel** — with that form's statistics but the type
+**celestial, fey or fiend (your choice)**. Acts independently but always obeys;
+**rolls its own initiative**; **cannot attack**. At 0 HP it vanishes and returns
+on a recast. Within **100 ft** you communicate telepathically; **as an action
+you can see and hear through it** (gaining its special senses) **while blind and
+deaf yourself**. Action to **temporarily dismiss** it to a pocket dimension, or
+dismiss it forever; action to recall it within 30 ft. **Only one familiar at a
+time**; recasting **changes its form**. **It can deliver your touch spells** as
+its reaction within 100 ft, using **your** attack modifier.
+
+**Find Steed** — 2nd conjuration · **10 minutes** · 30 ft · V, S ·
+Instantaneous. A **warhorse, pony, camel, elk or mastiff** with that form's
+statistics but the type **celestial, fey or fiend**. **INT becomes 6 if it was
+5 or less**, and it understands one language you speak. **While mounted, any
+spell you cast that targets only you also targets the steed.** At 0 HP it
+vanishes; recasting summons **the same steed at full HP**. Telepathy within
+**1 mile**. **One steed at a time**; action to release the bond.
+
+**Find the Path** — 6th divination · **1 minute** · Self · V, S, **M\***
+(divinatory tools worth **100 gp** **and an object from the location**) ·
+**conc, up to 1 day**. The shortest physical route to a **specific fixed
+location you are familiar with on the same plane**. **Fails** for another plane,
+a moving destination, or a non-specific one ("a green dragon's lair"). You know
+its distance and direction.
