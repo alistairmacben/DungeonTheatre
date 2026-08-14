@@ -1582,3 +1582,348 @@ and comparable effects aimed at the target's mind or information about them.
 **Minor Illusion** — Illusion cantrip · 1 action · 30 ft · **S, M** (no verbal)
 · **1 minute**. **Either** a sound **or** an image of an object (not both).
 Sound ranges from a whisper to a scream, continuous or in discrete bursts.
+An object image is **≤5-ft cube** and **creates no sound, light, smell or other
+sensory effect**. **Physical interaction reveals it**; **action + INT
+(Investigation) vs. your spell save DC** to discern it, after which it becomes
+faint.
+
+**Mirage Arcane** — 7th illusion · **10 minutes** · **Sight** · V, S ·
+**10 days**. Terrain up to **1 mile square** looks, sounds, smells **and feels**
+like other terrain; the **general shape is unchanged**. Structures may be
+altered or **added**; **creatures are never disguised, concealed or added**.
+Because it includes **tactile** elements it **can genuinely create or remove
+difficult terrain**. Removed pieces **vanish**. **Truesight sees the true terrain
+but the illusion's other elements persist and can still be physically
+interacted with.**
+
+**Mirror Image** — 2nd illusion · 1 action · Self · V, S · **1 minute** (no
+concentration). **Three** duplicates. Each time a creature targets you with an
+attack, **roll a d20**: with three duplicates **6+** redirects it, with two
+**8+**, with one **11+**. A duplicate's **AC = 10 + your DEX modifier**;
+**a hit destroys it**, and **only a hit can** — it ignores all other damage and
+effects. **Immune:** anything that cannot see, relies on non-sight senses, or
+has truesight.
+*(A targeting-interception roll — a die rolled by the *defender* in the middle
+of resolving the attacker's attack. Another networked mid-roll interaction.)*
+
+**Mislead** — 5th illusion · 1 action · Self · **S only** · **conc, 1 hour**.
+You turn **invisible** (**ending if you attack or cast a spell**) and an
+**illusory double** appears. **Action** to move the double **twice your speed**
+and make it act. **See and hear through it**; **bonus action to switch senses**;
+**while using its senses you are blind and deaf to your own**.
+
+**Misty Step** — 2nd conjuration · **1 bonus action** · Self · **V only** ·
+Instantaneous. **Teleport up to 30 ft** to an unoccupied space you can see.
+
+**Modify Memory** — 5th enchantment · 1 action · 30 ft · V, S · **conc,
+1 minute**. save WIS (**advantage if you are fighting it**) or **charmed,
+incapacitated and unaware**, though it can still hear you. **Any damage or being
+targeted by another spell ends the spell with no memories changed.**
+You may affect a memory of an event **within the last 24 hours lasting no more
+than 10 minutes**: erase it, sharpen it, alter details, or **fabricate a
+different event**. **You must describe it aloud in a language it understands**;
+**if the spell ends before you finish, nothing changes**. A memory that
+contradicts the creature's inclinations, alignment or beliefs **may simply be
+dismissed**. Undone by *remove curse* or *greater restoration*.
+↑ **6th → 7 days · 7th → 30 days · 8th → 1 year · 9th → any time in its past**.
+
+**Moonbeam** — 2nd evocation · 1 action · 120 ft · V, S, M · **conc, 1 minute**.
+A **5-ft-radius, 40-ft-high cylinder** of **dim light**. On entering first time
+on a turn or starting there: save CON, **2d10 radiant**, half on success.
+**Shapechangers save at disadvantage** and on a failure **instantly revert and
+cannot change form until they leave the light**. **Action** to move the beam
+**60 ft**. ↑ **+1d10** per slot above 2nd.
+
+**Move Earth** — 6th transmutation · 1 action · 120 ft · V, S, M · **conc,
+up to 2 hours**. Reshape dirt, sand or clay in an area **≤40 ft on a side** —
+raise or lower elevation, dig a trench, raise a wall or pillar — by **at most
+half the area's largest dimension**. **Takes 10 minutes to complete**, and you
+may **pick a new area every 10 minutes**. Because it is slow, creatures are
+**not trapped or injured**. **Cannot manipulate natural stone or stonework**;
+structures shift and **may collapse if destabilised**; plants ride along.
+
+---
+
+## N–P
+
+**Nondetection** — 3rd abjuration · 1 action · Touch · V, S, **M\*\*** (diamond
+dust **25 gp, consumed**) · **8 hours**. Hides a willing creature, or a place or
+object **≤10 ft in any dimension**, from **all divination magic and magical
+scrying sensors**.
+
+**Pass without Trace** — 2nd abjuration · 1 action · Self · V, S, M · **conc,
+1 hour**. Chosen creatures within **30 ft** (including you) gain **+10 to DEX
+(Stealth) checks**, **cannot be tracked except magically**, and **leave no
+tracks or traces**.
+
+**Passwall** — 5th transmutation · 1 action · 30 ft · V, S, M · **1 hour**.
+A passage in wood, plaster or stone: **up to 5 ft wide, 8 ft tall, 20 ft deep**,
+causing **no structural instability**. Occupants are **safely ejected** when it
+closes.
+
+**Phantasmal Killer** — 4th illusion · 1 action · 120 ft · V, S · **conc,
+1 minute**. save WIS or **frightened**. **At the end of each of its turns**, a
+further WIS save or **4d10 psychic**; **a success ends the spell**.
+↑ **+1d10** per slot above 4th.
+
+**Phantom Steed** — 3rd illusion **(R)** · 1 minute · 30 ft · V, S · **1 hour**.
+A Large quasi-real steed with **saddle, bit and bridle** (which **vanish more
+than 10 ft from the steed**). Uses **riding horse** statistics but **speed
+100 ft**, travelling **10 miles per hour, or 13 at a fast pace**. **Fades over
+1 minute** when the spell ends, giving the rider time to dismount. **Ends if
+dismissed or if the steed takes any damage.**
+
+**Planar Ally** — 6th conjuration · **10 minutes** · 60 ft · V, S ·
+Instantaneous. Beseech a **known** cosmic entity; it sends a celestial,
+elemental or fiend. **The creature is under no compulsion** — you must
+**bargain**, and you must be able to communicate. Rule-of-thumb payment:
+**100 gp per minute · 1,000 gp per hour · 10,000 gp per day (up to 10 days)**;
+**halved or waived** if aligned with its ethos, **halved** for non-hazardous
+tasks, **more** for especially dangerous ones. **Suicidal tasks are rarely
+accepted.** Failure to agree sends it home immediately. **A creature that joins
+the group takes a full share of experience points.**
+*(Explicitly a **negotiation**, not a mechanic — the engine can only track the
+gold and the contract; the outcome is DM adjudication.)*
+
+**Planar Binding** — 5th abjuration · **1 hour** · 60 ft · V, S, **M\*\***
+(jewel **≥1,000 gp, consumed**) · **24 hours**. The target (**celestial,
+elemental, fey or fiend**) must remain in range for the whole casting — typically
+held by an inverted *magic circle*. save CHA or **bound to serve**. **If it was
+summoned by another spell, that spell's duration extends to match this one.**
+It **obeys the letter of your instructions** and, if hostile, **twists your
+words**. ↑ **6th → 10 days · 7th → 30 days · 8th → 180 days · 9th → a year and
+a day**.
+
+**Plane Shift** — 7th conjuration · 1 action · Touch · V, S, **M\*** (forked
+metal rod **≥250 gp, attuned to a particular plane**) · Instantaneous.
+You and **up to eight willing creatures linking hands** travel to a plane you
+name in **general terms** — you arrive in or near it, at the GM's discretion.
+Alternatively, travel to a **teleportation circle whose sigil sequence you
+know**. **Offensive use:** melee spell atk against a creature in reach; on a hit
+save CHA or be **banished to a random location on a plane you name**, left to
+find its own way back.
+*(The material component is **plane-specific** — an item whose identity encodes a
+destination. Items can carry arbitrary typed parameters.)*
+
+**Plant Growth** — 3rd transmutation · **1 action *or* 8 hours** · 150 ft ·
+V, S · Instantaneous.
+*1 action:* plants in a **100-ft radius** become overgrown — **4 ft of movement
+per 1 ft moved** (worse than ordinary difficult terrain). **You may exclude
+areas of any size.**
+*8 hours:* plants in a **half-mile radius** are enriched for **1 year**, yielding
+**double food when harvested**.
+*(A spell with **two entirely different casting times producing different
+effects** — casting time is a cast-time parameter like slot level.)*
+
+**Poison Spray** — Conjuration cantrip · 1 action · **10 ft** · V, S ·
+Instantaneous. save CON or **1d12 poison**. [cantrip-scale] 2d12/3d12/4d12.
+
+**Polymorph** — 4th transmutation · 1 action · 60 ft · V, S, M · **conc,
+1 hour**. Unwilling creatures save **WIS**. **No effect on a shapechanger or a
+creature at 0 HP.** New form: **any beast of CR ≤ the target's CR (or level)**.
+**All statistics including mental ability scores are replaced**; alignment and
+personality are retained. **Assumes the new form's HP**; reverting restores the
+prior HP, and **excess damage carries over** (without knocking it unconscious
+unless it would drop the true form to 0). **Cannot speak, cast, or do anything
+requiring hands or speech.** Gear melds in and is unusable.
+
+**Power Word Kill** — 9th enchantment · 1 action · 60 ft · **V only** ·
+Instantaneous. **If the target has 100 hit points or fewer, it dies.**
+Otherwise **nothing happens**. **No save, no attack roll.**
+
+**Power Word Stun** — 8th enchantment · 1 action · 60 ft · **V only** ·
+Instantaneous. **If the target has 150 hit points or fewer, it is stunned**;
+otherwise nothing. **CON save at the end of each of its turns** to end.
+
+**Prayer of Healing** — 2nd evocation · **10 minutes** · 30 ft · **V only** ·
+Instantaneous. **Up to six creatures**, each **2d8 + your spellcasting ability
+modifier**. ↑ **+1d8** per slot above 2nd.
+
+**Prestidigitation** — Transmutation cantrip · 1 action · 10 ft · V, S ·
+**up to 1 hour**. One of: a harmless instantaneous sensory effect; light or snuff
+a candle/torch/small campfire; clean or soil an object **≤1 cubic foot**; chill,
+warm or flavour **1 cubic foot** of nonliving material for **1 hour**; make a
+mark, colour or symbol appear for **1 hour**; create a nonmagical trinket or
+hand-sized illusory image lasting **until the end of your next turn**.
+**Up to three non-instantaneous effects active at once**, dismissible as an
+action.
+*(A cantrip that maintains a **bounded pool of concurrent instances** — three
+independent effect instances from one spell.)*
+
+**Prismatic Spray** — 7th evocation · 1 action · **Self (60-ft cone)** · V, S ·
+Instantaneous. Every creature saves DEX; **roll a d8 per target** for the ray:
+
+| d8 | Ray | Effect |
+|---|---|---|
+| 1 | Red | **10d6 fire**, half on success |
+| 2 | Orange | **10d6 acid**, half on success |
+| 3 | Yellow | **10d6 lightning**, half on success |
+| 4 | Green | **10d6 poison**, half on success |
+| 5 | Blue | **10d6 cold**, half on success |
+| 6 | Indigo | **restrained**; then CON save each turn — **three successes ends it, three failures = permanently petrified** |
+| 7 | Violet | **blinded**; WIS save at the start of your next turn — success ends the blindness, failure **transports it to another plane** |
+| 8 | Special | **struck by two rays** — roll twice more, rerolling 8s |
+
+*(A per-target random effect table with a **recursive** entry.)*
+
+**Prismatic Wall** — 9th abjuration · 1 action · 60 ft · V, S · **10 minutes**.
+A wall up to **90 × 30 × 1 inch**, or a **30-ft-diameter sphere**. **The spell
+fails and the slot is wasted if it would pass through a creature's space.**
+Sheds **bright light 100 ft, dim 100 ft more**. You and designated creatures pass
+freely. Others coming **within 20 ft** or starting there save **CON or blinded
+for 1 minute**. Passing through means a **DEX save against each of the seven
+layers in turn**. Layers are destroyed **in order, red to violet**, each by its
+own means; **a *rod of cancellation* destroys the whole wall; an *antimagic
+field* has no effect on it.**
+
+| # | Layer | On failed DEX save | Blocks | Destroyed by |
+|---|---|---|---|---|
+| 1 | Red | 10d6 fire (half on success) | nonmagical ranged attacks | ≥25 cold damage |
+| 2 | Orange | 10d6 acid | magical ranged attacks | a strong wind |
+| 3 | Yellow | 10d6 lightning | — | ≥60 force damage |
+| 4 | Green | 10d6 poison | — | *passwall* or an equal/higher spell that opens a portal |
+| 5 | Blue | 10d6 cold | — | ≥25 fire damage |
+| 6 | Indigo | restrained → three-strikes CON, petrified on three failures | spells cast through the wall | bright light from *daylight* or an equal/higher spell |
+| 7 | Violet | blinded → WIS save or **planar transport** | — | *dispel magic* or an equal/higher spell |
+
+**Private Sanctum** — 4th abjuration · **10 minutes** · 120 ft · V, S, M ·
+**24 hours**. A cube **5 to 100 ft** per side; action to dismiss. Choose any or
+all: **sound cannot pass**; **the barrier is dark and foggy, blocking vision
+including darkvision**; **divination sensors cannot enter or pass**; **creatures
+inside cannot be targeted by divination**; **no teleportation in or out**;
+**planar travel blocked**. **Cast daily for a year → permanent.**
+↑ **cube +100 ft** per slot above 4th.
+
+**Produce Flame** — Conjuration cantrip · 1 action · Self · V, S ·
+**10 minutes**. A flame in your hand; **bright light 10 ft, dim 10 ft more**.
+**Attacking with it ends the spell**: on casting or as an **action** later, hurl
+it at a creature within **30 ft** — ranged spell atk, **1d8 fire**.
+[cantrip-scale] 2d8/3d8/4d8.
+*(A cantrip that is simultaneously a light source and a weapon, where using one
+mode destroys the other.)*
+
+**Programmed Illusion** — 6th illusion · 1 action · 120 ft · V, S, **M\***
+(fleece and **jade dust ≥25 gp**) · **Until dispelled**. An imperceptible
+illusion up to a **30-ft cube** with a scripted performance of **up to
+5 minutes**, triggered by a condition **based on visual or audible conditions
+within 30 ft**. **After performing it goes dormant for 10 minutes**, then can
+fire again. Disbelief: **action + INT (Investigation) vs. your spell save DC**.
+*(A third authored trigger, this one with a **cooldown**.)*
+
+**Project Image** — 7th illusion · 1 action · **500 miles** · V, S, **M\***
+(a replica of you **≥5 gp**) · **conc, up to 1 day**. An intangible illusory
+copy at any location in range **you have seen before**, regardless of
+obstacles. **Any damage destroys it and ends the spell.** **Action** to move it
+**twice your speed** and make it act; see and hear through it; **bonus action to
+switch senses**, blind and deaf to your own while using its. Disbelief as above.
+
+**Protection from Energy** — 3rd abjuration · 1 action · Touch · V, S · **conc,
+1 hour**. **Resistance to one of: acid, cold, fire, lightning, thunder.**
+
+**Protection from Evil and Good** — 1st abjuration · 1 action · Touch · V, S,
+**M\*\*** (holy water or powdered silver and iron, **consumed**) · **conc,
+10 minutes**. Against **aberrations, celestials, elementals, fey, fiends and
+undead**: they have **disadvantage on attack rolls** against the target; the
+target **cannot be charmed, frightened or possessed** by them; and **existing
+such effects grant advantage on any new saving throw**.
+
+**Protection from Poison** — 2nd abjuration · 1 action · Touch · V, S ·
+**1 hour**. **Neutralises one poison** (a known one, or one at random if several).
+For the duration: **advantage on saves against being poisoned** and
+**resistance to poison damage**.
+
+**Purify Food and Drink** — 1st transmutation **(R)** · 1 action · 10 ft ·
+V, S · Instantaneous. All nonmagical food and drink in a **5-ft-radius sphere**
+becomes **free of poison and disease**.
+
+---
+
+## R
+
+**Raise Dead** — 5th necromancy · **1 hour** · Touch · V, S, **M\*\*** (diamond
+**≥500 gp, consumed**) · Instantaneous. **Dead no longer than 10 days**; soul
+**willing and at liberty**. Returns at **1 hit point**. **Neutralises poisons and
+cures nonmagical diseases** present at death, but **not magical diseases, curses
+or similar** — those take effect on return. **Cannot raise an undead creature.**
+**Closes mortal wounds but does not restore missing body parts**, and
+**automatically fails if a part integral to survival (a head) is missing.**
+**Ordeal penalty: −4 to all attack rolls, saving throws and ability checks,
+reduced by 1 per long rest until gone.**
+*(A **decaying penalty tied to the rest clock** — a modifier whose magnitude is a
+function of long rests taken since an event.)*
+
+**Ray of Enfeeblement** — 2nd necromancy · 1 action · 60 ft · V, S · **conc,
+1 minute**. Ranged spell atk; on a hit the target **deals only half damage with
+weapon attacks that use Strength**. **CON save at the end of each of its turns**
+to end.
+
+**Ray of Frost** — Evocation cantrip · 1 action · 60 ft · V, S ·
+Instantaneous. Ranged spell atk, **1d8 cold**, and **speed −10 ft until the
+start of your next turn**. [cantrip-scale] 2d8/3d8/4d8.
+
+**Regenerate** — 7th transmutation · **1 minute** · Touch · V, S, M ·
+**1 hour**. **4d8 + 15 hit points** immediately, then **1 HP at the start of each
+of its turns (10 per minute)**. **Severed body parts regrow after 2 minutes**, or
+**reattach instantly** if you hold the part to the stump.
+
+**Reincarnate** — 5th transmutation · **1 hour** · Touch · V, S, **M\*\*** (rare
+oils **≥1,000 gp, consumed**) · Instantaneous. A humanoid **dead no longer than
+10 days** gets a **new adult body**, likely of a different race. GM rolls d100
+(or chooses):
+
+| d100 | Race |
+|---|---|
+| 01–04 | Dragonborn |
+| 05–13 | Dwarf, hill |
+| 14–21 | Dwarf, mountain |
+| 22–25 | Elf, dark |
+| 26–34 | Elf, high |
+| 35–42 | Elf, wood |
+| 43–46 | Gnome, forest |
+| 47–52 | Gnome, rock |
+| 53–56 | Half-elf |
+| 57–60 | Half-orc |
+| 61–68 | Halfling, lightfoot |
+| 69–76 | Halfling, stout |
+| 77–96 | Human |
+| 97–00 | Tiefling |
+
+**Retains all capabilities and memories**, but **swaps its racial traits for the
+new race's**.
+*(A spell that **rewrites a character's race**, so racial traits must be a
+detachable, swappable effect bundle — not baked in at creation. Note this table
+is also an exact enumeration of the SRD's playable races.)*
+
+**Remove Curse** — 3rd abjuration · 1 action · Touch · V, S · Instantaneous.
+**All curses on one creature or object end.** On a **cursed magic item** the
+curse **remains**, but **the owner's attunement is broken** so it can be removed
+or discarded.
+
+**Resilient Sphere** — 4th evocation · 1 action · 30 ft · V, S, M · **conc,
+1 minute**. Encloses a **Large or smaller** creature or object; unwilling
+creatures save **DEX**. **Nothing — objects, energy or spell effects — passes in
+or out**, though the occupant can breathe. **The sphere is immune to all
+damage**, and neither side can harm the other. Weightless and exactly sized.
+The occupant may **push to roll it at half its speed**; others can pick it up.
+***Disintegrate* destroys the sphere without harming the contents.**
+
+**Resistance** — Abjuration cantrip · 1 action · Touch · V, S, M · **conc,
+1 minute**. **Once**, the target adds **1d4 to one saving throw of its choice**,
+**rolling the die before or after the save**. Then the spell ends.
+*(The saving-throw twin of *Guidance* — and another post-roll modification
+window.)*
+
+**Resurrection** — 7th necromancy · **1 hour** · Touch · V, S, **M\*\***
+(diamond **≥1,000 gp, consumed**) · Instantaneous. **Dead up to a century**,
+**not of old age**, **not undead**. Returns at **full hit points**, with poisons
+and normal diseases cured and **all missing body parts restored**. Same **−4
+ordeal penalty** decaying per long rest.
+**Caster cost for a body dead a year or more: until you finish a long rest you
+cannot cast spells, and you have disadvantage on all attack rolls, ability
+checks and saving throws.**
+
+**Reverse Gravity** — 7th transmutation · 1 action · 100 ft · V, S, M · **conc,
+1 minute**. A **50-ft-radius, 100-ft-high cylinder**. Everything unanchored
+**falls upward**; a **DEX save** grabs a fixed object to avoid it. Striking a
+ceiling resolves as a normal fall. Anything reaching the top **hangs there**,
+and **falls back down when the spell ends**.
