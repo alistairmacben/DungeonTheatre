@@ -12,7 +12,10 @@ with the whole picture in hand.
 
 - **`NN-*.md`** — complete extraction of a section. Every mechanic, in order,
   losslessly. These get long. That is intentional.
-- **`90-vocabulary-findings.md`** — the distilled cross-cutting output: every
+- **`90-vocabulary-findings.md`** — raw running notes from the races and classes
+  read. Superseded by `91-effect-vocabulary.md`.
+- **`91-effect-vocabulary.md`** — THE OUTPUT. The distilled, complete effect
+  vocabulary derived from all 253 pages: every
   *distinct* mechanic pattern the effect vocabulary must express, deduplicated
   across sections. This is what the engine design is actually built from.
 
