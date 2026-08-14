@@ -1927,3 +1927,331 @@ checks and saving throws.**
 **falls upward**; a **DEX save** grabs a fixed object to avoid it. Striking a
 ceiling resolves as a normal fall. Anything reaching the top **hangs there**,
 and **falls back down when the spell ends**.
+
+**Revivify** — 3rd necromancy · 1 action · Touch · V, S, **M\*\*** (diamonds
+**300 gp, consumed**) · Instantaneous. A creature **dead within the last
+minute** returns with **1 hit point**. **Cannot restore a death from old age or
+any missing body parts.**
+
+**Rope Trick** — 2nd transmutation · 1 action · Touch · V, S, M · **1 hour**.
+A rope **up to 60 ft** stands upright with an **invisible entrance** to an
+extradimensional space at its top, holding **up to eight Medium or smaller
+creatures**. The rope can be pulled in. **Attacks and spells cannot cross the
+entrance**, but occupants see out **as through a 3 × 5 ft window**. Everything
+**drops out** when the spell ends.
+
+---
+
+## S
+
+**Sacred Flame** — Evocation cantrip · 1 action · 60 ft · V, S ·
+Instantaneous. save DEX or **1d8 radiant**. **The target gains no benefit from
+cover for this save.** [cantrip-scale] 2d8/3d8/4d8.
+*(An explicit cover exemption — so cover bonuses to DEX saves need a
+per-effect override flag.)*
+
+**Sanctuary** — 1st abjuration · **1 bonus action** · 30 ft · V, S, M ·
+**1 minute**. Any creature **targeting the warded creature with an attack or a
+harmful spell must first save WIS**; on a failure it **must choose a new target
+or lose the attack or spell**. **No protection against area effects.**
+**Ends if the warded creature attacks or casts a spell affecting an enemy.**
+*(An interception that fires **before target selection resolves** — another
+mid-resolution hook.)*
+
+**Scorching Ray** — 2nd evocation · 1 action · 120 ft · V, S · Instantaneous.
+**Three rays**, distributed freely; **a separate ranged spell attack per ray**,
+**2d6 fire** each. ↑ **+1 ray** per slot above 2nd.
+
+**Scrying** — 5th divination · **10 minutes** · Self · V, S, **M\*** (focus
+**≥1,000 gp** — crystal ball, silver mirror, font of holy water) · **conc,
+10 minutes**. The target saves **WIS**, **modified by your knowledge of and
+physical connection to them** — and may **choose to fail** if it knows you are
+casting:
+
+| Knowledge | Save modifier |
+|---|---|
+| Secondhand (heard of them) | **+5** |
+| Firsthand (met them) | **+0** |
+| Familiar (know them well) | **−5** |
+
+| Connection | Save modifier |
+|---|---|
+| Likeness or picture | **−2** |
+| Possession or garment | **−4** |
+| Body part, hair, nail clipping | **−10** |
+
+Success grants **24-hour immunity** to your castings. Failure creates an
+invisible sensor **within 10 ft of the target that follows it**; you see and
+hear through it. Visible as a fist-sized orb to anyone who sees invisible
+objects. **Alternatively target a location you have seen** — the sensor appears
+there and does not move.
+*(A **save DC modified by relationship and evidence**, not by the caster's
+statistics. The DM/UI needs to expose these two dropdowns at cast time.)*
+
+**Secret Chest** — 4th conjuration · 1 action · Touch · V, S, **M\*** (a chest
+of rare materials **≥5,000 gp** and a **Tiny replica ≥50 gp**) ·
+Instantaneous. Hides a chest holding **≤12 cubic feet** of nonliving material on
+the Ethereal Plane. **Action + touch the replica to recall it** within 5 ft;
+**action + touch both to send it back**. **After 60 days there is a cumulative
+5% chance per day that the spell ends.** Ends if recast, if the **replica is
+destroyed**, or by your action — **and if the chest is ethereal when it ends, it
+is irretrievably lost**.
+
+**See Invisibility** — 2nd divination · 1 action · Self · V, S, M · **1 hour**.
+See **invisible creatures and objects**, and **into the Ethereal Plane** (which
+appears ghostly and translucent).
+
+**Seeming** — 5th illusion · 1 action · 30 ft · V, S · **8 hours**.
+**Any number** of creatures get illusory appearances covering **clothing, armour,
+weapons and equipment**. Unwilling targets save **CHA**. **±1 foot of height**,
+any build, **same body type**. **Fails physical inspection**; an **action +
+INT (Investigation) vs. your spell save DC** reveals the disguise.
+
+**Sending** — 3rd evocation · 1 action · **Unlimited** · V, S, M · **1 round**.
+A **≤25-word** message to a familiar creature, who **can answer immediately in
+kind**. Understood by anything with **INT ≥ 1**. Works **across planes**, with a
+**5% chance the message does not arrive** if you are on different planes.
+
+**Sequester** — 7th transmutation · 1 action · Touch · V, S, **M\*\*** (gem-dust
+powder **≥5,000 gp, consumed**) · **Until dispelled**. A willing creature or
+object becomes **invisible and undetectable by divination or scrying**. A
+creature falls into **suspended animation — time stops for it and it does not
+age**. **Set an ending condition** that must **occur or be visible within
+1 mile** ("after 1,000 years", "when the tarrasque awakens").
+**Also ends if the target takes any damage.**
+
+**Shapechange** — 9th transmutation · 1 action · Self · V, S, **M\*** (jade
+circlet **≥1,500 gp**, **worn before casting**) · **conc, 1 hour**.
+Any creature of **CR ≤ your level**, **not a construct or undead**, **that you
+have seen**. An **average example** — no class levels, no Spellcasting trait.
+Statistics replaced, but you keep **alignment and INT/WIS/CHA**, and **all your
+skill and saving-throw proficiencies plus the creature's** (**the higher bonus
+wins** where both have it). **No legendary or lair actions.** Take the form's HP
+and Hit Dice; reverting restores your prior HP with excess damage carrying over.
+**You keep class, race and other features and may use them if the form is
+physically capable**; **you cannot use special senses the form lacks**; **you can
+speak only if the form can**. Equipment may **drop, merge, or be worn** (merged
+equipment does nothing). **Action to change form again** — but **if the new form
+has more HP than your current total, your HP stays where it is** (blocking
+re-shifting as a heal).
+
+**Shatter** — 2nd evocation · 1 action · 60 ft · V, S, M · Instantaneous.
+**10-ft-radius sphere**, save CON, **3d8 thunder**, half on success.
+**Creatures made of inorganic material (stone, crystal, metal) save at
+disadvantage.** **Unattended nonmagical objects in the area also take the
+damage.** ↑ **+1d8** per slot above 2nd.
+
+**Shield** — 1st abjuration · **1 reaction, taken when you are hit by an attack
+or targeted by *magic missile*** · Self · V, S · **1 round**.
+**+5 AC, including against the triggering attack**, and **no damage from *magic
+missile***.
+*(An AC bonus applied **retroactively to an attack already rolled** — the attack
+resolution pipeline must be interruptible after the roll but before the
+hit/miss verdict is committed.)*
+
+**Shield of Faith** — 1st abjuration · **1 bonus action** · 60 ft · V, S, M ·
+**conc, 10 minutes**. **+2 AC.**
+
+**Shillelagh** — Transmutation cantrip · **1 bonus action** · Touch · V, S, M
+(**a club or quarterstaff**) · **1 minute**. For that weapon: **use your
+spellcasting ability instead of Strength for attack and damage**, **the damage
+die becomes a d8**, and **the weapon becomes magical**. **Ends if recast or if
+you let go of the weapon.**
+*(Overrides a weapon's ability and its damage die — weapon statistics must be
+computed through an effect pipeline, not read straight off the item.)*
+
+**Shocking Grasp** — Evocation cantrip · 1 action · Touch · V, S ·
+Instantaneous. Melee spell atk, **advantage if the target wears metal armour**.
+Hit: **1d8 lightning** and **it cannot take reactions until the start of its next
+turn**. [cantrip-scale] 2d8/3d8/4d8.
+
+**Silence** — 2nd illusion **(R)** · 1 action · 120 ft · V, S · **conc,
+10 minutes**. **No sound is created within or passes through a 20-ft-radius
+sphere.** Creatures and objects entirely inside are **immune to thunder damage**;
+creatures are **deafened**; **spells with verbal components cannot be cast**
+there.
+
+**Silent Image** — 1st illusion · 1 action · 60 ft · V, S, M · **conc,
+10 minutes**. A **purely visual** image up to a **15-ft cube** — **no sound,
+smell or other sensory effects**. **Action to move it** in range and alter its
+appearance to match. Disbelief: **action + INT (Investigation) vs. your spell
+save DC**.
+
+**Simulacrum** — 7th illusion · **12 hours** · Touch · V, S, **M\*\*** (snow or
+ice enough for a life-size copy, **a piece of the creature's body**, and
+**powdered ruby 1,500 gp, consumed**) · **Until dispelled**. An illusory but
+**real, actable** duplicate of one **beast or humanoid** with **half its hit
+point maximum** and **no equipment**; all other statistics identical. Friendly and
+obedient, acting on your turn. **It cannot learn, level, or regain expended
+spell slots.** Repairable in an alchemical laboratory at **100 gp per hit
+point**. **Reverts to melting snow at 0 HP.** **Recasting destroys any active
+duplicate.**
+
+**Sleep** — 1st enchantment · 1 action · 90 ft · V, S, M · **1 minute**.
+**Roll 5d8** as a **hit-point pool**. Creatures within **20 ft of a point**
+are affected in **ascending order of current HP** (ignoring unconscious ones),
+each falling **unconscious** and subtracting its HP from the pool; a creature is
+only affected if its HP ≤ the remaining pool. **Wakes on damage or if someone
+uses an action to shake or slap it.** **Undead and creatures immune to charm are
+unaffected.** ↑ **+2d8** per slot above 1st.
+
+**Sleet Storm** — 3rd conjuration · 1 action · 150 ft · V, S, M · **conc,
+1 minute**. A **20-ft-tall, 40-ft-radius cylinder**: **heavily obscured**,
+**exposed flames doused**, **ground is difficult terrain**. On entering first
+time on a turn or starting there: **DEX save or fall prone**. **Anyone
+concentrating in the area must make a CON save against your spell save DC or
+lose concentration.**
+
+**Slow** — 3rd transmutation · 1 action · 120 ft · V, S, M · **conc, 1 minute**.
+**Up to six creatures in a 40-ft cube**, save WIS. Affected: **speed halved**,
+**−2 AC and −2 to DEX saves**, **no reactions**, **either an action or a bonus
+action, not both**, and **at most one melee or ranged attack per turn regardless
+of any ability or item**. **Casting a 1-action spell: roll a d20 — on 11 or
+higher the spell is delayed to the creature's next turn**, which it must spend
+completing it or the spell is wasted. **WIS save at the end of its turn** to
+end.
+
+**Spare the Dying** — Necromancy cantrip · 1 action · Touch · V, S ·
+Instantaneous. A living creature at **0 HP becomes stable**. No effect on undead
+or constructs.
+
+**Speak with Animals** — 1st divination **(R)** · 1 action · Self · V, S ·
+**10 minutes**. Comprehend and verbally communicate with beasts. They can at
+minimum report **nearby locations and monsters**, including anything perceived
+**within the past day**. Small favours are possible at the GM's discretion.
+
+**Speak with Dead** — 3rd necromancy · 1 action · 10 ft · V, S, M ·
+**10 minutes**. A corpse **that still has a mouth** and **is not undead**.
+**Fails if the corpse was targeted by this spell within the last 10 days.**
+**Five questions.** It knows only what it knew in life, answers **briefly,
+cryptically or repetitively**, and is **under no compulsion to tell the truth**
+if hostile. **It has no soul** — it cannot learn, know what has happened since
+death, or speculate.
+
+**Speak with Plants** — 3rd transmutation · 1 action · **Self (30-ft radius)** ·
+V, S · **10 minutes**. Question plants about **events in the area within the past
+day**. **Turn plant-caused difficult terrain into ordinary terrain, or ordinary
+terrain with plants into difficult terrain**, for the duration. Plants cannot
+uproot but can move branches and tendrils. Plant creatures can be communicated
+with but **not influenced**. **Can make *entangle*'s plants release a restrained
+creature.**
+
+**Spider Climb** — 2nd transmutation · 1 action · Touch · V, S, M · **conc,
+1 hour**. Move on vertical surfaces and ceilings **with hands free**, and gain a
+**climbing speed equal to walking speed**.
+
+**Spike Growth** — 2nd transmutation · 1 action · 150 ft · V, S, M · **conc,
+10 minutes**. A **20-ft radius** of difficult terrain dealing **2d4 piercing per
+5 feet travelled** within it. **Camouflaged** — a creature that could not see the
+casting must make a **WIS (Perception) check vs. your spell save DC** to
+recognise the hazard before entering.
+*(Damage proportional to **distance moved**, not to a turn or an event.)*
+
+**Spirit Guardians** — 3rd conjuration · 1 action · **Self (15-ft radius)** ·
+V, S, M (a holy symbol) · **conc, 10 minutes**. **Designate any number of
+creatures to be unaffected at cast time.** Affected creatures have **speed
+halved** in the area, and on entering first time on a turn or starting there
+save **WIS**, taking **3d8 radiant (if you are good or neutral) or 3d8 necrotic
+(if you are evil)**, half on success. ↑ **+1d8** per slot above 3rd.
+*(Damage type determined by the **caster's alignment** — the one place the SRD
+attaches a mechanic to alignment, contradicting "alignment is purely
+descriptive" in `03-progression.md`. Worth noting as an exception.)*
+
+**Spiritual Weapon** — 2nd evocation · **1 bonus action** · 60 ft · V, S ·
+**1 minute** (no concentration). A floating weapon; **recasting replaces it**.
+On casting, a melee spell atk within 5 ft of it for **1d8 + your spellcasting
+ability modifier force**. **Bonus action** to move it **20 ft** and attack again.
+↑ **+1d8 per *two* slot levels above 2nd**.
+
+**Stinking Cloud** — 3rd conjuration · 1 action · 90 ft · V, S, M · **conc,
+1 minute**. **20-ft-radius sphere**, spreads around corners, **heavily
+obscured**. A creature **completely inside at the start of its turn** saves CON
+or **spends its action retching**. **Creatures that don't breathe or are immune
+to poison automatically succeed.** **Moderate wind (≥10 mph) disperses it after
+4 rounds; strong wind (≥20 mph) after 1 round.**
+
+**Stone Shape** — 4th transmutation · 1 action · Touch · V, S, M ·
+Instantaneous. Reshape a **Medium or smaller** stone object, or a section of
+stone **≤5 ft in any dimension**, into any form — a weapon, an idol, a coffer, a
+passage through a wall under 5 ft thick, a sealed door. **Up to two hinges and a
+latch**; **no finer mechanical detail**.
+
+**Stoneskin** — 4th abjuration · 1 action · Touch · V, S, **M\*\*** (diamond
+dust **100 gp, consumed**) · **conc, 1 hour**. **Resistance to nonmagical
+bludgeoning, piercing and slashing damage.**
+
+**Storm of Vengeance** — 9th conjuration · 1 action · **Sight** · V, S ·
+**conc, 1 minute**. A **360-ft-radius** storm cloud. On appearing, every creature
+beneath it (**within 5,000 ft below**) saves **CON** or takes **2d6 thunder** and
+is **deafened for 5 minutes**. Then, per round of concentration:
+
+| Round | Effect |
+|---|---|
+| 2 | **1d6 acid** to every creature and object beneath, no save |
+| 3 | **Six lightning bolts** at six chosen creatures or objects (one bolt each): DEX save, **10d6 lightning**, half on success |
+| 4 | **2d6 bludgeoning** hail to everything beneath, no save |
+| 5–10 | Area becomes **difficult terrain and heavily obscured**; **1d6 cold** per creature; **ranged weapon attacks impossible**; **severe distraction for concentration**; winds of 20–50 mph **automatically disperse fog and mist, mundane or magical** |
+
+*(A **scripted multi-round sequence** — the effect is a timeline keyed to the
+round counter, not a single application.)*
+
+**Suggestion** — 2nd enchantment · 1 action · 30 ft · **V, M** (no somatic) ·
+**conc, up to 8 hours**. One creature that can **hear and understand** you;
+**immune if it can't be charmed**. A **one-or-two-sentence** reasonable course of
+action — **an obviously harmful command ends the spell**. save WIS or pursue it;
+**ends early on completion**. May carry a **conditional trigger**. **Damage from
+you or your companions ends it.**
+
+**Sunbeam** — 6th evocation · 1 action · **Self (5-ft-wide, 60-ft line)** ·
+V, S, M · **conc, 1 minute**. save CON, **6d8 radiant** and **blinded until your
+next turn**; half and no blindness on a success. **Undead and oozes save at
+disadvantage.** **Action on any turn to fire a new line.** A mote in your hand
+sheds **bright light 30 ft, dim 30 ft more** — **and this light is sunlight**.
+
+**Sunburst** — 8th evocation · 1 action · 150 ft · V, S, M · Instantaneous.
+**60-ft radius**, save CON, **12d6 radiant** and **blinded for 1 minute**; half
+and no blindness on a success. **Undead and oozes save at disadvantage.**
+**CON save at the end of each of its turns** to end the blindness.
+**Dispels any spell-created darkness in the area.**
+
+**Symbol** — 7th abjuration · **1 minute** · Touch · V, S, **M\*\*** (mercury,
+phosphorus, powdered diamond and opal **≥1,000 gp total, consumed**) ·
+**Until dispelled or triggered**. Same inscription, concealment, discovery
+(**INT (Investigation) vs. your spell save DC**), trigger authoring and password
+rules as *Glyph of Warding* — refinable by **physical characteristics or physical
+kind** (hags, shapechangers). On trigger it **fills a 60-ft-radius sphere with
+dim light for 10 minutes**, affecting everyone inside then, **plus anyone
+entering first time on a turn or ending a turn there**. Choose one effect:
+
+| Effect | Save | On failure |
+|---|---|---|
+| Death | CON | **10d10 necrotic**, half on success |
+| Discord | CON | bickers for 1 minute: **no meaningful communication, disadvantage on attack rolls and ability checks** |
+| Fear | WIS | **frightened 1 minute**; drops what it holds and must move ≥30 ft from the glyph each turn |
+| Hopelessness | CHA | 1 minute: **cannot attack or target any creature with harmful abilities, spells or magical effects** |
+| Insanity | INT | 1 minute: **cannot act, understand speech or read; speaks gibberish; the GM controls its erratic movement** |
+| Pain | CON | **incapacitated** 1 minute |
+| Sleep | WIS | **unconscious 10 minutes**; wakes on damage or a shake |
+| Stunning | WIS | **stunned** 1 minute |
+
+---
+
+## T
+
+**Telekinesis** — 5th transmutation · 1 action · 60 ft · V, S · **conc,
+10 minutes**. On casting **and as your action each round**, affect one target;
+switching targets **releases the previous one**.
+*Creature* — **Huge or smaller**: an **ability check with your spellcasting
+ability contested by the creature's STR check**. On a win, move it **30 ft** in
+any direction (including upward) within range, and it is **restrained in your
+grip until the end of your next turn**; **repeat the contest each round to
+maintain**.
+*Object* — **up to 1,000 lb**: unattended objects move **30 ft automatically**;
+**a worn or carried object requires the same contest**. **Fine control**
+possible — use a simple tool, open a door or container, stow or retrieve, pour a
+vial.
+
+**Telepathic Bond** — 5th divination **(R)** · 1 action · 30 ft · V, S, M ·
+**1 hour**. Links **up to eight willing creatures** telepathically, **regardless
+of shared language**, **over any distance but not across planes**. **No effect on
+INT ≤ 2.**
