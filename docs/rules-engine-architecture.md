@@ -511,3 +511,9 @@ Steps 1–4 are the ones worth being slow and pedantic about. If the vocabulary
 is right, 5 onward are mostly assembly. If it is wrong, everything after step 4
 becomes progressively harder to change, which is the failure mode this document
 exists to prevent.
+
+---
+
+> **SUPERSEDED.** This document was written *before* the SRD read and is wrong
+> in several places. See `architecture.md` for the final architecture, and
+> `architecture.md` §16 for a table of the specific corrections.
