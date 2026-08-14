@@ -808,3 +808,84 @@ Grouped by what they defend. Each must fail if the corresponding rule regresses.
   resolves through the **generic path only**, with no branch on `kind` or
   `provenance` anywhere in the resolver. This is the test that fails first if
   anyone adds bespoke per-content logic.
+
+---
+
+# Phase 2 addendum — the playable vertical slice
+
+Implemented after the foundation, against the same rules. This section records
+what changed and why, so the design document stays the description of the code.
+
+## New primitives, and the evidence for each
+
+All six came out of `feat-coverage.md`, which was written *before* any feat
+content. Each is a **stat path or a capability key** — a noun, not a verb — and
+each is used by non-feat content as well.
+
+| Primitive | Shape | First needed by | Also used by |
+|---|---|---|---|
+| `movementCost.<kind>` | feet of movement per foot travelled | Athlete, Mobile | difficult terrain, crawling, *freedom of movement* |
+| `damageReduction.<type>` | flat reduction before resistance | Heavy Armor Master | *warding bond*, protective auras |
+| `resistanceBypass.<type>` | ignore a resistance | Elemental Adept | magic weapons, the DM's Flamefang |
+| `armorDexCap` | how much Dexterity armour admits | Medium Armor Master | every medium armour, *mage armor* |
+| `attack.roll` / `check.roll` / `save.roll` / `damage.weapon` | the roll total itself | Great Weapon Master, Sharpshooter | Bless, Bane, any situational bonus |
+| `beSurprised`, `beCriticallyHit` | capability keys | Alert | *foresight*, adamantine armour |
+
+Alongside them, four vocabulary additions that are mechanisms rather than nouns,
+each justified by several unrelated pieces of content:
+
+- **`ValueExpr`** — formula-valued modifiers. Tough is `2 × level`; the fighter's
+  hit points are `6/level + CON/level + 4`; the baseline Dexterity contribution
+  is `min(dexModifier, armorDexCap)`.
+- **`ProficiencyCategory`** — one proficiency system covering skills, tools,
+  saves, armour categories, weapon categories and individual weapons.
+- **`appliesTo: 'attackersAgainstSelf'`** — the defender's modifiers reaching the
+  attacker's roll, which is how every "attack rolls against the creature have
+  advantage" clause works without the attacker knowing condition names.
+- **`ActionOption`** — a choice declared at the moment of acting rather than when
+  the source was taken.
+
+## The design decision the feat analysis forced
+
+Situational penalties — long range, cover, being unseen, armour's Stealth
+penalty — were going to be computed inline inside the attack resolver. Four
+separate feats want to remove them selectively, and **inline arithmetic cannot
+be selectively removed**.
+
+They are now **tagged modifiers entering resolution through the ordinary
+pipeline**, so `suppress` — already built and tested for mithral armour — is the
+single answer to every "you ignore X" clause in the game. Sharpshooter,
+Crossbow Expert, Skulker, Alert, Medium Armor Master and Spell Sniper all fall
+out of one decision, and so will every future item and spell with that shape.
+
+## Armour, and why heavy armour suppresses rather than caps
+
+Heavy armour admits no Dexterity — **and a negative Dexterity modifier is not
+applied either**. Capping `armorDexCap` at 0 would produce `min(-1, 0) = -1` and
+wrongly subtract. So heavy armour **suppresses the Dexterity term by tag**,
+which expresses both halves of the rule with the primitive that already existed.
+Light armour leaves the cap alone; medium armour sets it to 2; Medium Armor
+Master raises it to 3 at a higher priority. None of that is a branch.
+
+## The bug the canonical character found
+
+Weapon proficiency never reached the attack roll. Skills, tools and saves imply
+their own roll scope, but a weapon's proficiency depends on *which weapon is
+being swung* — a fact the roll scope does not carry. The fix was to let a roll
+**name the proficiency categories it may draw on** (`RollRequest.
+proficiencyCategories`), which the attack resolver supplies from the weapon.
+
+This is worth recording because the alternative — computing weapon proficiency
+inside `resolveAttack` — would have been the third place in the codebase that
+knows the proficiency rule, and the first place it could drift.
+
+## Test coverage added
+
+`test-rules-character.mjs`, 93 checks over one character, covering: ability
+modifiers, proficiency bonus, AC, max HP, speed, initiative, carrying capacity,
+skill checks (including Constitution (Athletics)), passive scores, saving
+throws, paralysis auto-fail, equip/unequip, attunement, medium-armour Dex caps,
+weapon attacks, finesse, versatile, long range, cover, elected options,
+target-side conditions, full attack outcomes, the DM-authored weapon,
+conditions, exhaustion, temporary effects, resources, rests, and feat
+activation and deactivation.
