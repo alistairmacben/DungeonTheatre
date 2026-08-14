@@ -882,3 +882,722 @@ resistance to all damage**, and **counts as a worn object**.
 table lookup. **Reserve** is a stored-spell container whose casts carry
 **another character's** statistics, which a cast record must therefore be able
 to represent.)*
+
+---
+
+## 10. Catalogue: I–R
+
+**Iron Bands of Binding** — Wondrous, rare. Action + command word, thrown at a
+Huge-or-smaller creature within 60 ft: **a ranged attack at DEX modifier +
+proficiency bonus**; on a hit the target is **restrained** until you release it
+with a bonus action. Escape: action, **DC 20 STR check** — success **destroys
+the item**; **failure means that creature auto-fails for 24 hours**.
+**Dawn recharge.**
+
+**Iron Flask** — Wondrous, legendary. Action + command word at a visible
+creature within 60 ft **native to another plane**: **DC 17 WIS save or trapped**
+(**advantage if it has been trapped before**). **One creature at a time**; it
+does not breathe, eat, drink or age. Releasing it makes it **friendly and
+obedient for 1 hour**, then it reverts to its own disposition. ***identify*
+reveals that something is inside but not what.** Found contents, d100:
+**1–50 empty** · 51–66 demons of types 1–6 · 67 deva · 68–69 greater devil ·
+70–73 lesser devil · 74–75 djinni · 76–77 efreeti · 78–83 any elemental ·
+84–86 invisible stalker · 87–90 night hag · 91 planetar · 92–95 salamander ·
+96 solar · 97–99 succubus/incubus · 100 xorn.
+
+**Javelin of Lightning** — Weapon (javelin), uncommon. Hurl + command word: a
+**5-ft-wide line to a target within 120 ft**; everyone in it **except you and
+the target** makes a **DC 13 DEX save for 4d6 lightning**, half on success. It
+reverts to a javelin at the target: **make a ranged weapon attack** for javelin
+damage **+ 4d6 lightning**. **Dawn recharge**; usable as a plain magic weapon
+meanwhile.
+
+**Lantern of Revealing** — Wondrous, uncommon. Hooded lantern; **6 hours per
+pint**, **bright 30 ft / dim 30 ft more**. **Invisible creatures and objects are
+visible while in the bright light.** Action to hood down to dim 5 ft.
+
+**Luck Blade** — Weapon (any sword), legendary (attunement). **+1 to attack and
+damage**; **+1 to saving throws** while on your person. *Luck:* **no action
+required** — **reroll one attack roll, ability check or saving throw you
+dislike; you must use the second roll**. **Dawn recharge.** *Wish:* **1d4 − 1
+charges**; action + 1 charge to cast *wish*, **dawn recharge**, and **the
+property is lost at 0 charges**.
+
+**Mace of Disruption** — Weapon (mace), rare (attunement). **+2d6 radiant
+against fiends and undead**; if the target is left at **25 HP or fewer**, a
+**DC 15 WIS save or it is destroyed**, and on a success it is **frightened of
+you until the end of your next turn**. Sheds bright light 20 ft / dim 20 ft.
+
+**Mace of Smiting** — Weapon (mace), rare. **+1 to attack and damage**, rising
+to **+3 against constructs**. On a **natural 20**: **+2d6 bludgeoning**, or
+**+4d6 against a construct**, and a construct left at **25 HP or fewer is
+destroyed**.
+
+**Mace of Terror** — Weapon (mace), rare (attunement). **3 charges, 1d3 daily at
+dawn.** Action + 1 charge: chosen creatures in a **30-ft radius** save
+**DC 15 WIS or be frightened for 1 minute** — must move as far from you as
+possible, **cannot approach within 30 ft**, **cannot take reactions**, and may
+only **Dash**, try to escape movement restraints, or **Dodge** if trapped.
+Repeatable save at the end of each turn.
+
+**Mantle of Spell Resistance** — Wondrous, rare (attunement). **Advantage on
+saving throws against spells.**
+
+**Manual of Bodily Health / Gainful Exercise / Quickness of Action** and
+**Tome of Clear Thought / Leadership and Influence / Understanding** —
+Wondrous, very rare. **48 hours of study over 6 days or fewer** permanently
+raises **CON / STR / DEX / INT / CHA / WIS respectively by 2, and raises that
+score's maximum by 2**. The book **loses its magic and regains it in a
+century**.
+*(A **downtime activity that is also an item consumption**, and the clearest
+statement that **per-ability caps are themselves mutable state**.)*
+
+**Manual of Golems** — Wondrous, very rare. **Requires a spellcaster with at
+least two 5th-level spell slots**; anyone else attempting to read it takes
+**6d6 psychic**. Building requires uninterrupted work **resting no more than
+8 hours per day**, plus supplies: **d20 1–5 clay, 30 days, 65,000 gp · 6–17
+flesh, 60 days, 50,000 gp · 18 iron, 120 days, 100,000 gp · 19–20 stone,
+90 days, 80,000 gp**. The book is **consumed**, and its ashes animate the golem.
+
+**Marvelous Pigments** — Wondrous, very rare. **1d4 pots**; each covers
+**1,000 sq ft**, creating up to **10,000 cubic feet** of inanimate objects or
+terrain; **10 minutes per 100 sq ft**. Painted things become **real and
+nonmagical**. **Nothing may be worth more than 25 gp** (higher-value items look
+authentic but are worthless); **painted energy dissipates harmlessly**.
+
+**Medallion of Thoughts** — Wondrous, uncommon (attunement). **3 charges, 1d3
+at dawn**; action + 1 charge to cast *detect thoughts* (DC 13).
+
+**Mirror of Life Trapping** — Wondrous, very rare. 4 ft tall, 50 lb, **AC 11,
+10 HP, vulnerable to bludgeoning**; shatters at 0 HP. Activated with an action
+while hanging on a vertical surface. Any creature other than you **seeing its
+reflection within 30 ft** makes a **DC 15 CHA save or is trapped with its gear
+in one of twelve extradimensional cells** — **advantage if it knows the mirror's
+nature**, and **constructs succeed automatically**. Cells are fog-filled
+infinities where occupants **do not age, eat, drink or sleep**; escape needs
+planar-travel magic. **A thirteenth capture frees a random prisoner.**
+**Shattering frees everyone.** You can **speak a name or cell number** to
+converse with an occupant, or use a **second command word to release one**.
+
+**Mithral Armor** — Armor (medium or heavy, **not hide**), uncommon.
+**Removes the Stealth disadvantage and the Strength requirement** if the base
+armour had them. *(An item that **deletes a property** rather than adding one.)*
+
+**Necklace of Adaptation** — Wondrous, uncommon (attunement). **Breathe normally
+in any environment**, and **advantage on saves against harmful gases and
+vapours** (*cloudkill*, *stinking cloud*, inhaled poisons, some dragon breath).
+
+**Necklace of Fireballs** — Wondrous, rare. **1d6 + 3 beads.** Action to detach
+and throw one up to 60 ft: it detonates as a **3rd-level *fireball* (DC 15)**.
+**Throwing multiple beads as one action raises the level by 1 per extra bead.**
+
+**Necklace of Prayer Beads** — Wondrous, rare (**attunement by a cleric, druid
+or paladin**). **1d4 + 2 magic beads**; **removing a bead destroys its magic**.
+Each casts a spell **as a bonus action** using your spell save DC, then
+**recharges at the next dawn**. **d20: 1–6 Blessing (*bless*) · 7–12 Curing
+(*cure wounds* at 2nd level, or *lesser restoration*) · 13–16 Favor (*greater
+restoration*) · 17–18 Smiting (*branding smite*) · 19 Summons (*planar ally*) ·
+20 Wind walking (*wind walk*)**.
+
+**Nine Lives Stealer** — Weapon (any sword), very rare (attunement).
+**+2 to attack and damage**; **1d8 + 1 charges**. On a **critical hit against a
+creature with fewer than 100 HP**, a **DC 15 CON save or it is slain instantly**
+(**constructs and undead immune**); a kill **spends a charge**. **At 0 charges
+the property is lost.**
+
+**Oathbow** — Weapon (longbow), very rare (attunement). Declaring a **sworn
+enemy** (one at a time, until it dies or **seven days later at dawn**) grants
+**advantage on ranged attacks against it**, **ignores all cover except total
+cover**, **no disadvantage at long range**, and **+3d6 piercing on a hit** —
+but **disadvantage on attack rolls with every other weapon while it lives**.
+
+**Oil of Etherealness** — Potion, rare. **10 minutes to apply**; covers a Medium
+or smaller creature and its gear (**one extra vial per size category above
+Medium**). Grants ***etherealness* for 1 hour**.
+
+**Oil of Sharpness** — Potion, very rare. **1 minute to apply** to one slashing
+or piercing weapon or **5 pieces of ammunition**: magical and **+3 to attack and
+damage for 1 hour**.
+
+**Oil of Slipperiness** — Potion, uncommon. **10 minutes to apply**: ***freedom
+of movement* for 8 hours**. Or **poured on the ground as an action** for a
+**10-ft square of *grease* lasting 8 hours**.
+
+**Pearl of Power** — Wondrous, uncommon (**attunement by a spellcaster**).
+Action + command word: **regain one expended spell slot**; **a 4th-level or
+higher slot comes back as 3rd level**. **Dawn recharge.**
+
+**Periapt of Health** — Wondrous, uncommon. **Immune to contracting disease**,
+and any current disease is **suppressed while worn**.
+
+**Periapt of Proof against Poison** — Wondrous, rare. **Immune to the poisoned
+condition and to poison damage.**
+
+**Periapt of Wound Closure** — Wondrous, uncommon (attunement). **You stabilise
+automatically whenever you are dying at the start of your turn**, and **Hit Dice
+spent to regain hit points restore double**.
+
+**Philter of Love** — Potion, uncommon. **The next creature you see within
+10 minutes charms you for 1 hour**; if it is of a species and gender you are
+normally attracted to, you regard it as your true love while charmed.
+
+**Pipes of Haunting** — Wondrous, uncommon. **Requires proficiency with wind
+instruments.** **3 charges, 1d3 at dawn.** Action + 1 charge: creatures within
+30 ft that hear it save **DC 15 WIS or be frightened for 1 minute** (**you may
+exempt all non-hostile creatures automatically**); repeatable save; **a success
+grants 24-hour immunity**.
+
+**Pipes of the Sewers** — Wondrous, uncommon (attunement). **Requires wind
+instrument proficiency.** Rats are indifferent to you. **3 charges, 1d3 at
+dawn**: action to play, then a **bonus action to spend 1–3 charges** summoning
+one rat swarm each **if enough rats are within half a mile** (otherwise the
+charge is wasted). Swarms come to the music but are **not controlled**. An
+uncontrolled swarm within 30 ft can be swayed by a **CHA check contested by its
+WIS check** — winning makes it friendly **only while you keep playing each
+round as an action**; losing (or the music stopping) makes it **immune for
+24 hours**.
+
+**Plate Armor of Etherealness** — Armor (plate), legendary (attunement).
+Action + command word for ***etherealness* for 10 minutes**, ending if removed
+or on another command word. **Dawn recharge.**
+
+**Portable Hole** — Wondrous, rare. Unfolds into a **6-ft circle** creating a
+**10-ft-deep extradimensional hole**; **it is on a different plane, so it cannot
+make an open passage**. Folding it shut traps the contents; **weighs next to
+nothing**. A creature inside a folded hole can spend an action on a **DC 10 STR
+check** to force its way out. **Breathing creatures survive 10 minutes.**
+**Nesting with a *bag of holding* or *handy haversack* destroys both and opens a
+one-way Astral gate.**
+
+**Potions** — all *Potion*; drinking is an action unless noted.
+*Animal Friendship* (uncommon) — cast *animal friendship* (DC 13) **at will for
+1 hour** · *Clairvoyance* (rare) — *clairvoyance* · *Climbing* (**common**) —
+climb speed equal to walking speed and **advantage on STR (Athletics) to climb**
+for 1 hour · *Diminution* (rare) — the **reduce** effect for **1d4 hours, no
+concentration** · *Flying* (very rare) — **fly speed equal to walking speed and
+hover** for 1 hour · *Gaseous Form* (rare) — **1 hour, no concentration**,
+endable as a bonus action · *Growth* (uncommon) — the **enlarge** effect for
+1d4 hours · *Heroism* (rare) — **10 temporary HP** and ***bless* without
+concentration** for 1 hour · *Invisibility* (very rare) — 1 hour, **ending early
+if you attack or cast** · *Mind Reading* (rare) — *detect thoughts* (DC 13) ·
+*Resistance* (uncommon) — resistance to one type for 1 hour (**same d10 table as
+*armor of resistance***) · *Speed* (very rare) — ***haste* for 1 minute, no
+concentration*** · *Water Breathing* (uncommon) — 1 hour.
+
+*Potion of Giant Strength* — **rarity varies**; **sets STR for 1 hour**:
+**hill 21 (uncommon) · frost/stone 23 (rare) · fire 25 (rare) · cloud 27 (very
+rare) · storm 29 (legendary)**.
+
+*Potions of Healing* — **healing common 2d4 + 2 · greater uncommon 4d4 + 4 ·
+superior rare 8d4 + 8 · supreme very rare 10d4 + 20**.
+
+*Potion of Poison* (uncommon) — **looks, smells and tastes like a beneficial
+potion**, and **only *identify* reveals it**. **3d6 poison** and a **DC 13 CON
+save or poisoned**, taking **3d6 at the start of each of your turns**; a save at
+the end of each turn **reduces the ongoing damage by 1d6**, ending at 0.
+*(The second deliberately-misidentified item, and a **decaying damage-over-time
+track** rather than a binary end.)*
+
+**Restorative Ointment** — Wondrous, uncommon. **1d4 + 1 doses.** Action to
+swallow or apply: **2d8 + 2 hit points**, **ends the poisoned condition**, and
+**cures any disease**.
+
+**Rings** — all *Ring*.
+*Animal Influence* (rare) — **3 charges, 1d3 at dawn**: *animal friendship*
+(DC 13), *fear* (DC 13, **beasts of INT 3 or lower only**), or *speak with
+animals*.
+*Djinni Summoning* (legendary, attunement) — command word summons a
+**particular djinni** for **as long as you concentrate, up to 1 hour**; it obeys
+**in any language**; **24-hour cooldown**, and **the ring dies if the djinni
+dies**.
+*Elemental Command* (legendary, attunement) — linked to one Elemental Plane;
+**advantage on attacks against its elementals and disadvantage for them against
+you**; **5 charges, 1d4 + 1 at dawn**, **spell DC 17**; **2 charges to
+*dominate monster* an elemental of that type**, plus a plane-specific always-on
+benefit (**air:** fall 60 ft/round unharmed, speak Auran · **earth:** ignore
+rubble and rock difficult terrain, speak Terran · **fire:** fire resistance,
+speak Ignan · **water:** walk on liquids, speak Aquan). **Helping to slay an
+elemental of that plane unlocks a further tier**: air — lightning resistance,
+**fly speed equal to walking speed with hover**, *chain lightning* (3) /
+*gust of wind* (2) / *wind wall* (1) · earth — acid resistance, **move through
+solid earth or rock as difficult terrain** (**shunted out if you end your turn
+inside**), *stone shape* (2) / *stoneskin* (3) / *wall of stone* (3) · fire —
+**immunity to fire**, *burning hands* (1) / *fireball* (2) / *wall of fire* (3)
+· water — breathe underwater and swim at walking speed, *create or destroy
+water* (1) / *control water* (3) / *ice storm* (2) / *wall of ice* (3).
+*(An item that **unlocks new capabilities in response to a narrative
+achievement** — an item with progression.)*
+*Evasion* (rare, attunement) — **3 charges, 1d3 at dawn**; **reaction to turn a
+failed DEX save into a success**.
+*Feather Falling* (rare, attunement) — descend 60 ft/round, **no falling
+damage**.
+*Free Action* (rare, attunement) — as *freedom of movement*'s core clauses.
+*Invisibility* (legendary, attunement) — **action to turn invisible**, ending
+when the ring is removed, when you **attack or cast**, or on a bonus action.
+*Jumping* (uncommon, attunement) — **bonus action to cast *jump* on yourself at
+will**.
+*Mind Shielding* (uncommon, attunement) — **immune to thought-reading,
+lie-detection, alignment- and type-detection magic**; telepathy **only with your
+consent**; **action to make the ring invisible**. **If you die wearing it your
+soul enters the ring** (unless occupied) and can **telepathically address any
+wearer, who cannot refuse**.
+*Protection* (rare, attunement) — **+1 AC and +1 to saving throws**.
+*Regeneration* (very rare, attunement) — **1d6 HP every 10 minutes** while above
+0 HP; **lost body parts regrow in 1d6 + 1 days**.
+*Resistance* (rare, attunement) — resistance to one type, **indicated by the
+gem**: pearl acid · tourmaline cold · garnet fire · sapphire force · citrine
+lightning · jet necrotic · amethyst poison · jade psychic · topaz radiant ·
+spinel thunder.
+*Shooting Stars* (very rare, **attunement outdoors at night**) — in dim light or
+darkness, *dancing lights* and *light* at will; **6 charges, 1d6 at dawn**:
+*faerie fire* (1); **Ball Lightning** (2 charges) creating **one to four 3-ft
+spheres** for up to 1 minute of concentration, each shedding dim light 30 ft,
+movable **30 ft as a bonus action** within 120 ft, discharging at any creature
+coming within 5 ft for a **DC 15 DEX save** — **damage depends inversely on the
+number created: 4 spheres 2d4 · 3 spheres 2d6 · 2 spheres 5d4 · 1 sphere
+4d12**; and **Shooting Stars** (1–3 charges) launching one mote per charge for a
+**15-ft cube, DC 15 DEX save, 5d4 fire**, half on success.
+*Spell Storing* (rare, attunement) — as the **Ioun Stone of Reserve** but
+**5 levels**, spells of **1st–5th**, found with **1d6 − 1** levels stored.
+*Spell Turning* (legendary, attunement) — **advantage on saves against any spell
+targeting only you**; **on a natural 20 against a spell of 7th level or lower
+the spell instead targets the caster**, using the caster's own statistics.
+*Swimming* (uncommon) — **swimming speed 40 ft**.
+*Telekinesis* (very rare, attunement) — cast *telekinesis* at will, **objects
+only, and only unattended ones**.
+*The Ram* (rare, attunement) — **3 charges, 1d3 at dawn**; action + **1–3
+charges**: an attack at **+7** for **2d10 force and a 5-ft push per charge**; or
+a **STR check at +5 per charge** to break an unattended object within 60 ft.
+*Three Wishes* (legendary) — **3 charges**, each casting *wish*; **nonmagical
+when spent**.
+*Warmth* (uncommon, attunement) — **cold resistance**, and you and your gear are
+**unharmed down to −50 °F**.
+*Water Walking* (uncommon) — walk on any liquid.
+*X-ray Vision* (rare, attunement) — action + command word: **see through solid
+matter within 30 ft for 1 minute**, penetrating **1 ft of stone, 1 inch of
+common metal, or 3 ft of wood or dirt**; **blocked by thicker material or a thin
+sheet of lead**. **Reusing it before a long rest requires a DC 15 CON save or
+you gain a level of exhaustion.**
+
+**Robe of Eyes** — Wondrous, rare (attunement). **See in all directions** and
+**advantage on WIS (Perception) checks that rely on sight**; **darkvision
+120 ft**; **see invisible creatures and into the Ethereal Plane to 120 ft**.
+**The robe's eyes cannot be closed or averted** — a ***light* spell cast on the
+robe, or *daylight* within 5 ft, blinds you for 1 minute** (repeatable CON save,
+**DC 11 for *light*, DC 15 for *daylight***).
+*(An item with a **genuine drawback that is not a curse** — a designed
+vulnerability.)*
+
+**Robe of Scintillating Colors** — Wondrous, very rare (attunement).
+**3 charges, 1d3 at dawn**; action + 1 charge for a display until the end of
+your next turn: **bright light 30 ft / dim 30 ft**, **creatures that can see you
+have disadvantage on attack rolls against you**, and anyone in the bright light
+who could see you when it activated saves **DC 15 WIS or is stunned** for the
+duration.
+
+**Robe of Stars** — Wondrous, very rare (attunement). **+1 to saving throws.**
+**Six large stars**: action to pull one off and cast ***magic missile* as a
+5th-level spell**; **1d6 stars reappear daily at dusk** (**the only dusk-based
+refresh in the SRD**). Action to **enter the Astral Plane** with everything you
+carry, and an action to return to your last space.
+
+**Robe of the Archmagi** — Wondrous, legendary (**attunement by a sorcerer,
+warlock or wizard**). **White for good, grey for neutral, black for evil** —
+**you cannot attune to a robe that does not match your alignment**. Unarmoured
+**base AC 15 + DEX modifier**; **advantage on saves against spells and other
+magical effects**; **spell save DC and spell attack bonus each +2**.
+*(A third alignment-gated mechanic, and a **sixth competing AC base provider**.)*
+
+**Robe of Useful Items** — Wondrous, uncommon. Patches detach as an action and
+become real; **when the last is gone it is an ordinary garment**. Always
+**two each** of: dagger, bullseye lantern (filled and lit), steel mirror, 10-ft
+pole, 50 ft coiled hempen rope, sack. Plus **4d4** others, d100: **01–08** bag
+of 100 gp · **09–15** silver coffer worth 500 gp · **16–22** an iron door up to
+10 × 10 ft that **conforms to and hinges itself into an opening** · **23–30**
+10 gems worth 100 gp each · **31–44** 24-ft wooden ladder · **45–51** a riding
+horse with saddlebags · **52–59** a 10-ft-cube pit placeable within 10 ft ·
+**60–68** 4 potions of healing · **69–75** a 12-ft rowboat · **76–83** a spell
+scroll of 1st–3rd level · **84–90** 2 mastiffs · **91–96** a 2 × 4 ft window up
+to 2 ft deep · **97–00** a portable ram.
+
+**Rod of Absorption** — Rod, very rare (attunement). **Reaction to absorb a
+spell targeting only you** (not an area effect), **cancelling it** and storing
+**energy equal to its level**. **Lifetime capacity 50 levels**; a newly found
+rod already holds **1d10**. On attuning you **learn both totals**. A spellcaster
+may **convert stored levels into spell slots, up to 5th level and never above
+your own maximum slot level**. **Becomes nonmagical when full and empty.**
+
+**Rod of Alertness** — Rod, very rare (attunement). **Advantage on WIS
+(Perception) checks and on initiative rolls**; **action to cast *detect evil and
+good*, *detect magic*, *detect poison and disease* or *see invisibility***; and
+a **Protective Aura** — action to plant it for **bright light 60 ft / dim 60 ft
+more** in which you and friendly creatures gain **+1 AC and +1 to saving
+throws** and can **sense the location of invisible hostile creatures** in the
+light. Lasts **10 minutes** or until pulled up; **dawn recharge**.
+
+**Rod of Lordly Might** — Rod, legendary (attunement). A **+3 magic mace**.
+**Six buttons, each a bonus action**, effective until another button or the same
+button is pressed: **1** becomes a *flame tongue* · **2** a **+3 battleaxe** ·
+**3** a **+3 spear** with a 6-ft haft · **4** a **climbing pole up to 50 ft**
+that anchors in granite and unfolds a ladder, bearing **4,000 lb** (more weight
+or poor anchoring reverts it) · **5** a **battering ram granting +10 to STR
+checks** to break barriers · **6** normal form, **indicating magnetic north** and
+**your depth or height relative to the ground**. Three further powers, each
+**dawn-recharged**: *Drain Life* (**DC 17 CON**, **+4d6 necrotic** and **you
+regain half that**), *Paralyze* (**DC 17 STR**, **paralyzed 1 minute** with a
+repeatable save), *Terrify* (action, **DC 17 WIS** for everyone you can see
+within 30 ft, **frightened 1 minute** with a repeatable save).
+
+**Rod of Rulership** — Rod, rare (attunement). Action: chosen creatures within
+**120 ft** save **DC 15 WIS or be charmed for 8 hours**, regarding you as a
+trusted leader. **Ends for any creature harmed by you or your companions, or
+commanded against its nature.** **Dawn recharge.**
+
+**Rod of Security** — Rod, very rare. Action to transport **you and up to 199
+willing creatures** to an **extraplanar paradise of your design**, with food and
+water; **objects taken out vanish**. **Each hour there restores hit points as
+though spending one Hit Die**, and **visitors do not age though time passes
+normally**. Duration: **200 days ÷ the number of creatures, rounded down**.
+**Ten-day cooldown.**
+
+**Rope of Climbing** — Wondrous, uncommon. 60 ft, 3 lb, holds **3,000 lb**.
+Action + command word to animate; **bonus action** to send the far end toward a
+destination, moving **10 ft per turn**. It can **fasten, unfasten, knot, unknot
+or coil itself**; **knotted it shortens to 50 ft and grants advantage on checks
+to climb it**. **AC 20, 20 HP, regaining 1 HP every 5 minutes** while above 0.
+
+**Rope of Entanglement** — Wondrous, rare. 30 ft. Action + command word: a
+creature within 20 ft saves **DC 15 DEX or is restrained**; **bonus action +
+second command word** releases it. Escape: action, **DC 15 STR *or* DEX (the
+target's choice)**. Same **AC 20 / 20 HP / 1 HP per 5 minutes**.
+
+---
+
+## 11. Catalogue: S–Z
+
+**Scarab of Protection** — Wondrous, legendary (attunement). Holding it for
+1 round reveals its nature. **Advantage on saving throws against spells**, and
+**12 charges**: **reaction to turn a failed save against a necromancy spell or a
+harmful undead effect into a success**. **Crumbles when the last charge is
+spent.**
+
+**Scimitar of Speed** — Weapon (scimitar), very rare (attunement).
+**+2 to attack and damage**, and **one attack with it as a bonus action each
+turn**.
+
+**Shield, +1/+2/+3** — Armor (shield), uncommon/rare/very rare. Bonus **in
+addition to the shield's normal +2**.
+
+**Shield of Missile Attraction** — Armor (shield), rare (attunement).
+**Resistance to damage from ranged weapon attacks.**
+**Curse:** you **become the target of any ranged weapon attack made against
+anyone within 10 ft of you**; **removing the shield does not end it**.
+
+**Slippers of Spider Climbing** — Wondrous, uncommon (attunement). Move on
+vertical surfaces and ceilings **hands free**, **climbing speed equal to walking
+speed** — **but not on slippery surfaces such as ice or oil**.
+
+**Sovereign Glue** — Wondrous, legendary. **1d6 + 1 ounces**; **1 ounce covers
+1 square foot**; **sets in 1 minute**. Must be stored in a container **coated
+inside with *oil of slipperiness***. The bond breaks **only** with *universal
+solvent*, *oil of etherealness*, or *wish*.
+
+**Spell Scroll** — Scroll, rarity by spell level. Castable **only if the spell is
+on your class's spell list**; otherwise **unintelligible**. **No material
+components required**; **normal casting time**; **the scroll crumbles once cast**
+(**an interrupted casting does not lose it**). **A spell above your normal
+maximum level requires an ability check with your spellcasting ability, DC =
+10 + the spell's level**; **failure loses the spell with no other effect**.
+
+| Spell level | Rarity | Save DC | Attack bonus |
+|---|---|---|---|
+| Cantrip | Common | 13 | +5 |
+| 1st | Common | 13 | +5 |
+| 2nd | Uncommon | 13 | +5 |
+| 3rd | Uncommon | 15 | +7 |
+| 4th | Rare | 15 | +7 |
+| 5th | Rare | 17 | +9 |
+| 6th | Very rare | 17 | +9 |
+| 7th | Very rare | 18 | +10 |
+| 8th | Very rare | 18 | +10 |
+| 9th | Legendary | 19 | +11 |
+
+**A wizard spell on a scroll can be copied into a spellbook** with an **INT
+(Arcana) check, DC = 10 + the spell's level**; **the scroll is destroyed either
+way**.
+*(The scroll's DC and attack bonus **override the reader's own**, so a cast can
+originate from an item with fully independent statistics.)*
+
+**Spellguard Shield** — Armor (shield), very rare (attunement). **Advantage on
+saves against spells and other magical effects**, and **spell attacks have
+disadvantage against you**.
+
+**Sphere of Annihilation** — Wondrous, legendary. A 2-ft hole in the multiverse
+that **obliterates all matter passing through it** (**artifacts excepted**);
+anything touching it without being engulfed takes **4d10 force**. Stationary
+until controlled: from within 60 ft, an action and a **DC 25 INT (Arcana)
+check** moves it **5 × your INT modifier feet** (minimum 5) in a chosen
+direction; **failure moves it 10 ft toward you**. Entering a creature's space
+forces a **DC 13 DEX save or 4d10 force**. Wresting control from another
+creature is an **INT (Arcana) contest**. Contact with a planar portal or
+extradimensional space, d100: **01–50 the sphere is destroyed** · **51–85 it
+passes through** · **86–00 a spatial rift sends everything within 180 feet,
+including the sphere, to a random plane**.
+
+**Staffs** — all *Staff*; all with a **dawn recharge** and, with two exceptions,
+a **d20 burnout roll when the last charge is spent**.
+
+| Staff | Rarity / attunement | Charges (dawn) | Effects | On expending the last charge |
+|---|---|---|---|---|
+| **Charming** | rare (bard, cleric, druid, sorcerer, warlock, wizard) | 10 (1d8 + 2) | *charm person*, *command* or *comprehend languages* (1 each, your DC); **turn one failed save against an enchantment targeting only you into a success (dawn)**; **reaction + 1 charge to reflect an enchantment you saved against back at its caster** | on a 1, a plain quarterstaff |
+| **Fire** | very rare (druid, sorcerer, warlock, wizard) | 10 (1d6 + 4) | **fire resistance**; *burning hands* (1), *fireball* (3), *wall of fire* (4) | on a 1, crumbles to cinders |
+| **Frost** | very rare (druid, sorcerer, warlock, wizard) | 10 (1d6 + 4) | **cold resistance**; *cone of cold* (5), *fog cloud* (1), *ice storm* (4), *wall of ice* (4) | on a 1, turns to water |
+| **Healing** | rare (bard, cleric, druid) | 10 (1d6 + 4) | *cure wounds* (**1 charge per spell level, up to 4th**), *lesser restoration* (2), *mass cure wounds* (5) | on a 1, vanishes forever |
+| **Striking** | very rare (attunement) | 10 (1d6 + 4) | **+3 quarterstaff**; **up to 3 charges on a hit for +1d6 force each** | on a 1, a plain quarterstaff |
+| **Swarming Insects** | rare (six classes) | 10 (1d6 + 4) | *giant insect* (4), *insect plague* (5); **Insect Cloud** (1 charge) — a 30-ft radius **heavily obscured for everyone but you**, moving with you for 10 minutes, **dispersed by a 10 mph wind** | on a 1, insects consume the staff |
+| **The Python** | uncommon (cleric, druid, warlock) | — | Action + command word to throw it within 10 ft: it becomes a **giant constrictor snake on its own initiative**, mentally commanded within 60 ft. **At 0 HP it dies and the staff shatters**; **reverting early restores its full HP** | — |
+| **The Woodlands** | rare (druid) | 10 (1d6 + 4) | **+2 quarterstaff and +2 to spell attack rolls**; *animal friendship* (1), *awaken* (5), *barkskin* (2), *locate animals or plants* (2), *speak with animals* (1), *speak with plants* (3), *wall of thorns* (6); ***pass without trace* free**; **Tree Form** (1 charge) — a real 60-ft tree, reverting on a command word and **dropping anyone in it** | on a 1, a plain quarterstaff |
+| **Thunder and Lightning** | very rare (attunement) | — (each property **dawn-recharged separately**) | **+2 quarterstaff**; *Lightning* (**+2d6 lightning** on a hit); *Thunder* (**DC 17 CON or stunned** until the end of your next turn, audible 300 ft); *Lightning Strike* (**5 × 120 ft line, DC 17 DEX, 9d6 lightning**); *Thunderclap* (**60 ft, DC 17 CON, 2d6 thunder and deafened 1 minute**, audible 600 ft); *Thunder and Lightning* (**both at once, spending only this property's use**) | — |
+| **Withering** | rare (cleric, druid, warlock) | 3 (1d3) | Magic quarterstaff; **1 charge for +2d10 necrotic** and a **DC 15 CON save or disadvantage for 1 hour on any STR- or CON-based ability check or saving throw** | — |
+| **Power** | very rare (sorcerer, warlock, wizard) | 20 (2d8 + 4) | **+2 quarterstaff**, and **+2 to AC, saving throws and spell attack rolls**; *Power Strike* (1 charge, **+1d6 force**); *cone of cold* (5), *fireball* at 5th level (5), *globe of invulnerability* (6), *hold monster* (5), *levitate* (2), *lightning bolt* at 5th level (5), *magic missile* (1), *ray of enfeeblement* (1), *wall of force* (5) | on a 1, keeps **+2 to attack and damage** and loses everything else; **on a 20 it regains 1d8 + 2 charges** |
+| **The Magi** | legendary (sorcerer, warlock, wizard) | 50 (4d6 + 2) | **+2 quarterstaff and +2 to spell attack rolls**; **Spell Absorption** — advantage on saves against spells, and a **reaction to absorb a spell targeting only you, gaining charges equal to its level** — **but exceeding 50 charges triggers the retributive strike**; *conjure elemental* (7), *dispel magic* (3), *fireball* at 7th (7), *flaming sphere* (2), *ice storm* (4), *invisibility* (2), *knock* (2), *lightning bolt* at 7th (7), *passwall* (5), *plane shift* (7), *telekinesis* (5), *wall of fire* (4), *web* (2); **free: *arcane lock*, *detect magic*, *enlarge/reduce*, *light*, *mage hand*, *protection from evil and good*** | **on a 20 it regains 1d12 + 1 charges** |
+
+**Retributive Strike** (*staff of power* and *staff of the magi*) — action to
+break the staff: a **30-ft-radius** explosion. **You have a 50% chance of being
+instantly transported to a random plane and avoiding it**; otherwise you take
+**force damage equal to 16 × the remaining charges**. Everyone else makes a
+**DC 17 DEX save**, taking **8× / 6× / 4× the charge count** at **≤10 ft /
+11–20 ft / 21–30 ft**, halved on a success.
+*(Damage as a **function of a resource's current value** — the most extreme case
+of a derived number depending on live item state.)*
+
+**Stone of Controlling Earth Elementals** — Wondrous, rare. While touching the
+ground, action + command word to summon an earth elemental. **Dawn recharge.**
+
+**Stone of Good Luck (Luckstone)** — Wondrous, uncommon (attunement).
+**+1 to ability checks and saving throws.**
+
+**Sun Blade** — Weapon (longsword), rare (attunement). A hilt; a **bonus action**
+creates or dismisses the blade. It has **finesse**, and **shortsword or longsword
+proficiency confers proficiency with it**. **+2 to attack and damage**; deals
+**radiant instead of slashing**; **+1d8 radiant against undead**. Emits
+**bright light 15 ft / dim 15 ft**, **and the light is sunlight**; an **action
+adjusts each radius by 5 ft**, between **10 and 30 ft**.
+
+**Sword of Life Stealing** — Weapon (any sword), rare (attunement). On a
+**natural 20**, **+3d6 necrotic** (**not against constructs or undead**) and
+**you gain temporary hit points equal to the extra damage**.
+
+**Sword of Sharpness** — Weapon (any sword dealing slashing), very rare
+(attunement). **Against objects, maximise the weapon damage dice.** On a
+**natural 20** against a creature, **+4d6 slashing**, then **roll another d20 —
+on a 20 you sever a limb** (or part of the body if it has no limbs). Command
+word for **bright light 10 ft / dim 10 ft**.
+
+**Sword of Wounding** — Weapon (any sword), rare (attunement).
+**Hit points lost to this weapon can be regained only through a short or long
+rest** — **not by regeneration, magic or any other means**. **Once per turn**, a
+hit can **wound** the target: at the start of each of its turns it takes
+**1d4 necrotic per wound**, then may make a **DC 15 CON save to end all of
+them**; alternatively it or an adjacent creature can spend an action on a
+**DC 15 WIS (Medicine)** check to end them.
+*(A **healing-channel restriction** — damage tagged so that only certain
+recovery paths apply to it.)*
+
+**Talisman of Pure Good** — Wondrous, legendary (**attunement by a good
+creature**). **A neutral creature touching it takes 6d6 radiant; an evil one
+8d6**, **repeating at the end of each turn it holds or carries it**. A **good
+cleric or paladin** may use it as a **holy symbol** and gains **+2 to spell
+attack rolls**. **7 charges**: action + 1 charge against a visible creature on
+the ground within 120 ft — **if it is evil**, a **DC 20 DEX save or it falls into
+a flaming fissure and is destroyed, leaving no remains**. **Destroyed when the
+last charge is spent.**
+
+**Talisman of Ultimate Evil** — the mirror image: **attunement by an evil
+creature**, **necrotic** damage, **good** creatures targeted, **6 charges**.
+
+**Talisman of the Sphere** — Wondrous, legendary (attunement). **Double your
+proficiency bonus** on INT (Arcana) checks to control a *sphere of
+annihilation*, and while controlling one, an action levitates it **10 ft +
+10 × your INT modifier**.
+
+**Trident of Fish Command** — Weapon (trident), uncommon (attunement).
+**3 charges, 1d3 at dawn**; action + 1 charge to cast *dominate beast* (DC 15)
+**on a beast with an innate swimming speed**.
+
+**Universal Solvent** — Wondrous, legendary. Action to pour: dissolves **up to
+1 square foot of adhesive**, including *sovereign glue*.
+
+**Vicious Weapon** — Weapon (any), rare. On a **natural 20**, the critical hit
+deals **+2d6 of the weapon's damage type**.
+
+**Vorpal Sword** — Weapon (any sword dealing slashing), legendary (attunement).
+**+3 to attack and damage**, and it **ignores resistance to slashing damage**.
+On a **natural 20** against a creature with at least one head, **you cut off a
+head** and it dies if it cannot survive without it. **Immune:** creatures immune
+to slashing, headless creatures, those with **legendary actions**, or any the GM
+rules too large — **those take +6d8 slashing instead**.
+
+**Wands** — all *Wand*; all charge-bearing wands recharge **daily at dawn**, and
+most **crumble to ashes on a d20 roll of 1 after the last charge is spent**.
+
+| Wand | Rarity / attunement | Charges (dawn) | Effects |
+|---|---|---|---|
+| **Binding** | rare (spellcaster) | 7 (1d6 + 1) | *hold monster* (5), *hold person* (2), DC 17; **reaction + 1 charge for advantage on a save against paralysis or restraint, or on a check to escape a grapple** |
+| **Enemy Detection** | rare (attunement) | 7 (1d6 + 1) | 1 charge: for 1 minute **know the direction (not distance) of the nearest hostile creature within 60 ft**, including **ethereal, invisible, disguised or hidden** ones |
+| **Fear** | rare (attunement) | 7 (1d6 + 1) | 1 charge: *command* to flee or grovel (DC 15); 2 charges: a **60-ft cone**, **DC 15 WIS or frightened 1 minute** with the full flee-and-cannot-approach-within-30-ft behaviour |
+| **Fireballs** | rare (spellcaster) | 7 (1d6 + 1) | *fireball* (DC 15) at **3rd level for 1 charge, +1 level per extra charge** |
+| **Lightning Bolts** | rare (spellcaster) | 7 (1d6 + 1) | *lightning bolt* (DC 15), same upcast-by-charge rule |
+| **Magic Detection** | uncommon | 3 (1d3) | *detect magic* |
+| **Magic Missiles** | uncommon | 7 (1d6 + 1) | *magic missile*, **1st level for 1 charge, +1 level per extra charge** |
+| **Paralysis** | rare (spellcaster) | 7 (1d6 + 1) | 1 charge: a ray at a creature within 60 ft, **DC 15 CON or paralyzed 1 minute**, repeatable save |
+| **Polymorph** | very rare (spellcaster) | 7 (1d6 + 1) | *polymorph* (DC 15) |
+| **Secrets** | uncommon | 3 (1d3) | 1 charge: **points at the nearest secret door or trap within 30 ft** |
+| **The War Mage, +1/+2/+3** | uncommon/rare/very rare (spellcaster) | — | **Bonus to spell attack rolls**, and **you ignore half cover on spell attacks** |
+| **Web** | uncommon (spellcaster) | 7 (1d6 + 1) | *web* (DC 15) |
+| **Wonder** | rare (spellcaster) | 7 (1d6 + 1) | 1 charge at a target within 120 ft, then a **d100 wild-magic table** — see below |
+
+**Wand of Wonder** table (spell DC 15; spell ranges become 120 ft; areas must
+include the chosen target; the GM randomises among multiple possible subjects):
+**01–05** *slow* · **06–10** *faerie fire* · **11–15** **you are stunned until
+the start of your next turn** · **16–20** *gust of wind* · **21–25** *detect
+thoughts* on the target, or **1d6 psychic to you** if you targeted no creature ·
+**26–30** *stinking cloud* · **31–33** heavy rain in a 60-ft radius, **lightly
+obscured**, until the start of your next turn · **34–36** an uncontrolled animal
+appears (**d100: 01–25 rhinoceros, 26–50 elephant, 51–100 rat**) · **37–46**
+*lightning bolt* · **47–49** 600 butterflies **heavily obscure** a 30-ft radius
+for 10 minutes · **50–53** *enlarge* on the target, **or on you** if it cannot be
+affected · **54–58** *darkness* · **59–62** grass grows (or grows tenfold) in a
+60-ft radius for 1 minute · **63–65** an unattended object within 120 ft, no
+larger than 10 ft, **vanishes into the Ethereal Plane** · **66–69** **you
+shrink** · **70–79** *fireball* · **80–84** *invisibility* on yourself ·
+**85–87** leaves grow from the target, falling after 24 hours · **88–90**
+**1d4 × 10 one-gp gems** in a 30 × 5 ft line, dealing **1 bludgeoning each,
+divided equally among all creatures in the line** · **91–95** a 30-ft burst;
+**you and everyone who can see** save **DC 15 CON or blinded 1 minute** ·
+**96–97** the target's skin turns bright blue for 1d10 days · **98–00** a
+**DC 15 CON save** (on **you** if you targeted no creature): **failing by 5 or
+more petrifies instantly**; any other failure **restrains and begins
+petrification**, repeated at the end of its next turn. Ended only by *greater
+restoration* or similar.
+
+**Weapon, +1/+2/+3** — Weapon (any), uncommon/rare/very rare. Bonus to **attack
+and damage rolls**.
+
+**Well of Many Worlds** — Wondrous, legendary. Unfolds to a **6-ft circle**
+creating a **two-way portal to another world or plane**, destination chosen by
+the GM. Action to close. **1d8-hour cooldown.**
+
+**Wind Fan** — Wondrous, uncommon. Action to cast *gust of wind* (DC 13).
+**Nominally dawn-recharged**, but it *can* be reused early at a **cumulative 20%
+chance per use of failing and tearing into useless tatters**.
+*(A resource with an **optional overuse gamble** rather than a hard lock.)*
+
+**Winged Boots** — Wondrous, uncommon (attunement). **Flying speed equal to your
+walking speed**, for **up to 4 hours total**, spendable in chunks of **at least
+1 minute**. Running out mid-air means **descending 30 ft per round** until you
+land. **Regain 2 hours of flight for every 12 hours unused.**
+
+**Wings of Flying** — Wondrous, rare (attunement). Action + command word for
+**flying speed 60 ft** for **1 hour** or until dismissed; then a **1d12-hour
+cooldown**.
+
+---
+
+## 12. Sentient magic items (p251–252)
+
+**"Sentient magic items function as NPCs under the GM's control."** Any
+**activated** property is under the **item's** control, not the wielder's; a
+strained relationship lets the item **suppress its properties or turn them
+against the wielder**. **Consumables (potions, scrolls) are never sentient.**
+
+A sentient item has **INT, WIS and CHA scores** (roll 4d6 drop lowest), a
+**communication mode** (**d100: 01–60 transmits emotion · 61–90 speaks, reads and
+understands languages · 91–00 that plus telepathy with its bearer**), **senses**
+(**d4: 1** hearing and normal vision 30 ft · **2** 60 ft · **3** 120 ft ·
+**4** hearing and **darkvision** 120 ft), an **alignment** (d100: 01–15 LG,
+16–35 NG, 36–50 CG, 51–63 LN, 64–73 N, 74–85 CN, 86–89 LE, 90–96 NE, 97–00 CE),
+and optionally a **special purpose** (**d10: 1** Aligned · **2** Bane ·
+**3** Protector · **4** Crusader · **5** Templar · **6** Destroyer · **7** Glory
+Seeker · **8** Lore Seeker · **9** Destiny Seeker · **10** Creator Seeker).
+
+**Conflict** — when the wielder acts against the item's alignment or purpose,
+the item makes a **CHA check contested by the wielder's CHA check**. Winning, it
+may demand to be carried at all times, that repugnant possessions be discarded,
+that its goals take priority, or that it be given to someone else. If refused,
+it may **block attunement**, **suppress properties**, or **attempt to take
+control**: the wielder makes a **CHA saving throw, DC = 12 + the item's CHA
+modifier**, and on a failure is **charmed by the item for 1d12 hours**, repeating
+the save whenever it takes damage. **Dawn cooldown on the control attempt.**
+
+*Engine note:* this is the SRD explicitly modelling **an item as an agent with
+its own opposed rolls against its owner**. It is a genuinely multiplayer,
+DM-facing feature and a natural fit for the theatrical layer — but it sits
+**outside a deterministic rules engine** and should be surfaced as DM narration
+plus a contested-check helper, nothing more.
+
+## 13. Artifacts (p252–253)
+
+**Orb of Dragonkind** — Wondrous, **artifact** (attunement). Attuning and
+speaking the command word requires a **DC 15 CHA check**: success grants control
+for as long as you stay attuned; **failure charms you for as long as you stay
+attuned**, and while charmed **you cannot voluntarily end attunement** and the
+orb **casts *suggestion* on you at will (DC 18)**.
+**Random Properties:** **2 minor beneficial, 1 minor detrimental, 1 major
+detrimental** *(the tables themselves are absent from this SRD — a dangling
+reference)*.
+**Spells:** **7 charges, 1d4 + 3 daily at dawn**, DC 18: *cure wounds* at
+5th level (3), *daylight* (1), *death ward* (2), *scrying* (3); ***detect magic*
+free**.
+**Call Dragons:** action to send a telepathic call **40 miles in all
+directions**; **evil dragons feel compelled to come by the most direct route**
+(deities excepted, and arrivals may well be hostile). **One-hour cooldown.**
+**Destroying it:** impervious to almost everything **including dragon attacks and
+breath**, but destroyed by ***disintegrate*** or **one good hit from a +3 magic
+weapon**.
+
+**The SRD contains exactly one artifact.** Artifacts are a rarity tier above
+legendary, with **random beneficial and detrimental property tables that this
+edition does not include**.
+
+---
+
+## 14. What the magic-item section demands of the engine
+
+1. **Attunement is a real resource** — three slots, live prerequisites (class,
+   race, alignment, spellcasting, and even *other attuned items*), proximity and
+   ownership invalidation, and cursed items that cannot be released.
+2. **Body slots and item sets** — one cloak, one item of headwear, paired boots
+   and gloves, and a **set of four** horseshoes.
+3. **More refresh triggers than short and long rest** — **dawn** dominates
+   (usually `regains 1dN expended charges`), plus **dusk** (*robe of stars*),
+   fixed **cooldowns in days** (figurines, *rod of security*),
+   **cumulative-duration stopwatches** (*boots of speed*, *winged boots*,
+   *candle of invocation*), and **finite lifetimes ending in destruction**
+   (*chime of opening*, *gem of brightness*, *scarab of protection*).
+4. **Burnout is a rule, not an edge case** — nearly every staff and wand rolls a
+   **d20 on spending its last charge**, with a **1** destroying or degrading it
+   and, for two staffs, a **20** restoring charges.
+5. **Items cast spells with their own statistics** — a fixed save DC and attack
+   bonus (spell scrolls, *circlet of blasting*), or the wielder's, or **the
+   original caster's** (*ring of spell storing*, *Ioun stone of reserve*). A
+   cast record therefore needs an explicit **statistics source**.
+6. **Items override weapon and character properties** — *shillelagh*-style
+   ability substitution, *mithral armor* deleting a Stealth penalty, *elven
+   chain* waiving proficiency, *sun blade* changing a damage type, *vorpal
+   sword* ignoring a resistance.
+7. **Ability scores are `set`, `add` and `cap-raise` operations** — and the
+   manuals and tomes prove that **the cap itself is mutable state**, while the
+   *Ioun stone of mastery* proves **the proficiency bonus is derived**.
+8. **Reaction-based interception is pervasive** — *ring of evasion*, *rod of
+   absorption*, *scarab of protection*, *gloves of missile snaring*,
+   *arrow-catching shield*, *staff of the magi*. The save and attack pipelines
+   need documented interruption points.
+9. **Identification can lie** — *potion of poison* and *dust of sneezing and
+   choking* defeat *identify*; *armor of vulnerability* hides its curse until
+   attunement. Items need a **true** and an **apparent** identity.
+10. **Some items simply do not fit an effect vocabulary** — the *apparatus of
+    the crab*'s ten-lever control surface, the *deck of many things*, the
+    *wand of wonder*'s d100 table, sentient items acting as NPCs. These should
+    be **explicitly out of scope**, represented as descriptive text plus a DM
+    roll helper, rather than half-modelled.
