@@ -77,6 +77,68 @@ end of the read.
     combat and NPCs out of scope these are largely inert, but they prove the
     data model needs a **summoned-entity** concept.
 
+*Shapes found later in the alphabet, added as they appeared:*
+
+18. **Player-authored triggers** — *Glyph of Warding*, *Magic Mouth*,
+    *Programmed Illusion*, *Symbol*, *Contingency*, *Sequester*, *Imprisonment*.
+    All take a **condition written by the player at cast time**, several with
+    explicit constraints on what the predicate may reference (visual or audible
+    within 30 ft; observable qualities, never level/class/hit points). This is
+    the strongest argument in the whole SRD for a first-class, constrained
+    **trigger language** rather than hard-coded per-spell logic.
+19. **Damage as accumulating state** — *Delayed Blast Fireball* grows by 1d6 per
+    round until detonation.
+20. **Effect selection by current hit points** — *Color Spray* and *Sleep* spend
+    a rolled HP pool against a sorted target list; *Divine Word*, *Power Word
+    Kill* and *Power Word Stun* branch on HP thresholds. Current HP is an
+    **input**, not just a resource.
+21. **Roll replacement** — *Glibness* substitutes a flat 15 for a d20 result.
+    Distinct from a bonus, advantage or a reroll.
+22. **Damage budgets as termination conditions** — *Guardian of Faith* vanishes
+    after dealing 60 total damage.
+23. **Divisible pools allocated by the caster** — *Mass Heal*'s 700 hit points.
+    An interactive allocation, not a roll.
+24. **Nested random tables** — *Confusion* (d10 behaviour → d8 direction →
+    random target), *Prismatic Spray* (d8 with a recursive entry), *Teleport*
+    (d100 with a re-roll-on-mishap loop), *Reincarnate* (d100 race table).
+25. **Mid-resolution interception** — *Shield* (+5 AC **after** the attack roll),
+    *Sanctuary* (a save **before** target selection commits), *Mirror Image*
+    (a defender's d20 redirecting the attack), *Death Ward* (a hook before HP
+    reaches 0), *Counterspell* (interrupting a cast in progress). The attack and
+    cast pipelines must be interruptible at several named points.
+26. **Retroactive rewriting** — *Wish* can force a reroll of **any roll made
+    within the last round**, including another creature's resolved save.
+27. **Saves modified by narrative inputs** — *Scrying*'s DC shifts by how well
+    you know the target and what physical connection you hold.
+28. **Scripted multi-round timelines** — *Storm of Vengeance* runs a different
+    effect on each of rounds 1–10.
+29. **Caster-composed areas** — *Fire Storm*, *Wall of Force*, *Wall of Ice*,
+    *Wall of Stone* are assembled from unit cubes or panels with adjacency
+    constraints, authored at cast time.
+30. **Objects as spell targets with their own HP** — walls of ice and stone have
+    AC and HP per section and can be breached.
+31. **Linked player-to-player effects** — *Warding Bond* redirects damage from
+    one character to another; *Freezing Sphere*'s held globe can be handed over;
+    *Instant Summons* reports who stole your item.
+32. **Non-linear upcast steps** — *Flame Blade* and *Spiritual Weapon* scale per
+    **two** slot levels; *Magic Weapon* jumps +1/+2/+3 at 2nd/4th/6th;
+    *Conjure Animals* multiplies only at 5th/7th/9th; *Bestow Curse*, *Dominate
+    \**, *Geas*, *Mass Suggestion* and *Planar Binding* change **duration
+    tiers**. Upcasting is a lookup, not a formula.
+33. **Two-axis cantrip scaling** — usually damage dice, but *Eldritch Blast*
+    scales the **number of beams** (and therefore the number of attack rolls).
+34. **Spell level vs. slot level are distinct** — *Globe of Invulnerability*
+    compares against the **spell's own level**, while *Counterspell* and
+    *Dispel Magic* compare against the **slot used**. A cast record must carry
+    both.
+35. **Permanence by repetition** — *Arcanist's Magic Aura* (30 days),
+    *Forbiddance* (30 days), *Guards and Wards* (1 year), *Private Sanctum*
+    (1 year), *Teleportation Circle* (1 year), and concentration-to-permanence
+    for *Flesh to Stone*, *Wall of Stone* and *True Polymorph*.
+36. **Effects that alter identity** — *Reincarnate* swaps a character's race and
+    racial traits, so a race must be a detachable effect bundle rather than
+    something baked in at creation.
+
 ---
 
 ## A
@@ -2255,3 +2317,282 @@ vial.
 **1 hour**. Links **up to eight willing creatures** telepathically, **regardless
 of shared language**, **over any distance but not across planes**. **No effect on
 INT ≤ 2.**
+
+**Teleport** — 7th conjuration · 1 action · 10 ft · **V only** · Instantaneous.
+You and **up to eight willing creatures**, or **a single object fitting in a
+10-ft cube and not held by an unwilling creature**, to a destination **known to
+you on the same plane**. **The GM rolls d100** against your familiarity:
+
+| Familiarity | Mishap | Similar area | Off target | On target |
+|---|---|---|---|---|
+| Permanent circle | — | — | — | **01–100** |
+| Associated object | — | — | — | **01–100** |
+| Very familiar | 01–05 | 06–13 | 14–24 | 25–100 |
+| Seen casually | 01–33 | 34–43 | 44–53 | 54–100 |
+| Viewed once | 01–43 | 44–53 | 54–73 | 74–100 |
+| Description | 01–43 | 44–53 | 54–73 | 74–100 |
+| False destination | 01–50 | 51–100 | — | — |
+
+**Definitions:** *permanent circle* = a circle whose sigil sequence you know ·
+*associated object* = an object taken from the destination **within the last six
+months** · *very familiar* = been there very often, carefully studied, or can
+see it now · *seen casually* = seen more than once but not well · *viewed once*
+= seen once, possibly magically · *description* = known only from another's
+account or a map · *false destination* = a place that does not exist.
+**Off target** = **1d10 × 1d10 percent** of the intended distance away, in a
+**random d8 compass direction**. **Similar area** = a visually or thematically
+similar place, generally the nearest, **but with no range limit**.
+**Mishap** = **3d10 force damage to each traveller** and **the GM rerolls the
+table** (mishaps can repeat, dealing damage each time).
+*(A **percentile table with a caster-declared familiarity input** — a
+DM-facing dropdown plus a d100 roll, and a rule that can recurse.)*
+
+**Teleportation Circle** — 5th conjuration · **1 minute** · 10 ft · **V, M\*\***
+(rare chalks and gem-infused inks **50 gp, consumed**) · **1 round**.
+A **10-ft-diameter** portal to a **permanent circle whose sigil sequence you
+know** on the same plane, open **until the end of your next turn**.
+**You learn two sigil sequences** on gaining the spell (GM's choice), and can
+memorise more after **1 minute of study**. **Casting it in the same place daily
+for a year creates a permanent circle.**
+
+**Thaumaturgy** — Transmutation cantrip · 1 action · 30 ft · **V only** ·
+**up to 1 minute**. One of: **voice three times as loud** for 1 minute; flames
+flicker, brighten, dim or change colour for 1 minute; harmless ground tremors
+for 1 minute; an instantaneous sound from a chosen point; **an unlocked door or
+window flies open or slams shut**; your eyes change appearance for 1 minute.
+**Up to three 1-minute effects active at once**, dismissible as an action.
+*(Along with *Prestidigitation* and *Druidcraft*, a direct match for the
+theatrical scene-effect vocabulary already in the app.)*
+
+**Thunderwave** — 1st evocation · 1 action · **Self (15-ft cube)** · V, S ·
+Instantaneous. save CON, **2d8 thunder** and **pushed 10 ft away**; half damage
+and no push on a success. **Unsecured objects entirely in the area are pushed
+10 ft automatically**, and a **boom is audible to 300 ft**.
+↑ **+1d8** per slot above 1st.
+
+**Time Stop** — 9th transmutation · 1 action · Self · **V only** ·
+Instantaneous. **You take 1d4 + 1 turns in a row** while no time passes for
+anyone else. **Ends immediately if any action or effect you create affects
+another creature or an object worn or carried by someone else**, or if you move
+**more than 1,000 ft** from where you cast it.
+
+**Tiny Hut** — 3rd evocation **(R)** · 1 minute · **Self (10-ft-radius
+hemisphere)** · V, S, M · **8 hours**. An immobile dome; **ends if you leave**.
+Holds **nine Medium or smaller creatures besides you**; **fails if the area
+contains a larger creature or more than nine**. Those inside at casting pass
+freely; **everything else is barred**, and **spells and magical effects cannot
+cross or be cast through it**. Comfortable and dry inside regardless of weather;
+**commandable to dim or dark**; **opaque from outside, transparent from inside**,
+in a colour you choose.
+
+**Tongues** — 3rd divination · 1 action · Touch · **V, M** (no somatic) ·
+**1 hour**. Understand **any spoken language heard**, and **anyone who knows at
+least one language understands the target's speech**.
+
+**Transport via Plants** — 6th conjuration · 1 action · 10 ft · V, S ·
+**1 round**. Links a **Large or larger inanimate plant** in range to another
+plant **at any distance on the same plane** that you have **seen or touched**.
+**Any creature** can step through using **5 ft of movement**.
+
+**Tree Stride** — 5th conjuration · 1 action · Self · V, S · **conc, 1 minute**.
+Enter a **living tree at least your size** (**5 ft of movement**) and step out of
+**another tree of the same kind within 500 ft** (**another 5 ft**). You
+**instantly know the location of all same-kind trees within 500 ft**. With no
+movement left you reappear beside the tree you entered. **Once per round**, and
+**you must end each turn outside a tree**.
+
+**True Polymorph** — 9th transmutation · 1 action · 30 ft · V, S, M · **conc,
+1 hour**. Creature→creature, creature→object, or object→creature (the object
+**unworn and uncarried**). **Concentrating the full duration makes it permanent
+until dispelled.** No effect on a shapechanger or a creature at 0 HP. Unwilling
+creatures save **WIS**.
+*Creature into creature* — any kind of **CR ≤ the target's CR or level**; all
+statistics including mental scores replaced; alignment and personality retained;
+assumes the new form's HP with the same carry-over rules as *Polymorph*; gear
+melds and is unusable.
+*Object into creature* — any creature **no larger than the object** and of
+**CR 9 or lower**, friendly and acting on your turns. **If the spell becomes
+permanent you lose control of it**, and its attitude depends on your treatment.
+*Creature into object* — it transforms with everything it wears and carries,
+takes the object's statistics, and **has no memory of the time spent as an
+object**.
+
+**True Resurrection** — 9th necromancy · **1 hour** · Touch · V, S, **M\*\***
+(holy water and diamonds **≥25,000 gp, consumed**) · Instantaneous.
+**Dead up to 200 years**, **not of old age**. Full hit points; **closes all
+wounds, neutralises poison, cures all diseases and lifts any curses present at
+death**; **replaces damaged or missing organs and limbs**; **can provide an
+entirely new body** if the original is gone (you must speak the creature's
+name). **No ordeal penalty** — unlike *raise dead* and *resurrection*.
+
+**True Seeing** — 6th divination · 1 action · Touch · V, S, **M\*\*** (eye
+ointment **25 gp, consumed**) · **1 hour**. **Truesight**, **notices magically
+hidden secret doors**, and **sees into the Ethereal Plane**, all to **120 ft**.
+
+**True Strike** — Divination cantrip · 1 action · 30 ft · **S only** ·
+**conc, up to 1 round**. **Advantage on your first attack roll against that
+target on your next turn.**
+
+---
+
+## U–Z
+
+**Unseen Servant** — 1st conjuration **(R)** · 1 action · 60 ft · V, S, M ·
+**1 hour**. An invisible, mindless force: **AC 10, 1 hit point, STR 2**,
+**cannot attack**; the spell ends at 0 HP. **Bonus action once per turn** to move
+it **15 ft** and interact with an object — fetching, cleaning, mending, folding,
+lighting fires, serving food, pouring wine. It completes a task then waits.
+**Ends if commanded more than 60 ft from you.**
+
+**Vampiric Touch** — 3rd necromancy · 1 action · Self · V, S · **conc,
+1 minute**. Melee spell atk, **3d6 necrotic**, and **you regain hit points equal
+to half the necrotic damage dealt**. **Action to repeat each turn.**
+↑ **+1d6** per slot above 3rd.
+*(Healing derived from damage actually dealt — the two rolls are linked, so the
+damage result must be available to a subsequent healing computation.)*
+
+**Vicious Mockery** — Enchantment cantrip · 1 action · 60 ft · **V only** ·
+Instantaneous. The target must **hear you (understanding is not required)**;
+save WIS or **1d4 psychic** and **disadvantage on its next attack roll before
+the end of its next turn**. [cantrip-scale] 2d4/3d4/4d4.
+
+**Wall of Fire** — 4th evocation · 1 action · 120 ft · V, S, M · **conc,
+1 minute**. **60 × 20 × 1 ft**, or a **20-ft-diameter ring, 20 ft high**;
+opaque. On appearing: save DEX, **5d8 fire**, half on success. **One side, chosen
+at cast time**, deals **5d8 fire** to anyone ending a turn within 10 ft of it or
+inside the wall, and on entering the wall first time on a turn; **the other side
+deals nothing**. ↑ **+1d8** per slot above 4th.
+
+**Wall of Force** — 5th evocation · 1 action · 120 ft · V, S, M · **conc,
+10 minutes**. Any orientation, free-floating or resting; a **hemisphere or
+sphere of radius ≤10 ft**, or **ten contiguous 10 × 10 ft panels**; **¼ inch
+thick**. Creatures in its path are **pushed to a side of your choice**.
+**Nothing physically passes through**; **immune to all damage**; **cannot be
+dispelled by *dispel magic***; ***disintegrate* destroys it instantly**.
+**Extends into the Ethereal Plane.**
+
+**Wall of Ice** — 6th evocation · 1 action · 120 ft · V, S, M · **conc,
+10 minutes**. A hemisphere/sphere of radius ≤10 ft, or **ten contiguous 10-ft
+square panels**, **1 ft thick**. Creatures in its path are pushed aside and save
+**DEX**, taking **10d6 cold**, half on success. **The wall is an object: AC 12,
+30 HP per 10-ft section, vulnerable to fire.** Destroying a section leaves a
+**sheet of frigid air**: moving through it first time on a turn is a **CON save
+for 5d6 cold**, half on success. ↑ **appearance damage +2d6 and frigid-air
+damage +1d6** per slot above 6th.
+
+**Wall of Stone** — 5th evocation · 1 action · 120 ft · V, S, M · **conc,
+10 minutes**. **Ten contiguous 10 × 10 ft panels at 6 inches thick**, or
+**10 × 20 ft panels at 3 inches**. Creatures in its path are pushed aside; one
+that would be **fully enclosed** may make a **DEX save to use its reaction to
+move its speed** clear. Any shape, need not be vertical or founded, **but must
+merge with and be supported by existing stone**. **Spans over 20 ft require
+halving each panel** for supports. **AC 15 and 30 HP per inch of thickness**;
+destroying a panel may collapse connected ones. **Concentrating the full
+duration makes it permanent and undispellable.**
+
+**Wall of Thorns** — 6th conjuration · 1 action · 120 ft · V, S, M · **conc,
+10 minutes**. **60 × 10 × 5 ft**, or a **20-ft-diameter circle up to 20 ft high
+and 5 ft thick**; **blocks line of sight**. On appearing: save DEX, **7d8
+piercing**, half on success. Moving through costs **4 ft per foot**, and entering
+it first time on a turn or ending a turn there is a **DEX save for 7d8
+slashing**, half on success. ↑ **both damages +1d8** per slot above 6th.
+
+**Warding Bond** — 2nd abjuration · 1 action · Touch · **M\*** (**a pair of
+platinum rings ≥50 gp each, worn by both of you for the duration**) · **1 hour**.
+While the target is within **60 ft**: **+1 AC and +1 to saving throws**, and
+**resistance to all damage** — but **you take the same damage it takes**.
+**Ends if you drop to 0 HP**, if you separate by more than 60 ft, if recast on
+either party, or by your action.
+*(An explicit **damage-redirection link between two player characters** — the
+purest multiplayer mechanic in the spell list, and one that needs a real-time
+notification to the bonded player.)*
+
+**Water Breathing** — 3rd transmutation **(R)** · 1 action · 30 ft · V, S, M ·
+**24 hours**. **Up to ten** willing creatures breathe underwater while **also
+retaining normal respiration**.
+
+**Water Walk** — 3rd transmutation **(R)** · 1 action · 30 ft · V, S, M ·
+**1 hour**. **Up to ten** willing creatures move across **any liquid surface**
+— water, acid, mud, snow, quicksand, **lava** (**heat damage still applies**) —
+as if it were solid ground. A **submerged** target is carried to the surface at
+**60 ft per round**.
+
+**Web** — 2nd conjuration · 1 action · 60 ft · V, S, M · **conc, 1 hour**.
+A **20-ft cube** of difficult terrain that **lightly obscures**. **Must be
+anchored between two solid masses or layered across a surface**, or it collapses
+and the spell ends at the start of your next turn; layered webs are **5 ft
+deep**. Starting a turn in or entering the webs: save DEX or **restrained** while
+it remains in them. Escape: action, **STR check vs. your spell save DC**.
+**Flammable — any 5-ft cube exposed to fire burns away in 1 round, dealing
+2d4 fire to anyone starting its turn in the fire.**
+
+**Weird** — 9th illusion · 1 action · 120 ft · V, S · **conc, 1 minute**.
+**30-ft-radius sphere**, save WIS or **frightened**. At the end of each
+frightened creature's turns, a further WIS save or **4d10 psychic**; **a success
+ends the spell for that creature**. *(The mass version of *Phantasmal Killer*.)*
+
+**Wind Walk** — 6th transmutation · **1 minute** · 30 ft · V, S, M ·
+**8 hours**. You and **up to ten** willing creatures become clouds:
+**flying speed 300 ft** and **resistance to nonmagical weapon damage**. The
+**only** available actions are **Dash** or **revert**. **Reverting takes 1 minute,
+during which you are incapacitated and immobile**; changing back likewise. A
+creature aloft when the spell ends **descends 60 ft per round for 1 minute and
+lands safely**; **if it has not landed by then it falls the rest of the way**.
+
+**Wind Wall** — 3rd evocation · 1 action · 120 ft · V, S, M · **conc,
+1 minute**. Up to **50 × 15 × 1 ft**, shaped freely along **one continuous path
+on the ground**. On appearing: save **STR**, **3d8 bludgeoning**, half on
+success. **Keeps fog, smoke and gases at bay**; **Small or smaller flying
+creatures and objects cannot pass**; loose lightweight material flies upward;
+**arrows, bolts and ordinary projectiles are deflected upward and automatically
+miss** (**not** boulders from giants or siege engines); **gaseous creatures
+cannot pass**.
+
+**Wish** — 9th conjuration · 1 action · Self · **V only** · Instantaneous.
+**Basic use:** duplicate **any spell of 8th level or lower**, ignoring all
+requirements **including costly components**. **No stress cost for this use.**
+**Or** one of:
+· create a **nonmagical object worth up to 25,000 gp**, no dimension over 300 ft
+· **up to twenty** creatures regain **all hit points** and have every effect
+  listed under *greater restoration* ended
+· **up to ten** creatures gain **resistance to a damage type**
+· **up to ten** creatures gain **immunity to a single spell or magical effect for
+  8 hours**
+· **force a reroll of any roll made within the last round (including your last
+  turn)** — you may impose **advantage or disadvantage** on the reroll and
+  **choose whether to keep it or the original**
+Anything beyond these is GM adjudication, with escalating risk of failure,
+partial success or perverse literalism.
+**Stress (any use other than duplicating a spell):** until you finish a long
+rest, **every spell you cast deals you 1d10 necrotic per spell level**, which
+**cannot be reduced or prevented**; your **Strength drops to 3 for 2d4 days**
+(each day of rest and light activity **removes 2 days**); and there is a
+**33% chance you can never cast *wish* again**.
+*(The reroll clause is the most extreme instance of the post-roll modification
+window — it reaches **backwards a full round** and can rewrite another player's
+resolved save. Any roll-history model must therefore keep at least one round of
+resolved rolls addressable and reversible.)*
+
+**Word of Recall** — 6th conjuration · 1 action · 5 ft · **V only** ·
+Instantaneous. You and **up to five willing creatures within 5 ft** teleport to
+a **previously designated sanctuary**. **No effect without a prepared
+sanctuary**, and the sanctuary must be **dedicated or strongly linked to your
+deity** — casting it elsewhere to designate a sanctuary **does nothing**.
+
+**Zone of Truth** — 2nd enchantment · 1 action · 60 ft · V, S · **10 minutes**.
+A **15-ft-radius sphere**. Entering first time on a turn or starting there:
+save **CHA** or **cannot speak a deliberate lie** inside the radius.
+**You know whether each creature succeeded or failed.** An affected creature
+**knows it is affected** and can be evasive or decline to answer, **as long as it
+stays within the truth**.
+*(A rare "the caster learns the save result" clause — save outcomes are normally
+not disclosed, so result visibility is a per-effect property.)*
+
+---
+
+## Spell descriptions: read complete (p114–193)
+
+The full alphabetical list has been read end to end. The recurring-shape
+catalogue at the top of this file was extended as new shapes appeared; the
+consolidated version, merged with the class and equipment findings, lives in
+`90-vocabulary-findings.md`.

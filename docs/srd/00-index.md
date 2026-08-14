@@ -27,9 +27,9 @@ with the whole picture in hand.
 | 62–74 | Equipment | `04-equipment.md` | **complete** |
 | 75 | Feats | `05-feats.md` | **complete** (1 feat only) |
 | 76–89 | Using ability scores, adventuring | `06-core-rules.md` | **complete** |
-| 90–104 | Combat, spellcasting rules | `07-combat-spellcasting.md` | pending |
-| 105–113 | Spell lists | `08-spells.md` | pending |
-| 114–193 | Spell descriptions (~320) | `08-spells.md` | pending |
+| 90–104 | Combat, spellcasting rules | `07-combat-spellcasting.md` | **complete** |
+| 105–113 | Spell lists | `08-spell-lists.md` | **complete** |
+| 114–193 | Spell descriptions (~320) | `08b-spell-descriptions.md` | **complete** |
 | 194–205 | Traps, madness, poisons, objects | `09-dm-content.md` | pending |
 | 206–253 | Magic items | `10-magic-items.md` | pending |
 
