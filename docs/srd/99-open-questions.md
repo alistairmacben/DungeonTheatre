@@ -106,6 +106,32 @@ roll again). Each needs a UI flow, and together they argue for one generic
 are pure economy reference data. Include as shop/ledger content, or omit from
 the rules dataset?
 
+**Question 12 — [BLOCKER] the conditions appendix is missing from the PDF.**
+"Appendix PH-A" is referenced by name on ten pages and its conditions are
+invoked by nearly every class, spell, trap, poison and magic item — but the
+appendix itself is **not in the 253-page document you gave me**, which ends with
+the *Orb of Dragonkind*. Verified by full-text search across every page.
+
+**Undefined but required:** blinded, charmed, deafened, **exhaustion (all six
+levels)**, frightened, grappled, incapacitated, invisible, paralyzed, petrified,
+poisoned, prone, restrained, stunned, unconscious.
+
+Without these the condition system cannot be built at all. Three ways forward:
+**(a)** you supply the missing appendix (it is in the full SRD 5.1 release and
+in the SRD 5.2 CC-BY document); **(b)** I write the condition definitions from
+the rules-as-referenced elsewhere in this document, which would be incomplete
+and partly guesswork; or **(c)** conditions become DM-narrated labels with no
+mechanical effect, which would gut the HUD. **My strong recommendation is (a)** —
+it is a two-page document and everything else depends on it.
+
+**Question 13 — the SRD contains exactly one statblock.** The *avatar of death*
+(summoned by the *deck of many things*) is the only creature statblock in this
+edition. Everything else that references creature statistics — Wild Shape, all
+the *conjure* spells, *polymorph*, *find familiar*, *find steed*, figurines,
+*bag of tricks*, *horn of Valhalla*, *animate dead* — points at content that was
+stripped out with the bestiary. This confirms the Q1 answer (DM-supplied
+statblocks, deferred to v3) applies far more widely than just Wild Shape.
+
 ---
 
 ## D. Things I expect to resolve by finishing the read
@@ -116,14 +142,22 @@ Recorded so I don't forget to check:
 - ~~Whether the SRD includes backgrounds~~ — **done**, exactly one (Acolyte)
 - ~~Whether feats are a full list or just the variant rule~~ — **done**,
   the rule plus exactly one feat (Grappler), `05-feats.md`
-- The full **conditions** appendix and exhaustion track *(referenced constantly
-  — falling → prone, forced march → exhaustion, heavily obscured → blinded,
-  net → restrained. Appendix PH-A, not yet reached.)*
-- Whether **disease** is defined as a mechanic or left to the DM *(Recuperating
-  and Lesser Restoration both reference it)*
-- Magic item **attunement** limit and the rarity/bonus conventions
-- Spell **component** rules including material component costs
-- Whether magic items introduce a **third refresh trigger ("at dawn")** beyond
-  short and long rest
-- Whether **initiative** is defined outside the combat section (out of scope,
-  but the DEX section references it)
+- ~~The full **conditions** appendix and exhaustion track~~ — **NOT IN THE
+  DOCUMENT.** See Question 12 above. This is the one item the read could not
+  close.
+- ~~Whether **disease** is defined as a mechanic or left to the DM~~ — **done**:
+  the SRD explicitly declines a unified rule ("primarily a plot device") and
+  gives three worked examples plus *contagion*'s six. See `09-dm-content.md` §2.
+- ~~Magic item **attunement** limit and the rarity/bonus conventions~~ —
+  **done**: three slots, and the rarity↔bonus ladders are in
+  `10-magic-items.md` §5.
+- ~~Spell **component** rules including material component costs~~ — **done**,
+  `07-combat-spellcasting.md` §6; costed and consumed components are flagged
+  per-spell in `08b-spell-descriptions.md`.
+- ~~Whether magic items introduce a third refresh trigger~~ — **done**, and it
+  is more than one: **dawn** (dominant), **dusk**, multi-day cooldowns,
+  cumulative-duration stopwatches, and finite lifetimes.
+- ~~Whether **initiative** is defined outside the combat section~~ — **done**:
+  it is defined in the combat section as a **DEX ability check**, and referenced
+  from the Dexterity entry. Out of scope for v2, but note the *rod of alertness*
+  grants advantage on it.

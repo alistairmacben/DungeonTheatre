@@ -30,8 +30,29 @@ with the whole picture in hand.
 | 90–104 | Combat, spellcasting rules | `07-combat-spellcasting.md` | **complete** |
 | 105–113 | Spell lists | `08-spell-lists.md` | **complete** |
 | 114–193 | Spell descriptions (~320) | `08b-spell-descriptions.md` | **complete** |
-| 194–205 | Traps, madness, poisons, objects | `09-dm-content.md` | pending |
-| 206–253 | Magic items | `10-magic-items.md` | pending |
+| 194–205 | Traps, madness, poisons, objects | `09-dm-content.md` | **complete** |
+| 206–253 | Magic items | `10-magic-items.md` | **complete** |
+| — | **Appendix PH-A: Conditions** | — | **MISSING FROM THIS PDF** |
+
+**The read is complete: all 253 pages have been read end to end.**
+
+## [BLOCKER] The conditions appendix is not in this document
+
+"Appendix PH-A" is **referenced by name on pages 9, 23, 67, 84, 86, 91, 93, 95,
+98 and 100**, and the conditions it defines are invoked constantly throughout
+the classes, spells, traps, poisons and magic items — but **the appendix itself
+is absent from this 253-page extraction**, which ends with the *Orb of
+Dragonkind* on p253.
+
+Verified by full-text search: no page contains a condition definition (e.g.
+"a blinded creature can't see"), and no page carries the appendix heading.
+
+**Undefined but required:** blinded · charmed · deafened · exhaustion (the six
+levels) · frightened · grappled · incapacitated · invisible · paralyzed ·
+petrified · poisoned · prone · restrained · stunned · unconscious.
+
+This is the single largest hole in the corpus and it blocks the condition
+system outright. See `99-open-questions.md` Q12.
 
 ## Class read order and page ranges
 
