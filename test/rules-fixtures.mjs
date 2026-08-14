@@ -65,9 +65,14 @@ export const capMod = (capability, capOp, extra = {}) => ({
   permanence: 'persistent', ...extra
 })
 
-export const profGrant = (scope, level, extra = {}) => ({
-  id: uid('prof'), scope, level, rounding: 'floor', grantsProficiency: true, ...extra
+export const profGrant = (category, level, extra = {}) => ({
+  id: uid('prof'), category, level, rounding: 'floor', grantsProficiency: true, ...extra
 })
+
+export const skillProf = (id) => ({ kind: 'skill', id })
+export const saveProf = (ability) => ({ kind: 'save', ability })
+export const armorProf = (category) => ({ kind: 'armor', category })
+export const weaponCatProf = (category) => ({ kind: 'weaponCategory', category })
 
 /**
  * Builds a content index and attaches the given sources as ambient content, so

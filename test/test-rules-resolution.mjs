@@ -8,7 +8,7 @@ import {
 } from './bundle/rules.mjs'
 import {
   makeChecker, makeCharacter, makeContent, makeSource,
-  valueMod, suppressMod, rollMod, capMod, profGrant
+  valueMod, suppressMod, rollMod, capMod, profGrant, skillProf
 } from './rules-fixtures.mjs'
 
 const check = makeChecker()
@@ -29,14 +29,14 @@ const stealthScope = { kinds: ['check'], skills: ['stealth'] }
 
 {
   const r = createResolution(makeCharacter(), makeContent([
-    makeSource({ id: 'src:rogue', name: 'Rogue', proficiencies: [profGrant(stealthScope, 'proficient')] })
+    makeSource({ id: 'src:rogue', name: 'Rogue', proficiencies: [profGrant(skillProf('stealth'), 'proficient')] })
   ]))
   check.eq('proficiency: proficient adds the full bonus', r.proficiency(stealthScope).term, 3)
 }
 
 {
   const r = createResolution(makeCharacter(), makeContent([
-    makeSource({ id: 'src:exp', name: 'Expertise', proficiencies: [profGrant(stealthScope, 'expertise')] })
+    makeSource({ id: 'src:exp', name: 'Expertise', proficiencies: [profGrant(skillProf('stealth'), 'expertise')] })
   ]))
   check.eq('proficiency: expertise doubles the bonus', r.proficiency(stealthScope).term, 6)
 }
@@ -48,7 +48,7 @@ const stealthScope = { kinds: ['check'], skills: ['stealth'] }
   const r = createResolution(makeCharacter(), makeContent([
     makeSource({
       id: 'src:artificers-lore', name: "Artificer's Lore",
-      proficiencies: [profGrant({ kinds: ['check'], skills: ['history'] }, 'expertise', { grantsProficiency: false })]
+      proficiencies: [profGrant(skillProf('history'), 'expertise', { grantsProficiency: false })]
     })
   ]))
   const prof = r.proficiency({ kinds: ['check'], skills: ['history'] })
@@ -62,7 +62,7 @@ const stealthScope = { kinds: ['check'], skills: ['stealth'] }
   const r = createResolution(makeCharacter(), makeContent([
     makeSource({
       id: 'src:stonecunning', name: 'Stonecunning',
-      proficiencies: [profGrant({ kinds: ['check'], skills: ['history'] }, 'expertise', { grantsProficiency: true })]
+      proficiencies: [profGrant(skillProf('history'), 'expertise', { grantsProficiency: true })]
     })
   ]))
   check.eq('proficiency: granting and doubling gives PB × 2',
@@ -73,10 +73,10 @@ const stealthScope = { kinds: ['check'], skills: ['stealth'] }
   // Half proficiency rounds down for Jack of All Trades and up for Remarkable
   // Athlete, from the same PB. Not interchangeable.
   const down = createResolution(makeCharacter(), makeContent([
-    makeSource({ id: 'src:joat', name: 'Jack of All Trades', proficiencies: [profGrant(stealthScope, 'half', { rounding: 'floor' })] })
+    makeSource({ id: 'src:joat', name: 'Jack of All Trades', proficiencies: [profGrant(skillProf('stealth'), 'half', { rounding: 'floor' })] })
   ])).proficiency(stealthScope)
   const up = createResolution(makeCharacter(), makeContent([
-    makeSource({ id: 'src:ra', name: 'Remarkable Athlete', proficiencies: [profGrant(stealthScope, 'half', { rounding: 'ceil' })] })
+    makeSource({ id: 'src:ra', name: 'Remarkable Athlete', proficiencies: [profGrant(skillProf('stealth'), 'half', { rounding: 'ceil' })] })
   ])).proficiency(stealthScope)
   check.eq('proficiency: half rounds down (Jack of All Trades)', down.term, 1)
   check.eq('proficiency: half rounds up (Remarkable Athlete)', up.term, 2)
@@ -85,8 +85,8 @@ const stealthScope = { kinds: ['check'], skills: ['stealth'] }
 {
   // Two sources both granting proficiency: the bonus is added once.
   const r = createResolution(makeCharacter(), makeContent([
-    makeSource({ id: 'src:a', name: 'Background', proficiencies: [profGrant(stealthScope, 'proficient')] }),
-    makeSource({ id: 'src:b', name: 'Class', proficiencies: [profGrant(stealthScope, 'proficient')] })
+    makeSource({ id: 'src:a', name: 'Background', proficiencies: [profGrant(skillProf('stealth'), 'proficient')] }),
+    makeSource({ id: 'src:b', name: 'Class', proficiencies: [profGrant(skillProf('stealth'), 'proficient')] })
   ]))
   const roll = resolveRoll(r, { kind: 'check', ability: 'dex', skill: 'stealth' })
   const problems = checkRollInvariants(roll)
@@ -242,14 +242,49 @@ const withConditions = (ids, extra = {}) => makeCharacter({
 }
 
 {
-  // A partial condition applies, is reported as held, and marks dependents.
+  // The supplied replacement text completes every condition, so nothing is
+  // marked partial any more and no resolution is flagged incomplete.
   const r = createResolution(withConditions(['srd:condition.charmed']), makeContent([]))
-  check('condition: a partial condition is still held', r.hasCondition('srd:condition.charmed'))
+  check('condition: charmed is held', r.hasCondition('srd:condition.charmed'))
+  check('condition: no condition is partial any more', r.partialSources.length === 0)
   const roll = resolveRoll(r, { kind: 'check', ability: 'cha' })
-  check('condition: a partial condition marks the result incomplete', roll.incomplete === true)
+  check('condition: a complete condition does not flag the result incomplete',
+    roll.incomplete === false)
+
+  // Charmed's mechanical clause is target-relative: the *charmer* gets
+  // advantage on social checks, so the modifier lives on the charmed creature
+  // and is picked up by the other side's resolution.
   const source = r.sources.active.find((s) => s.id === 'srd:condition.charmed')
-  check('condition: the partial source says what is missing',
-    !!(source && source.narrative && source.narrative[0].text.includes('page break')))
+  check('condition: charmed carries a target-relative social advantage',
+    !!source && source.modifiers.some(
+      (m) => m.appliesTo === 'attackersAgainstSelf' && m.rollOp === 'advantage'))
+  check('condition: the unenforceable clause is narrative, not invented',
+    !!source && !!source.narrative && source.narrative[0].text.includes('cannot attack the charmer'))
+}
+
+{
+  // Poisoned is now defined: disadvantage on attack rolls and ability checks.
+  const r = createResolution(withConditions(['srd:condition.poisoned']), makeContent([]))
+  const attack = resolveRoll(r, { kind: 'attack', ability: 'str' })
+  const checkRoll = resolveRoll(r, { kind: 'check', ability: 'dex' })
+  check.eq('condition: poisoned imposes disadvantage on attacks', attack.advantage, 'disadvantage')
+  check.eq('condition: poisoned imposes disadvantage on ability checks',
+    checkRoll.advantage, 'disadvantage')
+  const save = resolveRoll(r, { kind: 'save', ability: 'con' })
+  check.eq('condition: poisoned does NOT affect saving throws', save.advantage, 'normal')
+}
+
+{
+  // Unconscious is now complete: it implies incapacitated and prone, auto-fails
+  // STR and DEX saves, and carries the within-5-feet auto-critical.
+  const r = createResolution(withConditions(['srd:condition.unconscious']), makeContent([]))
+  check('condition: unconscious implies incapacitated',
+    r.capability('takeActions').allowed === false)
+  const save = resolveRoll(r, { kind: 'save', ability: 'str' })
+  check('condition: unconscious auto-fails Strength saves', save.autoFail.length > 0)
+  const source = r.sources.active.find((s) => s.id === 'srd:condition.unconscious')
+  check('condition: unconscious carries the within-5-feet auto-critical',
+    !!source && source.modifiers.some((m) => m.rollOp === 'autoCritical'))
 }
 
 // --- exhaustion -------------------------------------------------------------

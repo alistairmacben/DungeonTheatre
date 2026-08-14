@@ -3,7 +3,9 @@
 // conditions alike — so a DM-authored item's gate is the same machinery as a
 // class feature's.
 
-import type { CapabilityKey, ConditionId, Predicate, StatPath } from './types.js'
+import type {
+  CapabilityKey, ConditionId, Predicate, ProficiencyCategory, StatPath
+} from './types.js'
 
 /**
  * Everything a predicate can read. Deliberately small: if a predicate needs
@@ -13,6 +15,10 @@ export interface PredicateEnv {
   getStat(path: StatPath): number
   hasCondition(id: ConditionId): boolean
   hasCapability(key: CapabilityKey): boolean
+  /** Armour, weapon, skill, tool or save proficiency. Gates Heavily Armored and friends. */
+  hasProficiency(category: ProficiencyCategory): boolean
+  /** Whether the character can cast at least one spell from its own features. */
+  canCastSpells(): boolean
   characterLevel(): number
   classLevel(classId: string): number
   speciesId(): string
@@ -27,6 +33,17 @@ export interface PredicateResult {
   value: boolean
   /** Human-readable explanation of why it failed. Empty when value is true. */
   reason: string
+}
+
+export function describeProficiency(c: ProficiencyCategory): string {
+  switch (c.kind) {
+    case 'skill': return `the ${c.id} skill`
+    case 'tool': return `${c.id}`
+    case 'save': return `${c.ability.toUpperCase()} saving throws`
+    case 'armor': return `${c.category} armour`
+    case 'weaponCategory': return `${c.category} weapons`
+    case 'weapon': return `the ${c.itemId} weapon`
+  }
 }
 
 const ok: PredicateResult = { value: true, reason: '' }
@@ -77,6 +94,16 @@ export function evaluate(pred: Predicate | undefined, env: PredicateEnv): Predic
     return env.hasCapability(pred.hasCapability)
       ? ok
       : fail(`cannot ${pred.hasCapability}`)
+  }
+
+  if ('hasProficiency' in pred) {
+    return env.hasProficiency(pred.hasProficiency)
+      ? ok
+      : fail(`not proficient with ${describeProficiency(pred.hasProficiency)}`)
+  }
+
+  if ('canCastSpells' in pred) {
+    return env.canCastSpells() ? ok : fail('cannot cast at least one spell')
   }
 
   if ('hasCondition' in pred) {

@@ -10,9 +10,10 @@
 
 import type {
   Ability, CapabilityKey, CapabilityValue, Character, CollectedSources,
-  ConditionId, ContentIndex, EffectSource, ProficiencyGrant, ProficiencyValue,
-  RollScope, StatPath, StatValue, Term, Modifier
+  ConditionId, ContentIndex, EffectSource, ProficiencyCategory, ProficiencyGrant,
+  ProficiencyValue, RollScope, StatPath, StatValue, Term, Modifier, ValueExpr
 } from './types.js'
+import { evaluateValue } from './formula.js'
 import { PROFICIENCY_MULTIPLIER } from './types.js'
 import { evaluate, statDependencies, type PredicateEnv } from './predicates.js'
 import {
@@ -44,6 +45,13 @@ export interface Resolution {
    */
   entries: ModifierEntry[]
   isSuppressed(entry: ModifierEntry): ModifierEntry | undefined
+  /** Every proficiency the character holds, with the source that granted it. */
+  proficiencies(): HeldProficiency[]
+  hasProficiency(category: ProficiencyCategory): boolean
+  /** The player's answer to a selection offered by a source. */
+  selection(sourceId: string, selectionId: string): string[]
+  /** Evaluates a formula-valued expression against live character state. */
+  evaluateValue(expr: ValueExpr | undefined, sourceId?: string): number
   /**
    * Active sources whose loaded content is known to be missing mechanics.
    * While any of these is in play every resolution is flagged `incomplete`,
@@ -114,6 +122,38 @@ function scopeMatches(scope: RollScope | undefined, query: RollScope): boolean {
 
 export { scopeMatches }
 
+export interface HeldProficiency {
+  category: ProficiencyCategory
+  level: string
+  sourceId: string
+  sourceName: string
+}
+
+/**
+ * The roll scope a proficiency category implies. Armour and weapon-category
+ * proficiencies gate item use rather than modifying a roll, so they imply no
+ * scope and never match a check.
+ */
+export function scopeOfCategory(category: ProficiencyCategory): RollScope | undefined {
+  switch (category.kind) {
+    case 'skill': return { kinds: ['check'], skills: [category.id] }
+    case 'tool': return { kinds: ['check'], tools: [category.id] }
+    case 'save': return { kinds: ['save'], abilities: [category.ability] }
+    default: return undefined
+  }
+}
+
+export function sameCategory(a: ProficiencyCategory, b: ProficiencyCategory): boolean {
+  if (a.kind !== b.kind) return false
+  if (a.kind === 'skill' && b.kind === 'skill') return a.id === b.id
+  if (a.kind === 'tool' && b.kind === 'tool') return a.id === b.id
+  if (a.kind === 'save' && b.kind === 'save') return a.ability === b.ability
+  if (a.kind === 'armor' && b.kind === 'armor') return a.category === b.category
+  if (a.kind === 'weaponCategory' && b.kind === 'weaponCategory') return a.category === b.category
+  if (a.kind === 'weapon' && b.kind === 'weapon') return a.itemId === b.itemId
+  return false
+}
+
 // ---------------------------------------------------------------------------
 // createResolution
 // ---------------------------------------------------------------------------
@@ -161,7 +201,78 @@ export function createResolution(
       return max - spent
     },
     toggle: (id) => character.toggles[id] === true,
-    dmFlag: (id) => character.dmFlags?.[id] === true
+    dmFlag: (id) => character.dmFlags?.[id] === true,
+    hasProficiency: (category) => hasProficiency(category),
+    canCastSpells: () => canCastSpells()
+  }
+
+  // "The ability to cast at least one spell" is the prerequisite shared by
+  // Elemental Adept, Spell Sniper and War Caster. The SRD is specific that it
+  // must come from the character's own traits or features, never from an item.
+  function canCastSpells(): boolean {
+    return sources.active.some((s) =>
+      s.kind !== 'item' &&
+      s.modifiers.some((m) => m.capability === 'castSpells' && m.capOp === 'grant'))
+  }
+
+  function heldProficiencies(): HeldProficiency[] {
+    const out: HeldProficiency[] = []
+    for (const source of sources.active) {
+      for (const g of source.proficiencies ?? []) {
+        if (!evaluate(g.condition, env).value) continue
+        for (const category of expandSelections(source, g)) {
+          out.push({
+            category, level: g.level,
+            sourceId: g.sourceId ?? source.id, sourceName: source.name
+          })
+        }
+      }
+    }
+    return out
+  }
+
+  // A grant may name a selection instead of a concrete value: Resilient's
+  // chosen ability, Skilled's three skills. The player's answer turns one
+  // authored grant into the proficiencies they actually hold, with no
+  // feat-specific code anywhere.
+  function expandSelections(source: EffectSource, g: ProficiencyGrant): ProficiencyCategory[] {
+    const c = g.category as (ProficiencyCategory & { selection?: string }) | undefined
+    if (!c) return []
+    if (!c.selection) return [g.category]
+    const answers = selection(source.id, c.selection)
+    return answers.map((answer) => {
+      switch (g.category.kind) {
+        case 'skill': return { kind: 'skill', id: answer } as ProficiencyCategory
+        case 'tool': return { kind: 'tool', id: answer } as ProficiencyCategory
+        case 'save': return { kind: 'save', ability: answer as Ability } as ProficiencyCategory
+        case 'weapon': return { kind: 'weapon', itemId: answer } as ProficiencyCategory
+        default: return g.category
+      }
+    })
+  }
+
+  function hasProficiency(category: ProficiencyCategory): boolean {
+    return heldProficiencies().some((p) => sameCategory(p.category, category))
+  }
+
+  function selection(sourceId: string, selectionId: string): string[] {
+    return character.selections?.[sourceId]?.[selectionId] ?? []
+  }
+
+  function evalValue(expr: ValueExpr | undefined, sourceId?: string): number {
+    return evaluateValue(expr, {
+      stat: (path) => stat(path).total,
+      characterLevel: () => characterLevel(character),
+      classLevel: (classId) =>
+        character.classLevels.find((c) => c.classId === classId)?.level ?? 0,
+      selection: (id) => (sourceId ? selection(sourceId, id)[0] : undefined),
+      selectionValue: (id) => {
+        const answer = sourceId ? selection(sourceId, id)[0] : undefined
+        if (answer === undefined) return undefined
+        const n = Number(answer)
+        return Number.isNaN(n) ? undefined : n
+      }
+    })
   }
 
   function resourceMax(resourceId: string): number {
@@ -233,7 +344,8 @@ export function createResolution(
         ...(computed !== undefined ? { computed } : {}),
         rounding: def.rounding,
         multiplyComposition: def.multiplyComposition,
-        ...(externalMax ? { externalMax } : {})
+        ...(externalMax ? { externalMax } : {}),
+        evaluateValue: (expr) => evalValue(expr)
       })
 
       const partial = sources.active.filter((s) => s.completeness === 'partial')
@@ -259,7 +371,14 @@ export function createResolution(
     const grants: { grant: ProficiencyGrant; source: EffectSource }[] = []
     for (const source of sources.active) {
       for (const g of source.proficiencies ?? []) {
-        if (!scopeMatches(g.scope, scope)) continue
+        // A grant matches a roll when the scope implied by its category matches,
+        // and when any explicit narrowing ("only to climb or swim") also does.
+        const implied = expandSelections(source, g)
+          .map(scopeOfCategory)
+          .filter((sc): sc is RollScope => sc !== undefined)
+        if (implied.length === 0) continue
+        if (!implied.some((sc) => scopeMatches(sc, scope))) continue
+        if (g.scope && !scopeMatches(g.scope, scope)) continue
         grants.push({ grant: g, source })
       }
     }
@@ -397,6 +516,10 @@ export function createResolution(
     get sources() { return sources },
     get entries() { return entries },
     isSuppressed: (entry) => suppressions.find(entry),
+    proficiencies: heldProficiencies,
+    hasProficiency,
+    selection,
+    evaluateValue: evalValue,
     get partialSources() { return sources.active.filter((s) => s.completeness === 'partial') },
     stat,
     proficiency: proficiencyFrom,

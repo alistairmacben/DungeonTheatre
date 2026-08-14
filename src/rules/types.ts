@@ -61,6 +61,30 @@ export interface DiceExpr {
   modifier?: number
 }
 
+/**
+ * A value that depends on character state.
+ *
+ * Needed because several effects are formulas rather than constants: Tough
+ * raises the hit point maximum by twice your level, Durable sets a Hit Die
+ * floor of twice your Constitution modifier, Inspiring Leader grants temporary
+ * hit points equal to level + Charisma modifier. Without this every such effect
+ * would need bespoke code, which is precisely what the architecture forbids.
+ */
+export type ValueExpr =
+  | number
+  | DiceExpr
+  | { stat: StatPath }
+  | { characterLevel: true }
+  | { classLevel: string }
+  | { sum: ValueExpr[] }
+  | { product: ValueExpr[] }
+  | { min: ValueExpr[] }
+  | { max: ValueExpr[] }
+  | { floor: ValueExpr }
+  | { ceil: ValueExpr }
+  /** Resolves to the value the player chose for a selection on this source. */
+  | { selection: string }
+
 export type DamageType =
   | 'acid' | 'bludgeoning' | 'cold' | 'fire' | 'force' | 'lightning'
   | 'necrotic' | 'piercing' | 'poison' | 'psychic' | 'radiant'
@@ -162,6 +186,8 @@ export type Predicate =
   | { statAtLeast: [StatPath, number] }
   | { statAtMost: [StatPath, number] }
   | { hasCapability: CapabilityKey }
+  | { hasProficiency: ProficiencyCategory }
+  | { canCastSpells: true }
   | { hasCondition: ConditionId }
   | { characterLevelAtLeast: number }
   | { classLevelAtLeast: [ClassId, number] }
@@ -192,6 +218,12 @@ export type RollOp =
   | 'advantage' | 'disadvantage'
   | 'autoFail' | 'autoSucceed'
   | 'reroll' | 'replaceRoll' | 'critRange'
+  /** Treat any damage die that rolls below this as this value (Elemental Adept). */
+  | 'minimumDieFace'
+  /** Reroll the damage dice and keep either total (Savage Attacker). */
+  | 'rerollDamageDice'
+  /** The attack scores a critical on a hit, regardless of the die (paralyzed within 5 ft). */
+  | 'autoCritical'
 
 export type CapabilityOp = 'grant' | 'revoke'
 
@@ -216,7 +248,7 @@ export interface Modifier {
   // --- value channel ---
   target?: StatPath
   op?: ValueOp
-  value?: number | DiceExpr
+  value?: ValueExpr
   /** Only for op 'suppress'. */
   suppresses?: SuppressionTarget
 
@@ -229,6 +261,17 @@ export interface Modifier {
   // --- capability channel ---
   capability?: CapabilityKey
   capOp?: CapabilityOp
+
+  /**
+   * Whose rolls this affects.
+   *
+   * 'self' is the default. 'attackersAgainstSelf' is how the SRD's
+   * "attack rolls against the creature have advantage" is expressed: the
+   * modifier lives on the *defender* and is picked up by the attacker's roll
+   * resolution. Without it, every such clause would need the attacker to know
+   * about every condition by name.
+   */
+  appliesTo?: 'self' | 'attackersAgainstSelf'
 
   /** Situational gate evaluated at resolve time. */
   condition?: Predicate
@@ -258,10 +301,30 @@ export const PROFICIENCY_MULTIPLIER: Record<ProficiencyLevel, number> = {
   expertise: 2
 }
 
+/**
+ * What a proficiency is *in*.
+ *
+ * Skills, tools and saves are roll-scoped; armour and weapon proficiency are
+ * not — they gate item use rather than modifying a roll. Both kinds live here
+ * so there is one proficiency system rather than two.
+ */
+export type ProficiencyCategory =
+  | { kind: 'skill'; id: SkillId }
+  | { kind: 'tool'; id: ToolId }
+  | { kind: 'save'; ability: Ability }
+  | { kind: 'armor'; category: ArmorCategory }
+  | { kind: 'weaponCategory'; category: WeaponCategory }
+  | { kind: 'weapon'; itemId: string }
+
+export type ArmorCategory = 'light' | 'medium' | 'heavy' | 'shield'
+export type WeaponCategory = 'simple' | 'martial' | 'improvised' | 'unarmed'
+
 export interface ProficiencyGrant {
   id: string
   sourceId?: string
-  scope: RollScope
+  category: ProficiencyCategory
+  /** Optional narrowing for roll-scoped grants, e.g. "only to climb or swim". */
+  scope?: RollScope
   level: ProficiencyLevel
   /**
    * Jack of All Trades rounds down, Remarkable Athlete rounds up — from the
@@ -378,12 +441,45 @@ export type EffectSourceKind =
  */
 export type Completeness = 'complete' | 'partial'
 
+/**
+ * A choice the player makes when they take this source: which ability Resilient
+ * raises, which damage type Elemental Adept names, which three skills Skilled
+ * grants. Modifiers reference the answer with `{ selection: id }`, so a
+ * selectable feat needs no code of its own.
+ */
+export interface SelectionDefinition {
+  id: string
+  prompt: string
+  kind: 'ability' | 'skill' | 'tool' | 'damageType' | 'weapon' | 'language' | 'spellList' | 'other'
+  count: number
+  /** Candidate values; omitted means "any valid value of this kind". */
+  from?: string[]
+}
+
+/**
+ * A choice made at the moment of acting rather than when the source was taken:
+ * Great Weapon Master's -5/+10, Sharpshooter's -5/+10, a Battle Master
+ * manoeuvre. The caller passes elected option ids into the roll context and
+ * their modifiers join the pipeline like any other.
+ */
+export interface ActionOption {
+  id: string
+  label: string
+  /** When this option may be offered at all. */
+  requirements?: Predicate
+  /** Which rolls it applies to. */
+  scope?: RollScope
+  modifiers: Modifier[]
+}
+
 export interface EffectSource extends Identity {
   kind: EffectSourceKind
   /** When this source is live. Evaluated against derived stats, so it can feed back. */
   activation: Predicate
   modifiers: Modifier[]
   proficiencies?: ProficiencyGrant[]
+  selections?: SelectionDefinition[]
+  options?: ActionOption[]
   actions?: ActionDefinition[]
   triggers?: TriggerDefinition[]
   resources?: ResourceDefinition[]
@@ -547,6 +643,12 @@ export interface Character {
   deathSaves: { successes: number; failures: number }
   toggles: Record<ToggleId, boolean>
   dmFlags?: Record<string, boolean>
+  /**
+   * Answers to the selections a source offered, keyed by sourceId then
+   * selectionId. Resilient's chosen ability, Skilled's three skills, Elemental
+   * Adept's damage type all live here — so a selectable feat needs no code.
+   */
+  selections?: Record<string, Record<string, string[]>>
 }
 
 // ---------------------------------------------------------------------------

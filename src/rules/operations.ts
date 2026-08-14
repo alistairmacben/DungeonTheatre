@@ -17,8 +17,9 @@
 
 import type {
   Modifier, Provenance, RoundingMode, StatPath, Term, MultiplyComposition,
-  SuppressionTarget, RollOp, ValueOp
+  SuppressionTarget, RollOp, ValueOp, ValueExpr
 } from './types.js'
+import { describeValue, isDynamic } from './formula.js'
 
 export interface ModifierEntry {
   modifier: Modifier
@@ -128,6 +129,8 @@ export interface ValuePipelineInput {
   multiplyComposition: MultiplyComposition
   /** Resolved from another stat path (ability score cap), not a modifier. */
   externalMax?: { value: number; sourceId: string; sourceName: string }
+  /** Evaluates formula-valued modifiers against current character state. */
+  evaluateValue: ValueEvaluator
 }
 
 export interface ValuePipelineResult {
@@ -136,15 +139,18 @@ export interface ValuePipelineResult {
   incomplete: boolean
 }
 
+/**
+ * Modifier values may be formulas over character state (Tough: twice your
+ * level), so the pipeline is handed an evaluator rather than reading the value
+ * directly. Dice-valued modifiers contribute their average to a derived stat;
+ * the dice themselves are carried separately on rolls, where they are thrown.
+ */
+export type ValueEvaluator = (expr: ValueExpr | undefined) => number
+
+let evaluate: ValueEvaluator = () => 0
+
 function numericValue(m: Modifier): number {
-  const v = m.value
-  if (typeof v === 'number') return v
-  // Dice-valued modifiers contribute their average to a derived stat; the dice
-  // themselves are carried separately on rolls, where they are actually thrown.
-  if (v && typeof v === 'object') {
-    return v.count * ((v.sides + 1) / 2) + (v.modifier ?? 0)
-  }
-  return 0
+  return evaluate(m.value)
 }
 
 function term(
@@ -163,11 +169,16 @@ function term(
     applied,
     ...(reason ? { reason } : {}),
     stage,
-    ...(e.modifier.note ? { note: e.modifier.note } : {})
+    ...(e.modifier.note
+      ? { note: e.modifier.note }
+      : isDynamic(e.modifier.value)
+        ? { note: describeValue(e.modifier.value) }
+        : {})
   }
 }
 
 export function applyValuePipeline(input: ValuePipelineInput): ValuePipelineResult {
+  evaluate = input.evaluateValue
   const terms: Term[] = []
   let incomplete = false
 

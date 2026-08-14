@@ -233,6 +233,29 @@ declare({
   intrinsicBase: 20
 })
 
+/**
+ * Resistance is a ternary carried as a number so it flows through the ordinary
+ * value pipeline: 0 none, 1 resistant, 2 immune, -1 vulnerable. `resistance.all`
+ * is the blanket form petrification grants.
+ */
+export const RESISTANCE_NONE = 0
+export const RESISTANCE_RESISTANT = 1
+export const RESISTANCE_IMMUNE = 2
+export const RESISTANCE_VULNERABLE = -1
+
+for (const t of [
+  'all', 'acid', 'bludgeoning', 'cold', 'fire', 'force', 'lightning',
+  'necrotic', 'piercing', 'poison', 'psychic', 'radiant', 'slashing', 'thunder'
+]) {
+  declare({
+    path: resistancePath(t),
+    dependsOn: [],
+    rounding: 'none',
+    multiplyComposition: 'product',
+    intrinsicBase: RESISTANCE_NONE
+  })
+}
+
 // --- registry access -------------------------------------------------------
 
 export function getStatPathDefinition(path: StatPath): StatPathDefinition | undefined {
@@ -253,10 +276,7 @@ export function allStatPaths(): StatPath[] {
   return [...registry.keys()]
 }
 
-/**
- * Resistance paths are open-ended (a DM may invent a damage type), so they are
- * declared on demand rather than up front.
- */
+/** A DM may invent a damage type, so resistance paths can be added on demand. */
 export function declareResistance(damageType: string): void {
   if (registry.has(resistancePath(damageType))) return
   declare({
