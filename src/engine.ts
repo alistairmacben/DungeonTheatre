@@ -8,3 +8,4 @@
 export * from './rules/index.js'
 export * from './content/index.js'
 export * from './view/index.js'
+export * from './persistence/sheet.js'
