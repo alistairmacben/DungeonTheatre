@@ -167,6 +167,9 @@ export function collectCandidates(character: Character, content: ContentIndex): 
     if (item) out.push({ source: stamp(item.effects) })
   }
 
+  // Whatever the DM improvised at the table, resolved exactly like content.
+  for (const source of character.adHocSources ?? []) out.push({ source: stamp(source) })
+
   for (const ambient of content.ambient ?? []) out.push({ source: stamp(ambient) })
 
   return out

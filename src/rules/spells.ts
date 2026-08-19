@@ -128,19 +128,28 @@ export function resolveSpellcasting(
 
   const canCast = r.capability('castSpells')
   const accessible: CastableSpell[] = []
-  const seen = new Set<string>()
 
+  // A spell can be reachable by more than one grant: a cleric's domain spells
+  // are also on the cleric list. It is one castable spell, and the *most
+  // permissive* grant must win — a domain spell is always prepared even though
+  // the list grant would have demanded preparation. Resolving this by source
+  // order would make the answer depend on the order features happen to be
+  // declared in, which is not a rule anyone wrote down.
+  const best = new Map<string, { grant: SpellGrant; source: { id: string; name: string } }>()
   for (const source of r.sources.active) {
     for (const grant of source.spells ?? []) {
       for (const spellId of spellIdsOf(grant, source.id, r, content)) {
-        const spell = content.spells.get(spellId)
-        // A grant naming a spell this deployment has not loaded is a content
-        // problem, surfaced by validation rather than crashing a cast.
-        if (!spell) continue
-        // The same spell reachable twice — a domain spell also on the class
-        // list — is one castable spell, not two.
-        if (seen.has(spellId)) continue
-        seen.add(spellId)
+        if (!content.spells.has(spellId)) continue
+        const held = best.get(spellId)
+        if (!held || (held.grant.availability === 'prepared' && grant.availability === 'always')) {
+          best.set(spellId, { grant, source: { id: source.id, name: source.name } })
+        }
+      }
+    }
+  }
+
+  for (const [spellId, { grant, source }] of best) {
+    const spell = content.spells.get(spellId)!
 
         const isPrepared = grant.availability === 'always' || prepared.has(spellId)
         const reasons: string[] = []
@@ -190,8 +199,6 @@ export function resolveSpellcasting(
           available: reasons.length === 0,
           unavailableReasons: reasons
         })
-      }
-    }
   }
 
   accessible.sort((a, b) =>

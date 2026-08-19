@@ -33,10 +33,18 @@ export function Hud({
   // makes. Unavailable ones are excluded rather than greyed: a bar of things
   // you cannot do is worse than a shorter bar, and the full list with its
   // reasons is one click away in the menu.
+  // Attacks, then things that spend a resource, then the character's own
+  // abilities. The third tier matters: a rogue's Cunning Action costs nothing
+  // at all, so a rule of "attacks and resource-spenders" left the character
+  // whose entire identity is bonus actions with a HUD showing one button.
+  // Dash, Dodge and Hide stay in the menu — everyone has those.
   const usable = view.actions.filter((a) => a.available)
   const pinned = [
     ...usable.filter((a) => a.kind === 'attack'),
-    ...usable.filter((a) => a.kind !== 'attack' && a.costs.length > 0)
+    ...usable.filter((a) => a.kind !== 'attack' && a.costs.length > 0),
+    ...usable.filter((a) =>
+      a.kind !== 'attack' && a.costs.length === 0 && a.kind !== 'basic'
+      && a.sourceId !== 'system:baseline')
   ].slice(0, 5)
 
   return (

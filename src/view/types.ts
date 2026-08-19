@@ -9,8 +9,8 @@
 // contains a branch on class, item or spell.
 
 import type {
-  Ability, ActionKind, ClassId, ConditionId, DamageType, Provenance,
-  ResourceDisplay, SkillId, SpeciesId
+  Ability, ActionKind, ClassId, ConditionId, DamageType, EffectSource,
+  Provenance, ResourceDisplay, SkillId, SpeciesId
 } from '../rules/types.js'
 
 /**
@@ -26,6 +26,15 @@ export interface BreakdownLine {
   sourceId: string
   provenance: Provenance
   amount?: number
+  /**
+   * How `amount` combines.
+   *
+   * Load-bearing: a proficiency line's amount is a *multiplier* (2 for
+   * expertise), not an addend. Without this the reader adds it, and the
+   * breakdown stops reconciling with the number it explains — which defeats
+   * the entire point of publishing one.
+   */
+  kind: 'add' | 'multiplier' | 'base' | 'set' | 'other'
   note?: string
   applied: boolean
   /** Always present when applied is false. */
@@ -73,9 +82,33 @@ export interface AbilityView {
   score: Readout
   modifier: Readout
   save: Readout & { proficient: boolean }
+  /** Rolling the raw ability check. */
+  roll: RollSpec
+  /** Rolling the saving throw. */
+  saveRoll: RollSpec
 }
 
 export type ProficiencyState = 'none' | 'half' | 'proficient' | 'expertise'
+
+/**
+ * Everything the caller needs to make a roll happen.
+ *
+ * The engine decides how many dice and which to keep; the caller supplies the
+ * faces. That split is what keeps the reducer pure and lets the server become
+ * the roller later without the UI changing — see rules/roll.ts.
+ */
+export interface RollSpec {
+  /** How many d20s to throw. Two under advantage or disadvantage. */
+  diceCount: number
+  keep: 'highest' | 'lowest' | 'all'
+  /** Dispatch this with `faces` filled in. */
+  command: PlayerCommand
+  /** "Acrobatics +7" — what the player is about to roll. */
+  label: string
+  modifier: number
+  /** Signed, for display: "+7". */
+  modifierDisplay: string
+}
 
 export interface SkillView {
   id: SkillId
@@ -88,6 +121,7 @@ export interface SkillView {
   rollState: 'advantage' | 'disadvantage' | 'normal'
   /** Why the roll state is what it is; shown on inspect. */
   rollStateReasons: string[]
+  roll: RollSpec
 }
 
 export interface ResourceView {
@@ -179,6 +213,8 @@ export interface ActionView {
   options?: ActionOptionView[]
   /** Exactly what to send the server. The UI echoes this; it never builds one. */
   command: PlayerCommand
+  /** Present when taking this action means throwing dice — attacks, for now. */
+  roll?: RollSpec
   sourceId: string
   sourceLabel: string
   breakdown?: Breakdown
@@ -304,9 +340,9 @@ export type PlayerCommand =
   | { type: 'attuneItem'; characterId: string; instanceId: string }
   | { type: 'endAttunement'; characterId: string; instanceId: string }
   | { type: 'useItem'; characterId: string; instanceId: string }
-  | { type: 'makeAttack'; characterId: string; weaponInstanceId: string; targetId?: string; electedOptions?: string[]; twoHanded?: boolean }
-  | { type: 'makeCheck'; characterId: string; checkType: 'ability' | 'skill'; ability?: Ability; skill?: SkillId }
-  | { type: 'makeSave'; characterId: string; ability: Ability; dc?: number }
+  | { type: 'makeAttack'; characterId: string; weaponInstanceId: string; targetAc?: number; electedOptions?: string[]; twoHanded?: boolean; faces: number[] }
+  | { type: 'makeCheck'; characterId: string; checkType: 'ability' | 'skill'; ability?: Ability; skill?: SkillId; faces: number[] }
+  | { type: 'makeSave'; characterId: string; ability: Ability; dc?: number; faces: number[] }
   | { type: 'useAbility'; characterId: string; actionId: string; sourceId: string }
   | { type: 'castSpell'; characterId: string; spellId: string; slotResourceId?: string }
   | { type: 'prepareSpells'; characterId: string; spellIds: string[] }
@@ -320,5 +356,14 @@ export type PlayerCommand =
   | { type: 'longRest'; characterId: string }
   | { type: 'transferItem'; fromCharacterId: string; toCharacterId: string; instanceId: string }
   | { type: 'dmOverride'; characterId: string; note: string }
+  // --- the DM's hand ---
+  // Six verbs, composed from the existing vocabulary rather than one button per
+  // D&D effect. "12 fire damage" and "frightened" need no enemy to exist.
+  | { type: 'dmDamage'; characterId: string; amount: number; damageType: DamageType; tags?: string[] }
+  | { type: 'dmHeal'; characterId: string; amount: number }
+  | { type: 'dmTemporaryHitPoints'; characterId: string; amount: number; choice?: 'keep' | 'replace' }
+  | { type: 'dmSetResource'; characterId: string; resourceId: string; remaining: number }
+  | { type: 'dmApplyEffect'; characterId: string; effect: EffectSource }
+  | { type: 'dmRemoveEffect'; characterId: string; sourceId: string }
 
 export type CommandType = PlayerCommand['type']

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { StageView } from '@stage-ui/StageView'
 import { DiceTray } from '@stage-ui/DiceTray'
-import { parseNotation, rollValues, totalOf } from '@shared/dice'
+import { totalOf } from '@shared/dice'
 import { supabase, storageUrl } from './supabase'
 import { useMemberships, useSession } from './useSession'
 import { useCampaignStage } from './useCampaignStage'
@@ -13,6 +13,7 @@ const LAST_CAMPAIGN_KEY = 'dungeon-stage:last-campaign'
 import { useGameState } from './game/useGameState'
 import { Hud } from './ui/Hud'
 import { GameMenu, type MenuTab } from './ui/GameMenu'
+import { RollResult, rollFor, type RollOutcome } from './ui/RollWidget'
 import { Solo } from './Solo'
 
 export function App(): React.JSX.Element {
@@ -83,6 +84,28 @@ function Stage({
   const game = useGameState()
   const [menuTab, setMenuTab] = useState<MenuTab | null>(null)
   const [actionNote, setActionNote] = useState<string | null>(null)
+  const [outcome, setOutcome] = useState<RollOutcome | null>(null)
+
+  // One path for every roll. The engine says how many dice, the shared roller
+  // throws them, the reducer turns faces into a result — and the same roll goes
+  // to the table, so the 3D dice and the readout can never disagree.
+  const makeRoll = (spec: import('@engine').RollSpec): void => {
+    const dice = rollFor(spec)
+    const result = game.dispatch({ ...spec.command, faces: dice.map((d) => d.value) } as never)
+    if (result.rejected) { setActionNote(result.rejected.join(' · ')); return }
+    // From the returned events, not from `game.events` — that array is last
+    // render's, so reading it here silently drops the roll just made.
+    const made = result.events.find((e) => e.type === 'RollMade')
+    if (made) setOutcome(made.payload as unknown as RollOutcome)
+    send({
+      notation: `${spec.diceCount}d20${spec.modifierDisplay}`,
+      dice,
+      modifier: spec.modifier,
+      total: totalOf(dice, spec.modifier),
+      visibility: 'public'
+    }, identity.diceTheme)
+    setActionNote(null)
+  }
 
   // The stage is the point, so the UI gets out of the way on its own.
   useEffect(() => {
@@ -114,6 +137,7 @@ function Stage({
 
       {/* The HUD sits over the theatre and never competes with it. */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center gap-2 p-4">
+        {outcome && <RollResult outcome={outcome} onDismiss={() => setOutcome(null)} />}
         {actionNote && (
           <p className="pointer-events-auto rounded-lg border border-white/10 bg-ink/85 px-3 py-1.5 text-xs text-parchment/80 backdrop-blur">
             {actionNote}
@@ -129,30 +153,10 @@ function Stage({
               setActionNote(action.unavailableReasons.join(' · '))
               return
             }
-            // An attack goes to the dice roller the app already has, so it lands
-            // on the shared table like any other roll. The engine supplies the
-            // bonus; the tray's own helpers supply the randomness.
-            if (action.kind === 'attack' && action.preview?.attackBonusDisplay) {
-              const notation = `1d20${action.preview.attackBonusDisplay}`
-              const parsed = parseNotation(notation)
-              if (parsed) {
-                const dice = rollValues(parsed)
-                send(
-                  {
-                    notation,
-                    dice,
-                    modifier: parsed.modifier,
-                    total: totalOf(dice, parsed.modifier),
-                    visibility: 'public'
-                  },
-                  identity.diceTheme
-                )
-                setActionNote(`${action.label} — ${action.preview.damageLabel} on a hit`)
-              }
-            } else {
-              const rejected = game.dispatch(action.command)
-              setActionNote(rejected ? rejected.join(' · ') : `${action.label} used`)
-            }
+            // An attack is a roll; everything else is a state transition.
+            if (action.roll) { makeRoll(action.roll); return }
+            const { rejected } = game.dispatch(action.command)
+            setActionNote(rejected ? rejected.join(' · ') : `${action.label} used`)
           }}
         />
       </div>
@@ -163,7 +167,8 @@ function Stage({
           tab={menuTab}
           onTab={setMenuTab}
           onClose={() => setMenuTab(null)}
-          dispatch={game.dispatch}
+          dispatch={(c) => game.dispatch(c).rejected}
+          onRoll={(spec) => { setMenuTab(null); makeRoll(spec) }}
         />
       )}
 

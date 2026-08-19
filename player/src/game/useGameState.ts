@@ -21,12 +21,25 @@ export interface GameState {
   /** Detail tier for the current view. Raising it costs payload, not correctness. */
   detail: DetailLevel
   setDetail(detail: DetailLevel): void
-  /** Send a command. Returns the reasons if it was rejected, so the UI can say so. */
-  dispatch(command: PlayerCommand): string[] | undefined
+  /**
+   * Send a command, and get back what happened.
+   *
+   * The events are returned rather than only pushed into state because reading
+   * `events` straight after dispatching reads the *previous* render's array —
+   * which silently loses the result of the roll you just made.
+   */
+  dispatch(command: PlayerCommand): DispatchResult
   /** Most recent first. The theatre will eventually consume these. */
   events: DomainEvent[]
   content: ContentIndex
   character: Character
+}
+
+export interface DispatchResult {
+  /** Present only when nothing changed, carrying the reasons why. */
+  rejected?: string[]
+  /** Newest first. Empty only if the command produced nothing at all. */
+  events: DomainEvent[]
 }
 
 export function useGameState(initial: Character = SIR_ALDREN): GameState {
@@ -41,18 +54,17 @@ export function useGameState(initial: Character = SIR_ALDREN): GameState {
     [character, content, detail, revision]
   )
 
-  const dispatch = useCallback((command: PlayerCommand): string[] | undefined => {
+  const dispatch = useCallback((command: PlayerCommand): DispatchResult => {
     const result = applyCommand(character, command, content)
+    setEvents((prev) => [...result.events, ...prev].slice(0, 50))
     if (result.rejected) {
       // A rejection is a result, not an error: it carries the same reasons an
       // unavailable action would have shown.
-      setEvents((prev) => [...result.events, ...prev].slice(0, 50))
-      return result.rejected.reasons
+      return { rejected: result.rejected.reasons, events: result.events }
     }
     setCharacter(result.character)
-    setEvents((prev) => [...result.events, ...prev].slice(0, 50))
     setRevision((n) => n + 1)
-    return undefined
+    return { events: result.events }
   }, [character, content])
 
   return { view, detail, setDetail, dispatch, events, content, character }

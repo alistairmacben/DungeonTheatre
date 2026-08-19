@@ -22,6 +22,11 @@ The single largest hole is spellcasting. `SpellDefinition` and
 state, `castSpell` is declared but unimplemented, and there are zero spells.
 Roughly half of D&D's classes cannot be represented at all.
 
+> **Status.** D1 (spellcasting), D2 (four archetypes), D3 (the test party) and
+> the rolling half of D4 are done, along with the first cut of Phase E. What
+> remains in D4 is HUD pinning and inventory organisation. See the vertical
+> slice commit for what rendering it exposed.
+
 ## Phase D — The playable character
 
 Goal: seven genuinely different characters, each complete, all rendered by the

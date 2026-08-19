@@ -9,10 +9,19 @@
 // grabbing the same item — produces an explanation the UI can show, not a
 // silent no-op.
 
-import type { Character, ContentIndex, GameEvent } from '../rules/types.js'
+import type {
+  Character, ContentIndex, EffectSource, GameEvent
+} from '../rules/types.js'
 import { createResolution } from '../rules/resolve.js'
 import { resolveResources, applyRest } from '../rules/resources.js'
 import { cheapestSlot, resolveSpellcasting } from '../rules/spells.js'
+import { resolveCheck } from '../rules/check.js'
+import { resolveAttack } from '../rules/attack.js'
+import { applyOutcome } from '../rules/roll.js'
+import { applyDamage, assignTemporaryHitPoints } from '../rules/damage.js'
+import { resistancesOf } from '../rules/attack.js'
+import { HP_MAX } from '../rules/statPaths.js'
+import type { RollResolution, RollResult } from '../rules/types.js'
 import type { PlayerCommand } from './types.js'
 import { buildPlayerView } from './build.js'
 
@@ -37,6 +46,9 @@ export type DomainEventType =
   | 'ShortRestTaken' | 'LongRestTaken'
   | 'AbilityUsed'
   | 'SpellCast' | 'SpellsPrepared' | 'ConcentrationBroken'
+  | 'RollMade'
+  | 'DamageTaken' | 'Healed' | 'TemporaryHitPointsGained' | 'Bloodied' | 'Downed'
+  | 'EffectApplied' | 'EffectRemoved' | 'ResourceSet'
   | 'CommandRejected'
 
 const MAX_ATTUNED = 3
@@ -74,6 +86,15 @@ export function applyCommand(
     case 'castSpell': return castSpell(character, command, content)
     case 'prepareSpells': return prepareSpells(character, command, content)
     case 'endConcentration': return endConcentration(character)
+    case 'makeCheck': return makeCheck(character, command, content)
+    case 'makeSave': return makeSave(character, command, content)
+    case 'makeAttack': return makeAttack(character, command, content)
+    case 'dmDamage': return dmDamage(character, command, content)
+    case 'dmHeal': return dmHeal(character, command, content)
+    case 'dmTemporaryHitPoints': return dmTemporaryHitPoints(character, command)
+    case 'dmSetResource': return dmSetResource(character, command, content)
+    case 'dmApplyEffect': return dmApplyEffect(character, command)
+    case 'dmRemoveEffect': return dmRemoveEffect(character, command)
     case 'spendResource': return spendResource(character, command, content)
     case 'restoreResource': return restoreResource(character, command)
     case 'applyCondition': return applyCondition(character, command, content)
@@ -420,6 +441,333 @@ function endConcentration(character: Character): CommandResult {
     events: [event('ConcentrationBroken', next, {
       reason: 'released', endedDefinitionId: ended?.definitionId
     })]
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Rolling
+//
+// A roll changes nothing about the character. It is an observation, and in a
+// theatre-of-the-mind game the consequences are the DM's to apply — which is
+// why these return the character untouched and put the whole result in an
+// event. The randomness arrives as `faces`, so the reducer stays pure and the
+// server can become the roller without the UI changing.
+// ---------------------------------------------------------------------------
+
+/** Which die survives advantage or disadvantage. A rule, not a random choice. */
+function keptIndexOf(faces: number[], keep: 'highest' | 'lowest' | 'all'): number {
+  if (keep === 'all' || faces.length < 2) return 0
+  let best = 0
+  for (let i = 1; i < faces.length; i++) {
+    const better = keep === 'highest' ? faces[i]! > faces[best]! : faces[i]! < faces[best]!
+    if (better) best = i
+  }
+  return best
+}
+
+function rollEvent(
+  character: Character, label: string, kind: string,
+  resolution: RollResolution, result: RollResult, extra: Record<string, unknown> = {}
+): DomainEvent {
+  return event('RollMade', character, {
+    label,
+    kind,
+    faces: result.outcome.faces,
+    natural: result.natural,
+    modifier: resolution.modifierTotal,
+    total: result.total,
+    advantage: resolution.advantage,
+    ...(result.success !== undefined ? { success: result.success } : {}),
+    ...(result.critical ? { critical: true } : {}),
+    ...(result.criticalMiss ? { criticalMiss: true } : {}),
+    incomplete: resolution.incomplete,
+    // The full breakdown travels with the result, so "why is it that number"
+    // is answerable from the event alone.
+    // `op` travels with the value because a proficiency term's value is a
+    // multiplier, not an addend. Dropping it makes a reader add "×2" as "+2"
+    // and the explanation stops matching the total.
+    terms: result.terms.map((t) => ({
+      source: t.sourceName, value: t.value, op: t.op, applied: t.applied,
+      ...(t.reason ? { reason: t.reason } : {}),
+      ...(t.note ? { note: t.note } : {})
+    })),
+    notes: resolution.notes
+  })
+}
+
+/**
+ * Rejects a face count that does not match what the resolution asked for.
+ *
+ * Silently accepting the wrong number would let a client roll one die and claim
+ * advantage, which is precisely the check the server will need.
+ */
+function facesProblem(resolution: RollResolution, faces: number[]): string | undefined {
+  if (faces.length !== resolution.dice.count) {
+    return `this roll needs ${resolution.dice.count} d20, not ${faces.length}`
+  }
+  if (faces.some((f) => !Number.isInteger(f) || f < 1 || f > resolution.dice.sides)) {
+    return `a d${resolution.dice.sides} cannot show that`
+  }
+  return undefined
+}
+
+function makeCheck(
+  character: Character,
+  command: Extract<PlayerCommand, { type: 'makeCheck' }>,
+  content: ContentIndex
+): CommandResult {
+  const r = createResolution(character, content)
+  const resolution = resolveCheck(r, {
+    checkType: command.checkType,
+    ...(command.ability ? { ability: command.ability } : {}),
+    ...(command.skill ? { skill: command.skill } : {})
+  })
+  const problem = facesProblem(resolution, command.faces)
+  if (problem) return reject(character, [problem])
+
+  const result = applyOutcome(resolution, {
+    faces: command.faces,
+    keptIndex: keptIndexOf(command.faces, resolution.dice.keep)
+  })
+  return {
+    character,
+    events: [rollEvent(character, resolution.label, command.checkType, resolution, result)]
+  }
+}
+
+function makeSave(
+  character: Character,
+  command: Extract<PlayerCommand, { type: 'makeSave' }>,
+  content: ContentIndex
+): CommandResult {
+  const r = createResolution(character, content)
+  const resolution = resolveCheck(r, { checkType: 'savingThrow', ability: command.ability })
+  const problem = facesProblem(resolution, command.faces)
+  if (problem) return reject(character, [problem])
+
+  const result = applyOutcome(resolution, {
+    faces: command.faces,
+    keptIndex: keptIndexOf(command.faces, resolution.dice.keep)
+  })
+  return {
+    character,
+    events: [rollEvent(character, resolution.label, 'save', resolution, result,
+      command.dc !== undefined ? { dc: command.dc } : {})]
+  }
+}
+
+function makeAttack(
+  character: Character,
+  command: Extract<PlayerCommand, { type: 'makeAttack' }>,
+  content: ContentIndex
+): CommandResult {
+  const inst = character.inventory.instances.find(
+    (i) => i.instanceId === command.weaponInstanceId)
+  if (!inst) return reject(character, ['that weapon is not in your inventory'])
+  const weapon = content.items.get(inst.definitionId)
+  if (!weapon) return reject(character, ['that weapon no longer exists in the loaded content'])
+
+  const r = createResolution(character, content)
+  const attack = resolveAttack(r, {
+    weapon,
+    ...(command.targetAc !== undefined ? { targetAc: command.targetAc } : {}),
+    ...(command.twoHanded !== undefined ? { twoHanded: command.twoHanded } : {})
+  })
+  const problem = facesProblem(attack.attackRoll, command.faces)
+  if (problem) return reject(character, [problem])
+
+  const result = applyOutcome(attack.attackRoll, {
+    faces: command.faces,
+    keptIndex: keptIndexOf(command.faces, attack.attackRoll.dice.keep)
+  })
+  return {
+    character,
+    events: [rollEvent(character, `${weapon.name} attack`, 'attack', attack.attackRoll, result, {
+      weaponId: weapon.id,
+      weaponName: weapon.name,
+      // The damage the DM applies on a hit, in the form the narrator rolls it.
+      damage: attack.damage.components.map((c) => ({
+        dice: c.dice, flat: c.flat, type: c.type
+      }))
+    })]
+  }
+}
+
+// ---------------------------------------------------------------------------
+// The DM's hand
+//
+// Six verbs, not a button per D&D effect. Each composes vocabulary that already
+// exists: damage runs through the same resistance pipeline a weapon does, and
+// an improvised curse is an EffectSource resolved like a feat. Nothing here
+// needs an enemy to exist, which is the point for a theatre-of-the-mind table —
+// the DM narrates, then applies.
+// ---------------------------------------------------------------------------
+
+/** Crossing half the maximum, and dropping, are things the theatre should see. */
+function vitalityEvents(
+  character: Character, before: number, after: number, max: number
+): DomainEvent[] {
+  const out: DomainEvent[] = []
+  if (after <= max / 2 && before > max / 2) {
+    out.push(event('Bloodied', character, { hitPoints: after, max }))
+  }
+  if (after <= 0 && before > 0) out.push(event('Downed', character, { max }))
+  return out
+}
+
+function dmDamage(
+  character: Character,
+  command: Extract<PlayerCommand, { type: 'dmDamage' }>,
+  content: ContentIndex
+): CommandResult {
+  if (!Number.isFinite(command.amount) || command.amount < 0) {
+    return reject(character, ['damage must be a positive number'])
+  }
+  const r = createResolution(character, content)
+  const max = r.stat(HP_MAX).total
+
+  // The DM names a number and a type. Resistance, vulnerability and temporary
+  // hit points are the engine's business, not theirs.
+  const result = applyDamage({
+    packet: {
+      components: [{ sourceId: 'dm', type: command.damageType, flat: command.amount }],
+      ...(command.tags ? { tags: command.tags } : {})
+    },
+    rolled: [{
+      sourceId: 'dm', sourceName: 'DM', type: command.damageType,
+      diceTotal: command.amount, flat: 0, doublesOnCrit: false
+    }],
+    critical: false,
+    flatReductions: [],
+    resistances: resistancesOf(r),
+    temporaryHitPoints: character.hitPointsTemp,
+    hitPointsCurrent: Math.min(character.hitPointsCurrent, max)
+  })
+
+  const next = clone(character)
+  next.hitPointsCurrent = result.hitPointsRemaining
+  next.hitPointsTemp = result.temporaryHitPointsRemaining
+
+  return {
+    character: next,
+    events: [
+      event('DamageTaken', next, {
+        amount: result.appliedToHitPoints,
+        rawAmount: result.totalBeforeAbsorption,
+        damageType: command.damageType,
+        absorbedByTemporary: result.absorbedByTemporary,
+        hitPoints: result.hitPointsRemaining,
+        max,
+        // Resistance halving it is exactly what a player should be shown.
+        terms: result.terms.filter((t) => t.applied).map((t) => ({
+          source: t.sourceName, value: t.value, ...(t.note ? { note: t.note } : {})
+        })),
+        notes: result.notes
+      }),
+      ...vitalityEvents(next, Math.min(character.hitPointsCurrent, max), result.hitPointsRemaining, max)
+    ]
+  }
+}
+
+function dmHeal(
+  character: Character,
+  command: Extract<PlayerCommand, { type: 'dmHeal' }>,
+  content: ContentIndex
+): CommandResult {
+  if (!Number.isFinite(command.amount) || command.amount < 0) {
+    return reject(character, ['healing must be a positive number'])
+  }
+  const max = createResolution(character, content).stat(HP_MAX).total
+  const before = Math.min(character.hitPointsCurrent, max)
+  const after = Math.min(before + command.amount, max)
+
+  const next = clone(character)
+  next.hitPointsCurrent = after
+  return {
+    character: next,
+    events: [event('Healed', next, {
+      amount: after - before,
+      requested: command.amount,
+      hitPoints: after,
+      max,
+      // Overhealing is worth saying rather than silently discarding.
+      ...(after - before < command.amount ? { wasted: command.amount - (after - before) } : {})
+    })]
+  }
+}
+
+function dmTemporaryHitPoints(
+  character: Character,
+  command: Extract<PlayerCommand, { type: 'dmTemporaryHitPoints' }>
+): CommandResult {
+  // Temporary hit points never stack; the recipient chooses which pool to keep.
+  // Defaulting to whichever is larger is the choice a player would always make,
+  // and the engine still owns the rule so the DM cannot accidentally add them.
+  const choice = command.choice
+    ?? (command.amount > character.hitPointsTemp ? 'replace' : 'keep')
+  const outcome = assignTemporaryHitPoints(character.hitPointsTemp, command.amount, choice)
+  const next = clone(character)
+  next.hitPointsTemp = outcome.value
+  return {
+    character: next,
+    events: [event('TemporaryHitPointsGained', next, {
+      amount: outcome.value, choice, note: outcome.note
+    })]
+  }
+}
+
+function dmSetResource(
+  character: Character,
+  command: Extract<PlayerCommand, { type: 'dmSetResource' }>,
+  content: ContentIndex
+): CommandResult {
+  const resource = resolveResources(createResolution(character, content))
+    .find((x) => x.id === command.resourceId)
+  if (!resource) return reject(character, ['that character has no such resource'])
+
+  const remaining = Math.max(0, Math.min(command.remaining, resource.maximum))
+  const next = clone(character)
+  next.resourcesSpent[command.resourceId] = resource.maximum - remaining
+  return {
+    character: next,
+    events: [event('ResourceSet', next, {
+      resourceId: command.resourceId, label: resource.name,
+      remaining, maximum: resource.maximum
+    })]
+  }
+}
+
+function dmApplyEffect(
+  character: Character,
+  command: Extract<PlayerCommand, { type: 'dmApplyEffect' }>
+): CommandResult {
+  const next = clone(character)
+  // Stamped DM-authored, so every breakdown line it produces is labelled and a
+  // player can always see the number came from the table, not from the rules.
+  const effect: EffectSource = { ...structuredClone(command.effect), provenance: 'dm' }
+  next.adHocSources = [
+    ...(next.adHocSources ?? []).filter((s) => s.id !== effect.id),
+    effect
+  ]
+  return {
+    character: next,
+    events: [event('EffectApplied', next, {
+      sourceId: effect.id, label: effect.name, provenance: 'dm'
+    })]
+  }
+}
+
+function dmRemoveEffect(
+  character: Character,
+  command: Extract<PlayerCommand, { type: 'dmRemoveEffect' }>
+): CommandResult {
+  const existing = (character.adHocSources ?? []).find((s) => s.id === command.sourceId)
+  if (!existing) return reject(character, ['that effect is not on this character'])
+  const next = clone(character)
+  next.adHocSources = (next.adHocSources ?? []).filter((s) => s.id !== command.sourceId)
+  return {
+    character: next,
+    events: [event('EffectRemoved', next, { sourceId: existing.id, label: existing.name })]
   }
 }
 

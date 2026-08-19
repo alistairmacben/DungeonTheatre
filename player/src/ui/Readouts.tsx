@@ -28,7 +28,13 @@ export function BreakdownList({ breakdown }: { breakdown: Breakdown }): React.JS
             </span>
             {l.amount !== undefined && (
               <span className="shrink-0 tabular-nums text-parchment">
-                {l.amount >= 0 ? `+${l.amount}` : l.amount}
+                {/* A proficiency line's amount is a multiplier, not an addend.
+                    Rendering it with a plus makes the column stop adding up. */}
+                {l.kind === 'multiplier'
+                  ? `×${l.amount}`
+                  : l.kind === 'base' || l.kind === 'set'
+                    ? l.amount
+                    : l.amount >= 0 ? `+${l.amount}` : l.amount}
               </span>
             )}
           </li>

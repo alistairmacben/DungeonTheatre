@@ -8,7 +8,7 @@
 
 import type {
   Ability, ActionDefinition, ClassDefinition, ContentIndex, EffectSource,
-  ItemDefinition, ResourceDefinition, SpellDefinition, StatValue, Term
+  ItemDefinition, ResourceDefinition, RollResolution, SpellDefinition, StatValue, Term
 } from '../rules/types.js'
 import { ABILITIES } from '../rules/types.js'
 import type { Resolution } from '../rules/resolve.js'
@@ -26,8 +26,8 @@ import { SRD_SKILLS } from '../rules/index.js'
 import type {
   AbilityView, ActionView, Breakdown, DetailLevel, EffectView,
   EquipmentSlotView, ItemGroup, ItemView, NoticeView, PlayerView,
-  ProgressionView, ProficiencyState, Readout, ResourceView, SkillView,
-  SpellcastingView, SpellView, VitalsView
+  PlayerCommand, ProgressionView, ProficiencyState, Readout, ResourceView,
+  RollSpec, SkillView, SpellcastingView, SpellView, VitalsView
 } from './types.js'
 
 const ABILITY_LABEL: Record<Ability, string> = {
@@ -64,12 +64,21 @@ function toBreakdown(value: StatValue, detail: DetailLevel): Breakdown | undefin
   }
 }
 
+function lineKind(op: Term['op']): Breakdown['lines'][number]['kind'] {
+  if (op === 'add') return 'add'
+  if (op === 'proficiency' || op === 'multiply') return 'multiplier'
+  if (op === 'base') return 'base'
+  if (op === 'set') return 'set'
+  return 'other'
+}
+
 function lineOf(t: Term): Breakdown['lines'][number] {
   return {
     source: t.sourceName,
     sourceId: t.sourceId,
     provenance: t.provenance,
     ...(t.value !== undefined ? { amount: t.value } : {}),
+    kind: lineKind(t.op),
     ...(t.note ? { note: t.note } : {}),
     applied: t.applied,
     ...(t.reason ? { reason: t.reason } : {})
@@ -222,9 +231,33 @@ function buildVitals(r: Resolution, detail: DetailLevel): VitalsView {
   }
 }
 
-function buildAbilities(r: Resolution, detail: DetailLevel): AbilityView[] {
+/**
+ * Turns a resolved check into everything a caller needs to roll it.
+ *
+ * The engine says how many dice and which to keep; the caller supplies the
+ * faces. Publishing the spec rather than a bare command is what stops the UI
+ * from having to know that advantage means two dice.
+ */
+function rollSpecOf(
+  resolution: { dice: RollResolution['dice']; modifierTotal: number; label: string },
+  command: PlayerCommand
+): RollSpec {
+  return {
+    diceCount: resolution.dice.count,
+    keep: resolution.dice.keep,
+    command,
+    label: resolution.label,
+    modifier: resolution.modifierTotal,
+    modifierDisplay: signed(resolution.modifierTotal)
+  }
+}
+
+function buildAbilities(
+  r: Resolution, detail: DetailLevel, characterId: string
+): AbilityView[] {
   return ABILITIES.map((a) => {
     const save = resolveCheck(r, { checkType: 'savingThrow', ability: a })
+    const check = resolveCheck(r, { checkType: 'ability', ability: a })
     const saveBreakdown = detail === 'summary'
       ? undefined
       : {
@@ -244,7 +277,13 @@ function buildAbilities(r: Resolution, detail: DetailLevel): AbilityView[] {
         display: signed(save.modifierTotal),
         proficient: r.hasProficiency({ kind: 'save', ability: a }),
         ...(saveBreakdown ? { breakdown: saveBreakdown } : {})
-      }
+      },
+      roll: rollSpecOf(check, {
+        type: 'makeCheck', characterId, checkType: 'ability', ability: a, faces: []
+      }),
+      saveRoll: rollSpecOf(save, {
+        type: 'makeSave', characterId, ability: a, faces: []
+      })
     }
   })
 }
@@ -258,7 +297,9 @@ function proficiencyStateFor(r: Resolution, skillId: string): ProficiencyState {
   return 'none'
 }
 
-function buildSkills(r: Resolution, detail: DetailLevel): SkillView[] {
+function buildSkills(
+  r: Resolution, detail: DetailLevel, characterId: string
+): SkillView[] {
   return SRD_SKILLS.map((s) => {
     const roll = resolveCheck(r, { checkType: 'skill', skill: s.id })
     const passive = resolvePassiveCheck(r, { checkType: 'skill', skill: s.id })
@@ -286,7 +327,10 @@ function buildSkills(r: Resolution, detail: DetailLevel): SkillView[] {
       },
       passive: { value: passive.total, label: `Passive ${s.name}`, display: String(passive.total) },
       rollState: roll.advantage,
-      rollStateReasons: reasons
+      rollStateReasons: reasons,
+      roll: rollSpecOf(roll, {
+        type: 'makeCheck', characterId, checkType: 'skill', skill: s.id, faces: []
+      })
     }
   })
 }
@@ -491,7 +535,15 @@ function buildActions(
         rollState: attack.attackRoll.advantage
       },
       ...(options.length ? { options } : {}),
-      command: { type: 'makeAttack', characterId, weaponInstanceId: instanceId },
+      command: { type: 'makeAttack', characterId, weaponInstanceId: instanceId, faces: [] },
+      roll: rollSpecOf(
+        {
+          dice: attack.attackRoll.dice,
+          modifierTotal: attack.attackRoll.modifierTotal,
+          label: `${def.name} attack`
+        },
+        { type: 'makeAttack', characterId, weaponInstanceId: instanceId, faces: [] }
+      ),
       sourceId: def.id,
       sourceLabel: def.name,
       ...(detail === 'summary'
@@ -888,8 +940,8 @@ export function buildPlayerView(
       diagnostics: resolution.diagnostics
     },
     vitals: buildVitals(resolution, detail),
-    abilities: buildAbilities(resolution, detail),
-    skills: buildSkills(resolution, detail),
+    abilities: buildAbilities(resolution, detail, c.id),
+    skills: buildSkills(resolution, detail, c.id),
     resources,
     equipment: slots,
     inventory: items,

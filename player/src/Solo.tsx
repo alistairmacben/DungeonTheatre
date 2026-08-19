@@ -1,31 +1,40 @@
-// The vertical-slice harness.
+// The session harness.
 //
 // The real Stage needs a signed-in player, a campaign and a live DM. That is
 // correct for the product and hopeless for judging whether the thing feels
-// good, so `#solo` renders the identical theatre + HUD + menu against local
-// state and no backend. It imports the same three components the Stage does —
-// if it looks right here it looks right there.
+// good, so `#solo` runs the whole loop against local state and no backend:
+// four characters, the same HUD and menu the Stage uses, and a DM panel on the
+// other side of the table.
+//
+// Everything here is either a component the Stage also renders or a harness
+// affordance clearly marked as one.
 
 import { useState } from 'react'
 import { StageView } from '@stage-ui/StageView'
 import { EMPTY_SNAPSHOT } from '@shared/types'
-import { parseNotation, rollValues, totalOf, type DiceRoll } from '@shared/dice'
-import type { Character } from '@engine'
+import { totalOf, type DiceRoll } from '@shared/dice'
+import type { Character, RollSpec } from '@engine'
 import { useGameState } from './game/useGameState'
 import { PARTY } from './game/character'
 import { Hud } from './ui/Hud'
 import { GameMenu, type MenuTab } from './ui/GameMenu'
+import { DmPanel } from './ui/DmPanel'
+import { RollResult, rollFor, type RollOutcome } from './ui/RollWidget'
 
 export function Solo(): React.JSX.Element {
-  // Switching characters is a harness affordance, not a product feature: the
-  // point is to see how different archetypes render through one HUD.
   const [who, setWho] = useState(0)
+  const [dmOpen, setDmOpen] = useState(false)
 
   return (
     <div className="relative h-full w-full">
-      {/* Keyed on the character, because the game state is seeded from it and
-          a fresh character means a fresh game, not a re-render. */}
-      <SoloCharacter key={PARTY[who]!.id} character={PARTY[who]!} />
+      {/* Keyed on the character, because game state is seeded from it and a
+          different character means a fresh game, not a re-render. */}
+      <SoloCharacter
+        key={PARTY[who]!.id}
+        character={PARTY[who]!}
+        dmOpen={dmOpen}
+        onCloseDm={() => setDmOpen(false)}
+      />
 
       <div className="pointer-events-auto absolute left-4 top-4 flex gap-1">
         {PARTY.map((c, i) => (
@@ -42,17 +51,70 @@ export function Solo(): React.JSX.Element {
             {c.name}
           </button>
         ))}
+        <button
+          type="button"
+          onClick={() => setDmOpen((v) => !v)}
+          className={`ml-2 rounded-lg border px-3 py-1.5 text-xs transition ${
+            dmOpen
+              ? 'border-ember/60 bg-ember/10 text-parchment'
+              : 'border-white/10 bg-ink/70 text-parchment/50 hover:text-parchment/80'
+          }`}
+        >
+          DM
+        </button>
       </div>
     </div>
   )
 }
 
-function SoloCharacter({ character }: { character: Character }): React.JSX.Element {
+function SoloCharacter({ character, dmOpen, onCloseDm }: {
+  character: Character
+  dmOpen: boolean
+  onCloseDm(): void
+}): React.JSX.Element {
   const game = useGameState(character)
   const [menuTab, setMenuTab] = useState<MenuTab | null>(null)
   const [note, setNote] = useState<string | null>(null)
+  const [outcome, setOutcome] = useState<RollOutcome | null>(null)
   const [roll, setRoll] = useState<DiceRoll | null>(null)
   const [rollSeq, setRollSeq] = useState(1)
+
+  /**
+   * One path for every roll in the product.
+   *
+   * The engine said how many dice; the shared roller throws them; the reducer
+   * turns the faces into a result. The 3D dice on the stage and the readout the
+   * player sees are the same roll, not two that happen to agree.
+   */
+  const makeRoll = (spec: RollSpec): void => {
+    const dice = rollFor(spec)
+    const faces = dice.map((d) => d.value)
+    const result = game.dispatch({ ...spec.command, faces } as never)
+    if (result.rejected) { setNote(result.rejected.join(' · ')); return }
+
+    // From the returned events, not from `game.events` — that array is last
+    // render's, so reading it here silently drops the roll just made.
+    const made = result.events.find((e) => e.type === 'RollMade')
+    if (made) setOutcome(made.payload as unknown as RollOutcome)
+
+    setRoll({
+      id: `solo-${rollSeq}`,
+      campaignId: 'solo',
+      rollerId: 'solo',
+      characterId: game.view.meta.characterId,
+      rollerName: game.view.meta.name,
+      color: '#c9a227',
+      notation: `${spec.diceCount}d20${spec.modifierDisplay}`,
+      dice,
+      modifier: spec.modifier,
+      total: totalOf(dice, spec.modifier),
+      visibility: 'public',
+      theme: 'bone',
+      at: rollSeq
+    })
+    setRollSeq((n) => n + 1)
+    setNote(null)
+  }
 
   return (
     <>
@@ -63,7 +125,9 @@ function SoloCharacter({ character }: { character: Character }): React.JSX.Eleme
         roll={roll}
       />
 
+      {/* The result sits above the HUD, where the eye already is. */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center gap-2 p-4">
+        {outcome && <RollResult outcome={outcome} onDismiss={() => setOutcome(null)} />}
         {note && (
           <p className="pointer-events-auto rounded-lg border border-white/10 bg-ink/85 px-3 py-1.5 text-xs text-parchment/80 backdrop-blur">
             {note}
@@ -79,32 +143,9 @@ function SoloCharacter({ character }: { character: Character }): React.JSX.Eleme
               setNote(action.unavailableReasons.join(' · '))
               return
             }
-            if (action.kind === 'attack' && action.preview?.attackBonusDisplay) {
-              const notation = `1d20${action.preview.attackBonusDisplay}`
-              const parsed = parseNotation(notation)
-              if (parsed) {
-                const dice = rollValues(parsed)
-                setRoll({
-                  id: `solo-${rollSeq}`,
-                  campaignId: 'solo',
-                  rollerId: 'solo',
-                  characterId: game.view.meta.characterId,
-                  rollerName: game.view.meta.name,
-                  color: '#c9a227',
-                  notation,
-                  dice,
-                  modifier: parsed.modifier,
-                  total: totalOf(dice, parsed.modifier),
-                  visibility: 'public',
-                  theme: 'bone',
-                  at: rollSeq
-                })
-                setRollSeq((n) => n + 1)
-                setNote(`${action.label} — ${action.preview.damageLabel} on a hit`)
-              }
-              return
-            }
-            const rejected = game.dispatch(action.command)
+            // An attack is a roll; everything else is a state transition.
+            if (action.roll) { makeRoll(action.roll); return }
+            const { rejected } = game.dispatch(action.command)
             setNote(rejected ? rejected.join(' · ') : `${action.label} used`)
           }}
         />
@@ -116,7 +157,16 @@ function SoloCharacter({ character }: { character: Character }): React.JSX.Eleme
           tab={menuTab}
           onTab={setMenuTab}
           onClose={() => setMenuTab(null)}
-          dispatch={game.dispatch}
+          dispatch={(c) => game.dispatch(c).rejected}
+          onRoll={(spec) => { setMenuTab(null); makeRoll(spec) }}
+        />
+      )}
+
+      {dmOpen && (
+        <DmPanel
+          view={game.view}
+          dispatch={(c) => game.dispatch(c).rejected}
+          onClose={onCloseDm}
         />
       )}
     </>

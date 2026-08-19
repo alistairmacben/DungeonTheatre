@@ -771,6 +771,18 @@ export interface Character {
    * casting another concentration spell ends this one.
    */
   concentratingOn?: string
+
+  /**
+   * Effect sources the DM composed at the table, belonging to this character
+   * rather than to the content set.
+   *
+   * This is what makes "god mode" generic instead of a wall of buttons: the DM
+   * builds a modifier out of the same vocabulary a feat or an item uses, and it
+   * resolves through the identical pipeline with a `dm` provenance so every
+   * breakdown shows where it came from. A cursed idol nobody has written
+   * content for is an EffectSource, not a special case.
+   */
+  adHocSources?: EffectSource[]
 }
 
 // ---------------------------------------------------------------------------

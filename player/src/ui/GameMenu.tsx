@@ -7,8 +7,9 @@
 
 import React, { useState } from 'react'
 import type {
-  ActionView, EffectView, ItemView, PlayerCommand, PlayerView, SpellView
+  ActionView, EffectView, ItemView, PlayerCommand, PlayerView, RollSpec, SpellView
 } from '@engine'
+import { RollChip } from './RollWidget'
 import { BreakdownList, Value } from './Readouts'
 
 export type MenuTab = 'character' | 'inventory' | 'actions' | 'spells' | 'effects'
@@ -24,13 +25,14 @@ const TABS: { id: MenuTab; label: string }[] = [
 ]
 
 export function GameMenu({
-  view, tab, onTab, onClose, dispatch
+  view, tab, onTab, onClose, dispatch, onRoll
 }: {
   view: PlayerView
   tab: MenuTab
   onTab(tab: MenuTab): void
   onClose(): void
   dispatch(command: PlayerCommand): string[] | undefined
+  onRoll(spec: RollSpec): void
 }): React.JSX.Element {
   return (
     <div className="pointer-events-auto absolute inset-0 z-40 flex items-center justify-center bg-ink/70 backdrop-blur-sm">
@@ -89,7 +91,7 @@ export function GameMenu({
         </nav>
 
         <div className="flex-1 overflow-y-auto px-6 py-5">
-          {tab === 'character' && <CharacterTab view={view} />}
+          {tab === 'character' && <CharacterTab view={view} onRoll={onRoll} />}
           {tab === 'inventory' && <InventoryTab view={view} dispatch={dispatch} />}
           {tab === 'actions' && <ActionsTab view={view} dispatch={dispatch} />}
           {tab === 'spells' && view.spellcasting && (
@@ -113,7 +115,10 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
-function CharacterTab({ view }: { view: PlayerView }): React.JSX.Element {
+function CharacterTab({ view, onRoll }: {
+  view: PlayerView
+  onRoll(spec: RollSpec): void
+}): React.JSX.Element {
   return (
     <div>
       <Section title="Vitals">
@@ -138,39 +143,46 @@ function CharacterTab({ view }: { view: PlayerView }): React.JSX.Element {
               <p className="text-[10px] uppercase tracking-widest text-parchment/40">{a.label}</p>
               <div className="mt-1"><Value readout={a.modifier} /></div>
               <p className="mt-1 text-[11px] text-parchment/40">score {a.score.display}</p>
-              <div className="mt-2 flex items-baseline gap-1 border-t border-white/5 pt-2">
-                <span className="text-[10px] uppercase tracking-wide text-parchment/35">Save</span>
-                <Value readout={a.save} size="sm" />
+              {/* Both the raw check and the save are one tap. A new player
+                  never has to work out which one they are being asked for. */}
+              <button
+                type="button"
+                onClick={() => onRoll(a.roll)}
+                className="mt-2 w-full rounded border border-white/10 py-1 text-[10px] uppercase tracking-wide text-parchment/45 transition hover:border-arcane/50 hover:text-parchment"
+              >
+                check
+              </button>
+              <button
+                type="button"
+                onClick={() => onRoll(a.saveRoll)}
+                className="mt-1 flex w-full items-center justify-center gap-1 rounded border border-white/10 py-1 text-[10px] uppercase tracking-wide text-parchment/45 transition hover:border-arcane/50 hover:text-parchment"
+              >
+                save {a.save.display}
                 {a.save.proficient && <span className="text-[9px] text-arcane">◆</span>}
-              </div>
+              </button>
             </div>
           ))}
         </div>
       </Section>
 
       <Section title="Skills">
-        <div className="grid grid-cols-1 gap-x-8 gap-y-1 sm:grid-cols-2 lg:grid-cols-3">
+        {/* Every skill is a button. Clicking one rolls it — the player never
+            has to know that chain mail is why two dice appeared. */}
+        <div className="grid grid-cols-1 gap-1 sm:grid-cols-2 lg:grid-cols-3">
           {view.skills.map((s) => (
-            <div key={s.id} className="flex items-center justify-between border-b border-white/5 py-1.5">
-              <span className="flex items-center gap-1.5 text-sm text-parchment/80">
-                {s.proficiency !== 'none' && (
+            <RollChip
+              key={s.id}
+              spec={s.roll}
+              sublabel={s.ability}
+              onRoll={onRoll}
+              marker={s.proficiency !== 'none'
+                ? (
                   <span className="text-[9px] text-arcane" title={s.proficiency}>
                     {s.proficiency === 'expertise' ? '◆◆' : '◆'}
                   </span>
-                )}
-                {s.label}
-                <span className="text-[10px] uppercase text-parchment/30">{s.ability}</span>
-                {s.rollState !== 'normal' && (
-                  <span
-                    title={s.rollStateReasons.join(' · ')}
-                    className={`text-[9px] ${s.rollState === 'advantage' ? 'text-verdigris' : 'text-ember'}`}
-                  >
-                    {s.rollState === 'advantage' ? '▲' : '▼'}
-                  </span>
-                )}
-              </span>
-              <Value readout={s.total} size="sm" />
-            </div>
+                )
+                : undefined}
+            />
           ))}
         </div>
       </Section>

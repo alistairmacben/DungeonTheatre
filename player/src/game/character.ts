@@ -87,5 +87,87 @@ export const ILYANA_VESS: Character = {
   ]
 }
 
+/**
+ * Pip Underbough, Lightfoot Halfling Rogue 5 — the skill and bonus-action test.
+ *
+ * Expertise doubles her proficiency in Stealth and Perception, and Cunning
+ * Action gives her three bonus actions that cost no resource at all. If the HUD
+ * reads well for her it reads well for a character whose turn is not "attack".
+ */
+export const PIP_UNDERBOUGH: Character = {
+  id: 'char:pip',
+  campaignId: 'camp-1',
+  name: 'Pip Underbough',
+  playerId: 'player-3',
+  speciesId: 'srd:species.halfling',
+  subspeciesId: 'srd:species.halfling.lightfoot',
+  classLevels: [{ classId: 'srd:class.rogue', level: 5 }],
+  abilityScoreBase: { str: 10, dex: 16, con: 14, int: 13, wis: 12, cha: 14 },
+  buildChoices: [{ atLevel: 4, kind: 'feat', value: 'srd:feat.alert' }],
+  hitPointsCurrent: 33,
+  hitPointsTemp: 0,
+  hitDiceSpent: {},
+  resourcesSpent: {},
+  conditions: [],
+  effectInstances: [],
+  exhaustionLevel: 0,
+  inventory: {
+    instances: [
+      { instanceId: 'r-short', definitionId: 'srd:weapon.shortsword', contentVersion: 1, identified: true },
+      { instanceId: 'r-dagger', definitionId: 'srd:weapon.dagger', contentVersion: 1, identified: true },
+      { instanceId: 'r-leather', definitionId: 'srd:armor.leather', contentVersion: 1, identified: true },
+      { instanceId: 'r-bow', definitionId: 'srd:weapon.longbow', contentVersion: 1, identified: true },
+      { instanceId: 'r-potion', definitionId: 'srd:item.potion-of-healing', contentVersion: 1, quantity: 3, identified: true }
+    ],
+    equipped: { mainHand: 'r-short', armor: 'r-leather' },
+    attunedInstanceIds: []
+  },
+  deathSaves: { successes: 0, failures: 0 },
+  toggles: {}
+}
+
+/**
+ * Brother Aldwin, Human Cleric 5 — the preparation and resource test.
+ *
+ * He prepares from an entire class list rather than a book, his domain spells
+ * are always prepared on top of that, and Channel Divinity is a short-rest
+ * resource with two different things to spend it on.
+ */
+export const BROTHER_ALDWIN: Character = {
+  id: 'char:aldwin',
+  campaignId: 'camp-1',
+  name: 'Brother Aldwin',
+  playerId: 'player-4',
+  speciesId: 'srd:species.human',
+  classLevels: [{ classId: 'srd:class.cleric', level: 5 }],
+  abilityScoreBase: { str: 14, dex: 10, con: 14, int: 10, wis: 16, cha: 12 },
+  buildChoices: [{ atLevel: 4, kind: 'feat', value: 'srd:feat.resilient' }],
+  hitPointsCurrent: 38,
+  hitPointsTemp: 0,
+  hitDiceSpent: {},
+  resourcesSpent: {},
+  conditions: [],
+  effectInstances: [],
+  exhaustionLevel: 0,
+  inventory: {
+    instances: [
+      { instanceId: 'c-mace', definitionId: 'srd:weapon.mace', contentVersion: 1, identified: true },
+      { instanceId: 'c-mail', definitionId: 'srd:armor.chain-mail', contentVersion: 1, identified: true },
+      { instanceId: 'c-shield', definitionId: 'srd:armor.shield', contentVersion: 1, identified: true },
+      { instanceId: 'c-potion', definitionId: 'srd:item.potion-of-healing', contentVersion: 1, quantity: 2, identified: true }
+    ],
+    equipped: { mainHand: 'c-mace', armor: 'c-mail', shield: 'c-shield' },
+    attunedInstanceIds: []
+  },
+  deathSaves: { successes: 0, failures: 0 },
+  toggles: { 'wearing-armor': true },
+  spellsPrepared: [
+    'srd:spell.detect-magic',
+    'srd:spell.protection-from-energy'
+  ]
+}
+
 /** The party. One entry per archetype the content can express today. */
-export const PARTY: Character[] = [SIR_ALDREN, ILYANA_VESS]
+export const PARTY: Character[] = [
+  SIR_ALDREN, ILYANA_VESS, PIP_UNDERBOUGH, BROTHER_ALDWIN
+]
