@@ -11,9 +11,16 @@
     "test": "node test/run.mjs",
     "doctor": "node scripts/doctor.mjs",
     "dev:player": "vite --config player/vite.config.ts",
-    "build:player": "vite build --config player/vite.config.ts"
+    "build:player": "vite build --config player/vite.config.ts",
+    "build:edge": "esbuild src/engine.ts --bundle --format=esm --platform=neutral --outfile=supabase/functions/_shared/engine.mjs"
   },
-  "keywords": ["dnd", "ttrpg", "discord", "vtt", "electron"],
+  "keywords": [
+    "dnd",
+    "ttrpg",
+    "discord",
+    "vtt",
+    "electron"
+  ],
   "author": "",
   "license": "UNLICENSED",
   "description": "A cinematic stage for Discord D&D games. Watches who is speaking in your voice channel and puts the right character on screen, with scenes, weather and 3D dice.",

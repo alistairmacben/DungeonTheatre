@@ -54,7 +54,8 @@ for (const suite of [
   'test-session.mjs',
   'test-persistence.mjs',
   'test-new-classes.mjs',
-  'test-projection.mjs'
+  'test-projection.mjs',
+  'test-authority.mjs'
 ]) {
   console.log(`\n───── ${suite} ─────`)
   try {
