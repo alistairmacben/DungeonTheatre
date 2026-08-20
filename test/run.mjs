@@ -52,7 +52,8 @@ for (const suite of [
   'test-view-contract.mjs',
   'test-spellcasting.mjs',
   'test-session.mjs',
-  'test-persistence.mjs'
+  'test-persistence.mjs',
+  'test-new-classes.mjs'
 ]) {
   console.log(`\n───── ${suite} ─────`)
   try {
