@@ -27,7 +27,7 @@ import type {
   AbilityView, ActionView, Breakdown, DetailLevel, EffectView,
   EquipmentSlotView, ItemGroup, ItemView, NoticeView, PlayerView,
   PlayerCommand, ProgressionView, ProficiencyState, Readout, ResourceView,
-  RollSpec, SkillView, SpellcastingView, SpellView, VitalsView
+  RollSpec, SkillView, SpellcastingView, SpellView, Viewer, VitalsView
 } from './types.js'
 
 const ABILITY_LABEL: Record<Ability, string> = {
@@ -44,6 +44,11 @@ const SLOT_LABEL: Record<string, string> = {
 export interface BuildOptions {
   detail?: DetailLevel
   revision?: number
+  /**
+   * Who the view is for. Defaults to the character's owner, which is what the
+   * single-player harness and every existing caller want. See `Viewer`.
+   */
+  viewer?: Viewer
 }
 
 // ---------------------------------------------------------------------------
@@ -394,8 +399,31 @@ function damageLabel(def: ItemDefinition, twoHanded = false): string | undefined
   return `${dice.count}d${dice.sides}`
 }
 
+/**
+ * What an item instance appears to be, to this viewer.
+ *
+ * One helper rather than a check at each call site, because the first attempt
+ * patched only the inventory and the true name promptly reappeared in the
+ * action list ("Use Potion of Poison") and in the narrative notices. A disguise
+ * is a property of the instance, not of the panel that happens to be rendering
+ * it, so every consumer has to ask the same question in the same place.
+ */
+function seenAs(
+  inst: { definitionId: string; identified: boolean; apparentDefinitionId?: string },
+  content: ContentIndex,
+  viewer: Viewer
+): { def: ItemDefinition | undefined; disguised: boolean; trueDef: ItemDefinition | undefined } {
+  const trueDef = content.items.get(inst.definitionId)
+  const apparent = !inst.identified && inst.apparentDefinitionId
+    ? content.items.get(inst.apparentDefinitionId)
+    : undefined
+  // The DM sees through it; everyone else, the owner included, does not.
+  const disguised = apparent !== undefined && viewer.kind !== 'dm'
+  return { def: disguised ? apparent : trueDef, disguised: apparent !== undefined, trueDef }
+}
+
 function buildInventory(
-  r: Resolution, content: ContentIndex, detail: DetailLevel
+  r: Resolution, content: ContentIndex, detail: DetailLevel, viewer: Viewer
 ): { items: ItemView[]; slots: EquipmentSlotView[] } {
   const c = r.character
   const equippedBySlot = c.inventory.equipped
@@ -405,8 +433,14 @@ function buildInventory(
 
   const items: ItemView[] = []
   for (const inst of c.inventory.instances) {
-    const def = content.items.get(inst.definitionId)
+    // A potion of poison presents as a potion of healing, and *identify*
+    // confirms the lie. Everyone but the DM is shown the disguise, including
+    // its effects — describing the real item's modifiers would give the game
+    // away just as surely as printing its name.
+    const seen = seenAs(inst, content, viewer)
+    const def = seen.def
     if (!def) continue
+
     const isEquipped = equippedIds.has(inst.instanceId)
     const reason = inactiveById.get(def.effects.id)
 
@@ -414,6 +448,10 @@ function buildInventory(
       instanceId: inst.instanceId,
       itemId: def.id,
       label: inst.customName ?? def.name,
+      ...(seen.disguised ? { disguised: true } : {}),
+      ...(viewer.kind === 'dm' && seen.disguised && seen.trueDef
+        ? { trueLabel: seen.trueDef.name }
+        : {}),
       group: itemGroupOf(def, isEquipped),
       provenance: def.provenance,
       quantity: inst.quantity ?? 1,
@@ -482,7 +520,8 @@ const CAPABILITY_FOR_COST: Record<string, string | undefined> = {
 }
 
 function buildActions(
-  r: Resolution, content: ContentIndex, detail: DetailLevel, resources: ResourceView[]
+  r: Resolution, content: ContentIndex, detail: DetailLevel,
+  resources: ResourceView[], viewer: Viewer
 ): ActionView[] {
   const out: ActionView[] = []
   const characterId = r.character.id
@@ -647,7 +686,9 @@ function buildActions(
 
   // --- consumables ----------------------------------------------------------
   for (const inst of r.character.inventory.instances) {
-    const def = content.items.get(inst.definitionId)
+    // Through the disguise, or "Use Potion of Poison" appears in the action
+    // list of a player who is holding what they believe is a healing potion.
+    const def = seenAs(inst, content, viewer).def
     if (def?.category !== 'consumable') continue
     const reasons: string[] = []
     const blocked = capabilityBlocked('action')
@@ -847,9 +888,25 @@ function buildEffects(r: Resolution, content: ContentIndex): EffectView[] {
   return out
 }
 
-function buildNotices(r: Resolution): NoticeView[] {
+function buildNotices(
+  r: Resolution, content: ContentIndex, viewer: Viewer
+): NoticeView[] {
   const out: NoticeView[] = []
+
+  // A disguised item's own source still resolves — it has to, or the poison
+  // would not work when drunk — so its narrative would otherwise appear in the
+  // notices under its real name. Suppressing by source id keeps the disguise
+  // whole without touching resolution.
+  const hidden = new Set<string>()
+  for (const inst of r.character.inventory.instances) {
+    const seen = seenAs(inst, content, viewer)
+    if (seen.disguised && viewer.kind !== 'dm' && seen.trueDef) {
+      hidden.add(seen.trueDef.effects.id)
+    }
+  }
+
   for (const source of r.sources.active) {
+    if (hidden.has(source.id)) continue
     for (const clause of source.narrative ?? []) {
       if (source.kind === 'condition') continue // shown on the effect itself
       out.push({
@@ -924,10 +981,11 @@ export function buildPlayerView(
   options: BuildOptions = {}
 ): PlayerView {
   const detail = options.detail ?? 'summary'
+  const viewer = options.viewer ?? { kind: 'owner' }
   const c = resolution.character
   const spellcasting = buildSpellcasting(resolution, content, detail, c.id)
   const resources = buildResources(resolution, detail)
-  const { items, slots } = buildInventory(resolution, content, detail)
+  const { items, slots } = buildInventory(resolution, content, detail, viewer)
 
   return {
     meta: {
@@ -945,10 +1003,10 @@ export function buildPlayerView(
     resources,
     equipment: slots,
     inventory: items,
-    actions: buildActions(resolution, content, detail, resources),
+    actions: buildActions(resolution, content, detail, resources, viewer),
     ...(spellcasting ? { spellcasting } : {}),
     effects: buildEffects(resolution, content),
-    notices: buildNotices(resolution),
+    notices: buildNotices(resolution, content, viewer),
     progression: buildProgression(resolution, content, detail)
   }
 }

@@ -53,7 +53,8 @@ for (const suite of [
   'test-spellcasting.mjs',
   'test-session.mjs',
   'test-persistence.mjs',
-  'test-new-classes.mjs'
+  'test-new-classes.mjs',
+  'test-projection.mjs'
 ]) {
   console.log(`\n───── ${suite} ─────`)
   try {

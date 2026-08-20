@@ -167,6 +167,16 @@ export interface ItemView {
   requiresAttunement: boolean
   attuned: boolean
   identified: boolean
+  /**
+   * Set when the viewer is being shown something other than the truth: an
+   * unidentified item presenting as what it appears to be. The DM's view sets
+   * this too, alongside the real identity, so the table and the DM can be
+   * looking at the same object and see different things without either of them
+   * being confused about which.
+   */
+  disguised?: boolean
+  /** DM only: what the item actually is, when it is presenting as something else. */
+  trueLabel?: string
   /** What equipping or using it would do. Derived from its modifiers, never authored prose. */
   effectSummary: string[]
   canEquip: boolean
@@ -301,6 +311,24 @@ export interface ProgressionView {
   /** Choices the character is entitled to but has not made. */
   pendingChoices: { id: string; prompt: string; kind: string; count: number; from?: string[] }[]
 }
+
+/**
+ * Who is looking.
+ *
+ * The projection question the architecture always intended and never answered:
+ * a view is built *for somebody*. A DM sees an unidentified item's true nature;
+ * the player holding it sees what it appears to be. Filtering this in the UI
+ * would be a lie a determined client could read straight through, so it happens
+ * where the view is built — and, for anything genuinely secret like an NPC's
+ * hit points, in RLS before the row is ever sent.
+ */
+export type Viewer =
+  /** The player this character belongs to. */
+  | { kind: 'owner' }
+  /** The DM, who sees through every disguise. */
+  | { kind: 'dm' }
+  /** Another player at the table. */
+  | { kind: 'table' }
 
 export interface PlayerViewMeta {
   characterId: string

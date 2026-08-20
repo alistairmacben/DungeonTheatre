@@ -201,6 +201,29 @@ export const PALADIN: ClassDefinition = {
 // More items — a consumable, a ring, and the DM helmet from the brief
 // ---------------------------------------------------------------------------
 
+/**
+ * The disguise test case.
+ *
+ * The SRD's potion of poison "is indistinguishable from a potion of healing"
+ * until identified, which is why ItemInstance carries apparentDefinitionId. It
+ * exists here so the projection has something real to hide: the DM sees this,
+ * the player sees a Potion of Healing, and neither of them is being lied to
+ * about which they are looking at.
+ */
+export const POTION_OF_POISON: ItemDefinition = {
+  id: 'srd:item.potion-of-poison', name: 'Potion of Poison',
+  provenance: 'srd', contentVersion: 1, rulesetVersion: V,
+  category: 'consumable', rarity: 'uncommon',
+  effects: source({
+    id: 'srd:item.potion-of-poison', name: 'Potion of Poison', kind: 'item',
+    narrative: [{
+      text: 'Take 3d6 poison damage and become poisoned for an hour. '
+        + 'Indistinguishable from a potion of healing until identified.',
+      dmPromptable: false
+    }]
+  })
+}
+
 export const POTION_OF_HEALING: ItemDefinition = {
   id: 'srd:item.potion-of-healing', name: 'Potion of Healing',
   provenance: 'srd', contentVersion: 1, rulesetVersion: V,
@@ -242,4 +265,4 @@ export const DM_HELM: ItemDefinition = {
 }
 
 export const EXTRA_CLASSES = [SORCERER, PALADIN]
-export const EXTRA_ITEMS = [POTION_OF_HEALING, RING_OF_PROTECTION, DM_HELM]
+export const EXTRA_ITEMS = [POTION_OF_HEALING, POTION_OF_POISON, RING_OF_PROTECTION, DM_HELM]
