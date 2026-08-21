@@ -10,12 +10,13 @@
 // silent no-op.
 
 import type {
-  Character, ContentIndex, EffectSource, GameEvent
+  Character, ContentIndex, DamageType, EffectSource, GameEvent
 } from '../rules/types.js'
 import { createResolution, characterLevel } from '../rules/resolve.js'
 import { resolveResources, applyRest } from '../rules/resources.js'
 import { cheapestSlot, resolveSpellcasting } from '../rules/spells.js'
 import { resolveSpellEffect } from '../rules/spellEffect.js'
+import { diceMismatch, totalDamageRoll } from '../rules/rollDamage.js'
 import { resolveCheck } from '../rules/check.js'
 import { resolveAttack } from '../rules/attack.js'
 import { applyOutcome } from '../rules/roll.js'
@@ -90,6 +91,7 @@ export function applyCommand(
     case 'makeCheck': return makeCheck(character, command, content)
     case 'makeSave': return makeSave(character, command, content)
     case 'makeAttack': return makeAttack(character, command, content)
+    case 'rollDamage': return rollDamage(character, command, content)
     case 'dmDamage': return dmDamage(character, command, content)
     case 'dmHeal': return dmHeal(character, command, content)
     case 'dmTemporaryHitPoints': return dmTemporaryHitPoints(character, command)
@@ -618,6 +620,96 @@ function makeAttack(
       damage: attack.damage.components.map((c) => ({
         dice: c.dice, flat: c.flat, type: c.type
       }))
+    })]
+  }
+}
+
+export type DamageSource = Extract<PlayerCommand, { type: 'rollDamage' }>['source']
+
+/**
+ * What rolling a hit's damage needs: the pools (undoubled — the caller applies
+ * the critical) and a label for the roll. Shared by the reducer and by the
+ * server authority, which needs the exact dice shape to roll without being
+ * able to run the reducer speculatively the way it does for a d20.
+ */
+export function resolveDamagePools(
+  character: Character, source: DamageSource, content: ContentIndex
+): { pools: { type: DamageType; dice: { count: number; sides: number }; flat: number }[]; label: string }
+  | { rejected: string } {
+  const r = createResolution(character, content)
+
+  if (source.kind === 'weapon') {
+    const inst = character.inventory.instances.find(
+      (i) => i.instanceId === source.weaponInstanceId)
+    if (!inst) return { rejected: 'that weapon is not in your inventory' }
+    const weapon = content.items.get(inst.definitionId)
+    if (!weapon) return { rejected: 'that weapon no longer exists in the loaded content' }
+    const attack = resolveAttack(r, {
+      weapon, ...(source.twoHanded !== undefined ? { twoHanded: source.twoHanded } : {})
+    })
+    return {
+      label: weapon.name,
+      pools: attack.damage.components.map((c) => ({
+        type: c.type, dice: c.dice ?? { count: 0, sides: 1 }, flat: c.flat ?? 0
+      }))
+    }
+  }
+
+  const casting = resolveSpellcasting(r, content)
+  const target = casting.accessible.find((s) => s.spell.id === source.spellId)
+  if (!target) return { rejected: 'you do not have access to that spell' }
+  const chosen = source.slotResourceId
+    ? target.slotOptions.find((s) => s.resourceId === source.slotResourceId)
+    : cheapestSlot(target)
+  const resolved = resolveSpellEffect(
+    target.spell,
+    { ability: target.ability, characterLevel: characterLevel(character), slotLevel: chosen?.level ?? target.spell.level },
+    r
+  )
+  if (!resolved || resolved.damage.length === 0) {
+    return { rejected: `${target.spell.name} has no damage to roll` }
+  }
+  // Instances (Magic Missile's three darts) fold into one pool per damage
+  // type: three 1d4+1 rolls summed is the same total as 3d4+3 rolled once.
+  return {
+    label: target.spell.name,
+    pools: resolved.damage.map((d) => ({
+      type: d.type,
+      dice: { count: d.dice.count * resolved.instances, sides: d.dice.sides },
+      flat: (d.dice.modifier ?? 0) * resolved.instances
+    }))
+  }
+}
+
+/**
+ * The follow-up to a hit: rolls the damage dice, doubled on a critical.
+ *
+ * Never applies anything to anyone — theatre-of-the-mind means the DM decides
+ * what the attack hits and applies the total through dmDamage, same as always.
+ * This only answers "how much, and of what type."
+ */
+function rollDamage(
+  character: Character,
+  command: Extract<PlayerCommand, { type: 'rollDamage' }>,
+  content: ContentIndex
+): CommandResult {
+  const resolved = resolveDamagePools(character, command.source, content)
+  if ('rejected' in resolved) return reject(character, [resolved.rejected])
+  const { pools, label } = resolved
+
+  const problem = diceMismatch(pools, command.faces, command.critical)
+  if (problem) return reject(character, [problem])
+
+  const rolled = totalDamageRoll(pools, command.faces, command.critical)
+  return {
+    character,
+    events: [event('RollMade', character, {
+      label: `${label} damage`,
+      kind: 'damage',
+      critical: command.critical,
+      pools: rolled.pools,
+      total: rolled.total,
+      damageLabel: rolled.label
     })]
   }
 }

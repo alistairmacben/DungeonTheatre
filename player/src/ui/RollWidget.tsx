@@ -6,12 +6,34 @@
 // dice already accounts for it.
 
 import React from 'react'
-import type { PlayerCommand, RollSpec } from '@engine'
-import { rollValues, type RolledDie } from '@shared/dice'
+import type { DamageRollSpec, DiceExpr, PlayerCommand, RollSpec } from '@engine'
+import { rollValues, type DieSides, type RolledDie } from '@shared/dice'
 
 /** The faces for a spec, using the shared roller the dice tray already uses. */
 export function rollFor(spec: RollSpec): RolledDie[] {
   return rollValues({ dice: [{ sides: 20, qty: spec.diceCount }], modifier: 0 })
+}
+
+/**
+ * Rolls a hit's damage locally — one pool at a time, since each pool can be a
+ * different die size. `critical` doubles the dice, never the flat bonus
+ * (folded server-side); the server re-rolls all of this anyway, this is only
+ * what animates on the roller's own screen while the real answer is in transit.
+ */
+export function rollDamageFaces(spec: DamageRollSpec, critical: boolean): number[][] {
+  return spec.pools.map(({ dice }: { dice: DiceExpr }) => {
+    const count = dice.count * (critical ? 2 : 1)
+    const sides = dice.sides as DieSides
+    return rollValues({ dice: [{ sides, qty: count }], modifier: 0 }).map((d) => d.value)
+  })
+}
+
+export interface DamageOutcome {
+  label: string
+  critical: boolean
+  total: number
+  damageLabel: string
+  pools: { type: string; rolls: number[]; total: number }[]
 }
 
 export interface RollOutcome {
@@ -81,8 +103,13 @@ export function RollChip({
  * arithmetic. Both are here, the second one folded away.
  */
 export function RollResult({
-  outcome, onDismiss
-}: { outcome: RollOutcome; onDismiss(): void }): React.JSX.Element {
+  outcome, onDismiss, onRollDamage
+}: {
+  outcome: RollOutcome
+  onDismiss(): void
+  /** Present right after an attack roll that has damage waiting to be rolled. */
+  onRollDamage?(): void
+}): React.JSX.Element {
   const [open, setOpen] = React.useState(false)
   const tone = outcome.critical
     ? 'border-verdigris/60 bg-verdigris/10'
@@ -128,6 +155,16 @@ export function RollResult({
         </p>
       )}
 
+      {onRollDamage && !outcome.criticalMiss && outcome.success !== false && (
+        <button
+          type="button"
+          onClick={onRollDamage}
+          className="mt-2 w-full rounded-lg border border-ember/40 bg-ember/10 py-1.5 text-[12px] font-medium text-ember transition hover:border-ember hover:bg-ember/20"
+        >
+          {outcome.critical ? 'Roll Damage (critical!)' : 'Roll Damage'}
+        </button>
+      )}
+
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -165,8 +202,52 @@ export function RollResult({
 export function outcomeFromEvents(
   events: { type: string; payload: Record<string, unknown> }[]
 ): RollOutcome | null {
-  const made = events.find((e) => e.type === 'RollMade')
+  const made = events.find((e) => e.type === 'RollMade' && e.payload['kind'] !== 'damage')
   return made ? (made.payload as unknown as RollOutcome) : null
+}
+
+/** Same idea, for the damage-rolling follow-up. */
+export function damageOutcomeFromEvents(
+  events: { type: string; payload: Record<string, unknown> }[]
+): DamageOutcome | null {
+  const made = events.find((e) => e.type === 'RollMade' && e.payload['kind'] === 'damage')
+  return made ? (made.payload as unknown as DamageOutcome) : null
+}
+
+/** The total, front and centre — same idea as RollResult, no d20 involved. */
+export function DamageResult({
+  outcome, onDismiss
+}: { outcome: DamageOutcome; onDismiss(): void }): React.JSX.Element {
+  return (
+    <div className="pointer-events-auto w-[22rem] rounded-xl border border-ember/50 bg-ink/90 px-4 py-3 shadow-2xl backdrop-blur">
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="min-w-0 truncate text-[13px] text-parchment/70">{outcome.label}</span>
+        <button
+          type="button"
+          onClick={onDismiss}
+          className="shrink-0 text-[11px] text-parchment/40 transition hover:text-parchment/80"
+        >
+          dismiss
+        </button>
+      </div>
+
+      <div className="mt-1 flex items-baseline gap-3">
+        <span className="text-4xl font-semibold tabular-nums text-parchment">{outcome.total}</span>
+        <span className="text-[12px] text-parchment/50">{outcome.damageLabel}</span>
+        {outcome.critical && (
+          <span className="rounded bg-verdigris/20 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-verdigris">
+            critical
+          </span>
+        )}
+      </div>
+
+      {outcome.pools.some((p) => p.rolls.length > 1) && (
+        <p className="mt-1 text-[11px] text-parchment/45">
+          rolled {outcome.pools.map((p) => p.rolls.join('+')).join(', ')}
+        </p>
+      )}
+    </div>
+  )
 }
 
 export type { PlayerCommand }

@@ -21,7 +21,7 @@ const check = makeChecker()
 // because the point is to notice when the union grows and this list does not.
 const ALL_COMMANDS = [
   'equipItem', 'unequipItem', 'attuneItem', 'endAttunement', 'useItem',
-  'makeAttack', 'makeCheck', 'makeSave', 'useAbility', 'castSpell',
+  'makeAttack', 'makeCheck', 'makeSave', 'rollDamage', 'useAbility', 'castSpell',
   'prepareSpells', 'endConcentration', 'spendResource', 'restoreResource',
   'applyCondition', 'removeCondition', 'setToggle', 'shortRest', 'longRest',
   'transferItem', 'dmOverride', 'dmDamage', 'dmHeal', 'dmTemporaryHitPoints',

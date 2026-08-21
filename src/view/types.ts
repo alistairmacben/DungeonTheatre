@@ -9,7 +9,7 @@
 // contains a branch on class, item or spell.
 
 import type {
-  Ability, ActionKind, ClassId, ConditionId, DamageType, EffectSource,
+  Ability, ActionKind, ClassId, ConditionId, DamageType, DiceExpr, EffectSource,
   Provenance, ResourceDisplay, SkillId, SpeciesId
 } from '../rules/types.js'
 
@@ -210,6 +210,20 @@ export interface ActionPreview {
   rollState?: 'advantage' | 'disadvantage' | 'normal'
 }
 
+/**
+ * What rolling this action's damage needs — the follow-up after a hit lands.
+ *
+ * Unlike `RollSpec`, this cannot pre-compute how many dice to roll: that
+ * depends on whether the attack was a critical, which is not known until the
+ * to-hit roll returns. `pools` is the undoubled dice, ready for
+ * `diceNeededFor(pools, wasCritical)` once the caller knows.
+ */
+export interface DamageRollSpec {
+  pools: { type: DamageType; dice: DiceExpr; flat: number }[]
+  characterId: string
+  source: Extract<PlayerCommand, { type: 'rollDamage' }>['source']
+}
+
 export interface ActionView {
   id: string
   label: string
@@ -227,6 +241,8 @@ export interface ActionView {
   command: PlayerCommand
   /** Present when taking this action means throwing dice — attacks, for now. */
   roll?: RollSpec
+  /** Present on attacks: what to roll for damage once a hit is confirmed. */
+  damageRoll?: DamageRollSpec
   sourceId: string
   sourceLabel: string
   breakdown?: Breakdown
@@ -385,6 +401,20 @@ export type PlayerCommand =
   | { type: 'endAttunement'; characterId: string; instanceId: string }
   | { type: 'useItem'; characterId: string; instanceId: string }
   | { type: 'makeAttack'; characterId: string; weaponInstanceId: string; targetAc?: number; electedOptions?: string[]; twoHanded?: boolean; faces: number[] }
+  /**
+   * The follow-up to a hit: rolls the damage dice, doubled on a critical.
+   * `faces` is one array per damage pool, matching `RollDamageSpec.pools` in
+   * order — almost always one pool, but a spell or feature with two damage
+   * types (rare) needs two. Applying it to anyone is still the DM's call.
+   */
+  | {
+      type: 'rollDamage'; characterId: string
+      source:
+        | { kind: 'weapon'; weaponInstanceId: string; twoHanded?: boolean }
+        | { kind: 'spell'; spellId: string; slotResourceId?: string }
+      critical: boolean
+      faces: number[][]
+    }
   | { type: 'makeCheck'; characterId: string; checkType: 'ability' | 'skill'; ability?: Ability; skill?: SkillId; faces: number[] }
   | { type: 'makeSave'; characterId: string; ability: Ability; dc?: number; faces: number[] }
   | { type: 'useAbility'; characterId: string; actionId: string; sourceId: string }

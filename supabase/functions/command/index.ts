@@ -23,7 +23,8 @@
 
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 import {
-  applyCommand, decodeSheet, encodeSheet, isServerRolled, loadContent, mayIssue
+  applyCommand, decodeSheet, diceNeededFor, encodeSheet, isServerRolled, loadContent, mayIssue,
+  resolveDamagePools
 } from '../_shared/engine.mjs'
 
 const CORS = {
@@ -63,10 +64,23 @@ function faceCountFor(character: unknown, command: Record<string, unknown>): num
   return match ? Number(match[1]) : 1
 }
 
-function rollFaces(count: number): number[] {
+function rollFaces(count: number, sides = 20): number[] {
   const out = new Uint32Array(count)
   crypto.getRandomValues(out)
-  return Array.from(out, (n) => (n % 20) + 1)
+  return Array.from(out, (n) => (n % sides) + 1)
+}
+
+/**
+ * Damage dice vary in size and come in more than one pool (a weapon with a
+ * fire rune, a spell with two damage types), so this asks the engine for the
+ * exact shape — count and sides per pool, the critical already folded in —
+ * rather than probing the way `faceCountFor` does for a uniform d20 roll.
+ */
+function damageFacesFor(character: unknown, command: Record<string, unknown>): number[][] {
+  const resolved = resolveDamagePools(character, command['source'], content)
+  if ('rejected' in resolved) return []
+  const need = diceNeededFor(resolved.pools, Boolean(command['critical']))
+  return need.map((n: { count: number; sides: number }) => rollFaces(n.count, n.sides))
 }
 
 Deno.serve(async (req: Request) => {
@@ -145,8 +159,9 @@ Deno.serve(async (req: Request) => {
   // --- the dice -----------------------------------------------------------
   let effective = command
   if (isServerRolled(command['type'] as string)) {
-    const count = faceCountFor(decoded.character, command)
-    effective = { ...command, faces: rollFaces(count) }
+    effective = command['type'] === 'rollDamage'
+      ? { ...command, faces: damageFacesFor(decoded.character, command) }
+      : { ...command, faces: rollFaces(faceCountFor(decoded.character, command)) }
   }
 
   // --- the transition -----------------------------------------------------

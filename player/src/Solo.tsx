@@ -13,13 +13,16 @@ import { useState } from 'react'
 import { StageView } from '@stage-ui/StageView'
 import { EMPTY_SNAPSHOT } from '@shared/types'
 import { totalOf, type DiceRoll } from '@shared/dice'
-import type { Character, RollSpec } from '@engine'
+import type { Character, DamageRollSpec, RollSpec } from '@engine'
 import { useGameState } from './game/useGameState'
 import { PARTY } from './game/character'
 import { Hud } from './ui/Hud'
 import { GameMenu, type MenuTab } from './ui/GameMenu'
 import { DmPanel } from './ui/DmPanel'
-import { RollResult, rollFor, type RollOutcome } from './ui/RollWidget'
+import {
+  DamageResult, RollResult, damageOutcomeFromEvents, rollDamageFaces, rollFor, outcomeFromEvents,
+  type DamageOutcome, type RollOutcome
+} from './ui/RollWidget'
 
 export function Solo(): React.JSX.Element {
   const [who, setWho] = useState(0)
@@ -76,6 +79,8 @@ function SoloCharacter({ character, dmOpen, onCloseDm }: {
   const [menuTab, setMenuTab] = useState<MenuTab | null>(null)
   const [note, setNote] = useState<string | null>(null)
   const [outcome, setOutcome] = useState<RollOutcome | null>(null)
+  const [damageSpec, setDamageSpec] = useState<DamageRollSpec | null>(null)
+  const [damageOutcome, setDamageOutcome] = useState<DamageOutcome | null>(null)
   const [roll, setRoll] = useState<DiceRoll | null>(null)
   const [rollSeq, setRollSeq] = useState(1)
 
@@ -86,7 +91,7 @@ function SoloCharacter({ character, dmOpen, onCloseDm }: {
    * turns the faces into a result. The 3D dice on the stage and the readout the
    * player sees are the same roll, not two that happen to agree.
    */
-  const makeRoll = (spec: RollSpec): void => {
+  const makeRoll = (spec: RollSpec, damageRoll?: DamageRollSpec): void => {
     const dice = rollFor(spec)
     const faces = dice.map((d) => d.value)
     const result = game.dispatch({ ...spec.command, faces } as never)
@@ -94,8 +99,10 @@ function SoloCharacter({ character, dmOpen, onCloseDm }: {
 
     // From the returned events, not from `game.events` — that array is last
     // render's, so reading it here silently drops the roll just made.
-    const made = result.events.find((e) => e.type === 'RollMade')
-    if (made) setOutcome(made.payload as unknown as RollOutcome)
+    const rolled = outcomeFromEvents(result.events)
+    if (rolled) setOutcome(rolled)
+    setDamageOutcome(null)
+    setDamageSpec(damageRoll ?? null)
 
     setRoll({
       id: `solo-${rollSeq}`,
@@ -116,6 +123,41 @@ function SoloCharacter({ character, dmOpen, onCloseDm }: {
     setNote(null)
   }
 
+  // The follow-up: once an attack has landed, roll what it does.
+  const rollDamage = (): void => {
+    if (!damageSpec || !outcome) return
+    const critical = Boolean(outcome.critical)
+    const faces = rollDamageFaces(damageSpec, critical)
+    const result = game.dispatch({
+      type: 'rollDamage', characterId: damageSpec.characterId,
+      source: damageSpec.source, critical, faces
+    } as never)
+    if (result.rejected) { setNote(result.rejected.join(' · ')); return }
+    const rolled = damageOutcomeFromEvents(result.events)
+    if (!rolled) return
+    setDamageOutcome(rolled)
+    setDamageSpec(null)
+
+    setRoll({
+      id: `solo-${rollSeq}`,
+      campaignId: 'solo',
+      rollerId: 'solo',
+      characterId: game.view.meta.characterId,
+      rollerName: game.view.meta.name,
+      color: '#c9a227',
+      notation: rolled.damageLabel,
+      dice: damageSpec.pools.flatMap((p, i) =>
+        (faces[i] ?? []).map((value) => ({ sides: p.dice.sides as 4 | 6 | 8 | 10 | 12 | 20, value }))),
+      modifier: 0,
+      total: rolled.total,
+      visibility: 'public',
+      theme: 'bone',
+      at: rollSeq
+    })
+    setRollSeq((n) => n + 1)
+    setNote(null)
+  }
+
   return (
     <>
       <StageView
@@ -127,7 +169,16 @@ function SoloCharacter({ character, dmOpen, onCloseDm }: {
 
       {/* The result sits above the HUD, where the eye already is. */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center gap-2 p-4">
-        {outcome && <RollResult outcome={outcome} onDismiss={() => setOutcome(null)} />}
+        {outcome && (
+          <RollResult
+            outcome={outcome}
+            onDismiss={() => { setOutcome(null); setDamageSpec(null) }}
+            onRollDamage={damageSpec ? rollDamage : undefined}
+          />
+        )}
+        {damageOutcome && (
+          <DamageResult outcome={damageOutcome} onDismiss={() => setDamageOutcome(null)} />
+        )}
         {note && (
           <p className="pointer-events-auto rounded-lg border border-white/10 bg-ink/85 px-3 py-1.5 text-xs text-parchment/80 backdrop-blur">
             {note}
@@ -144,7 +195,7 @@ function SoloCharacter({ character, dmOpen, onCloseDm }: {
               return
             }
             // An attack is a roll; everything else is a state transition.
-            if (action.roll) { makeRoll(action.roll); return }
+            if (action.roll) { makeRoll(action.roll, action.damageRoll); return }
             const { rejected } = game.dispatch(action.command)
             setNote(rejected ? rejected.join(' · ') : `${action.label} used`)
           }}

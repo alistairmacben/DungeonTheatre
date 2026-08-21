@@ -13,7 +13,10 @@ import { useServerGame } from './game/useServerGame'
 import { useCampaignRole } from './useCampaignRole'
 import { Hud } from './ui/Hud'
 import { GameMenu, type MenuTab } from './ui/GameMenu'
-import { RollResult, type RollOutcome } from './ui/RollWidget'
+import {
+  DamageResult, RollResult, damageOutcomeFromEvents, rollDamageFaces, outcomeFromEvents,
+  type DamageOutcome, type RollOutcome
+} from './ui/RollWidget'
 import { CreateCharacter } from './ui/CreateCharacter'
 import { claimAndCreateSheet } from './game/sheetStore'
 import { Solo } from './Solo'
@@ -97,6 +100,8 @@ function Stage({
   const [menuTab, setMenuTab] = useState<MenuTab | null>(null)
   const [actionNote, setActionNote] = useState<string | null>(null)
   const [outcome, setOutcome] = useState<RollOutcome | null>(null)
+  const [damageSpec, setDamageSpec] = useState<import('@engine').DamageRollSpec | null>(null)
+  const [damageOutcome, setDamageOutcome] = useState<DamageOutcome | null>(null)
 
   // One path for every roll, and the order matters.
   //
@@ -106,21 +111,49 @@ function Stage({
   // animation and letting the server roll separately would put a different
   // number on the dice than in the result, which is the one thing a shared
   // table cannot have.
-  const makeRoll = async (spec: import('@engine').RollSpec): Promise<void> => {
+  const makeRoll = async (
+    spec: import('@engine').RollSpec, damageRoll?: import('@engine').DamageRollSpec
+  ): Promise<void> => {
     setActionNote(null)
+    setDamageOutcome(null)
     const result = await game.dispatch({ ...spec.command, faces: [] } as never)
     if (result.rejected) { setActionNote(result.rejected.join(' · ')); return }
 
-    const made = result.events.find((e) => e.type === 'RollMade')
-    if (!made) return
-    const rolled = made.payload as unknown as RollOutcome
+    const rolled = outcomeFromEvents(result.events)
+    if (!rolled) return
     setOutcome(rolled)
+    setDamageSpec(damageRoll ?? null)
 
     // The dice everyone watches are the dice that counted.
     send({
       notation: `${rolled.faces.length}d20${spec.modifierDisplay}`,
       dice: rolled.faces.map((value) => ({ sides: 20 as const, value })),
       modifier: rolled.modifier,
+      total: rolled.total,
+      visibility: 'public'
+    }, identity.diceTheme)
+  }
+
+  // The follow-up: once an attack has landed, roll what it does. Same rule as
+  // above — the server's dice are the ones that count, this just animates.
+  const rollDamage = async (): Promise<void> => {
+    if (!damageSpec || !outcome) return
+    const faces = rollDamageFaces(damageSpec, Boolean(outcome.critical))
+    const result = await game.dispatch({
+      type: 'rollDamage', characterId: damageSpec.characterId,
+      source: damageSpec.source, critical: Boolean(outcome.critical), faces
+    } as never)
+    if (result.rejected) { setActionNote(result.rejected.join(' · ')); return }
+    const rolled = damageOutcomeFromEvents(result.events)
+    if (!rolled) return
+    setDamageOutcome(rolled)
+    setDamageSpec(null)
+
+    send({
+      notation: rolled.damageLabel,
+      dice: damageSpec.pools.flatMap((p, i) =>
+        (faces[i] ?? []).map((value) => ({ sides: p.dice.sides as import('@shared/dice').DieSides, value }))),
+      modifier: 0,
       total: rolled.total,
       visibility: 'public'
     }, identity.diceTheme)
@@ -156,7 +189,16 @@ function Stage({
 
       {/* The HUD sits over the theatre and never competes with it. */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center gap-2 p-4">
-        {outcome && <RollResult outcome={outcome} onDismiss={() => setOutcome(null)} />}
+        {outcome && (
+          <RollResult
+            outcome={outcome}
+            onDismiss={() => { setOutcome(null); setDamageSpec(null) }}
+            onRollDamage={damageSpec ? () => void rollDamage() : undefined}
+          />
+        )}
+        {damageOutcome && (
+          <DamageResult outcome={damageOutcome} onDismiss={() => setDamageOutcome(null)} />
+        )}
         {actionNote && (
           <p className="pointer-events-auto rounded-lg border border-white/10 bg-ink/85 px-3 py-1.5 text-xs text-parchment/80 backdrop-blur">
             {actionNote}
@@ -177,7 +219,7 @@ function Stage({
                 return
               }
               // An attack is a roll; everything else is a state transition.
-              if (action.roll) { void makeRoll(action.roll); return }
+              if (action.roll) { void makeRoll(action.roll, action.damageRoll); return }
               void game.dispatch(action.command).then(({ rejected }) =>
                 setActionNote(rejected ? rejected.join(' · ') : `${action.label} used`))
             }}

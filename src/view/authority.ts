@@ -37,7 +37,7 @@ export const DM_ONLY_COMMANDS: readonly CommandType[] = [
  * whatever the client rolled and leave with whatever the server rolled.
  */
 export const SERVER_ROLLED_COMMANDS: readonly CommandType[] = [
-  'makeCheck', 'makeSave', 'makeAttack'
+  'makeCheck', 'makeSave', 'makeAttack', 'rollDamage'
 ]
 
 const DM_ONLY = new Set<string>(DM_ONLY_COMMANDS)

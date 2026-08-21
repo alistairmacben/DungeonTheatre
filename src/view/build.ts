@@ -584,6 +584,15 @@ function buildActions(
         },
         { type: 'makeAttack', characterId, weaponInstanceId: instanceId, faces: [] }
       ),
+      // What to roll once the attack lands. Undoubled — whether it doubles
+      // depends on the to-hit roll's own crit flag, which does not exist yet.
+      damageRoll: {
+        pools: attack.damage.components.map((c) => ({
+          type: c.type, dice: c.dice ?? { count: 0, sides: 1 }, flat: c.flat ?? 0
+        })),
+        characterId,
+        source: { kind: 'weapon', weaponInstanceId: instanceId }
+      },
       sourceId: def.id,
       sourceLabel: def.name,
       ...(detail === 'summary'

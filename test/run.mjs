@@ -57,7 +57,8 @@ for (const suite of [
   'test-projection.mjs',
   'test-authority.mjs',
   'test-creation.mjs',
-  'test-spell-effect.mjs'
+  'test-spell-effect.mjs',
+  'test-roll-damage.mjs'
 ]) {
   console.log(`\n───── ${suite} ─────`)
   try {

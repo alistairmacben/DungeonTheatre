@@ -28,22 +28,30 @@ export function Hud({
   const weapon = view.equipment.find((s) => s.slot === 'mainHand')
   const weaponAction = view.actions.find((a) => a.kind === 'attack')
 
-  // The HUD shows a handful of actions, not all of them. Attacks first, then
-  // whatever costs a resource — those are the decisions a player actually
-  // makes. Unavailable ones are excluded rather than greyed: a bar of things
-  // you cannot do is worse than a shorter bar, and the full list with its
-  // reasons is one click away in the menu.
-  // Attacks, then things that spend a resource, then the character's own
-  // abilities. The third tier matters: a rogue's Cunning Action costs nothing
-  // at all, so a rule of "attacks and resource-spenders" left the character
-  // whose entire identity is bonus actions with a HUD showing one button.
-  // Dash, Dodge and Hide stay in the menu — everyone has those.
+  // The HUD shows a handful of actions, not all of them. Unavailable ones are
+  // excluded rather than greyed: a bar of things you cannot do is worse than a
+  // shorter bar, and the full list with its reasons is one click away in the
+  // menu.
+  //
+  // What earns a slot, in order:
+  //  1. Weapon attacks.
+  //  2. Anything with a combat effect — a damage cantrip, an attack-roll
+  //     spell, a save-for-effect spell. A caster's whole kit can be spells, so
+  //     a rule that only looked at weapons left them with an empty bar.
+  //  3. Everything else that spends a resource — buffs, utility, healing.
+  //  4. The character's free abilities. This tier matters on its own: a
+  //     rogue's Cunning Action costs nothing at all, so folding it into tier 3
+  //     left the character whose entire identity is bonus actions with one
+  //     button. Dash, Dodge and Hide stay in the menu — everyone has those.
   const usable = view.actions.filter((a) => a.available)
+  const isCombat = (a: PlayerView['actions'][number]): boolean =>
+    Boolean(a.preview?.damageLabel || a.preview?.attackBonusDisplay || a.preview?.saveDc)
   const pinned = [
     ...usable.filter((a) => a.kind === 'attack'),
-    ...usable.filter((a) => a.kind !== 'attack' && a.costs.length > 0),
+    ...usable.filter((a) => a.kind !== 'attack' && isCombat(a)),
+    ...usable.filter((a) => a.kind !== 'attack' && !isCombat(a) && a.costs.length > 0),
     ...usable.filter((a) =>
-      a.kind !== 'attack' && a.costs.length === 0 && a.kind !== 'basic'
+      a.kind !== 'attack' && !isCombat(a) && a.costs.length === 0 && a.kind !== 'basic'
       && a.sourceId !== 'system:baseline')
   ].slice(0, 5)
 
