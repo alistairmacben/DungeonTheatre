@@ -22,8 +22,8 @@ import type {
   SpeciesDefinition, WeaponProfile
 } from '../rules/types.js'
 import {
-  abilityModifierPath, abilityScorePath, HP_MAX, PROFICIENCY_BONUS,
-  SPELL_ATTACK, SPELL_SAVE_DC, SPELLS_PREPARED_MAX, speedPath
+  abilityModifierPath, HP_MAX, PROFICIENCY_BONUS,
+  SPELL_ATTACK, SPELL_SAVE_DC, SPELLS_PREPARED_MAX
 } from '../rules/statPaths.js'
 
 const V = '2014'
@@ -59,67 +59,6 @@ const prof = (
  * Adding it there is a one-word data edit, not an engine change.
  */
 const DRUID_LIST = 'srd:list.druid'
-
-// ===========================================================================
-// Species — Wood Elf
-// ===========================================================================
-
-/**
- * Wood Elf.
- *
- * Two problems, both reported rather than papered over.
- *
- * First: **the wood elf is not in SRD 5.1**. docs/srd/01-races.md carries the
- * elf and exactly one subrace, the high elf. The traits that make a wood elf a
- * wood elf — the Wisdom increase, the 35-foot speed, Elf Weapon Training and
- * Mask of the Wild — appear nowhere in the extraction this file is written
- * against, so they are not written as mechanics here. Inventing them from
- * memory would put un-sourced numbers into a content set whose whole claim is
- * that every number is quotable.
- *
- * Second: the elf's own traits are already authored, on `srd:species.elf` in
- * wizard.ts, whose `subspecies` array is where a wood elf belongs. That array
- * cannot be extended from outside the file that declares it, so this is a
- * standalone species carrying the SRD elf traits verbatim. It duplicates them,
- * which is the honest cost of not editing wizard.ts.
- */
-export const WOOD_ELF: SpeciesDefinition = {
-  id: 'srd:species.elf.wood', name: 'Wood Elf', provenance: 'srd', contentVersion: 1,
-  size: 'medium', baseWalkSpeed: 30,
-  effects: source({
-    id: 'srd:species.elf.wood', name: 'Wood Elf', kind: 'species',
-    modifiers: [
-      add(abilityScorePath('dex'), 2),
-      { id: id(), channel: 'value', target: speedPath('walk'), op: 'base', value: 30, permanence: 'persistent' },
-      // Fey Ancestry is two clauses, and only the first is a roll. The immunity
-      // to magical sleep is a category immunity rather than a condition
-      // immunity, which nothing in the vocabulary expresses — it goes below.
-      {
-        id: id(), channel: 'roll', rollOp: 'advantage',
-        scope: { kinds: ['save'], againstTags: ['charm'] },
-        permanence: 'persistent', note: 'Fey Ancestry'
-      }
-    ],
-    proficiencies: [prof({ kind: 'skill', id: 'perception' })],
-    narrative: [
-      {
-        text: 'Fey Ancestry also makes you immune to magical sleep, and Trance '
-          + 'means you meditate for four hours rather than sleeping. Darkvision '
-          + 'reaches 60 feet. You speak Common and Elvish.',
-        dmPromptable: false
-      },
-      {
-        text: 'The wood elf subrace is not present in SRD 5.1, which carries the '
-          + 'high elf alone. Its distinguishing traits — the Wisdom increase, the '
-          + 'faster walking speed, weapon training and Mask of the Wild — must be '
-          + 'supplied by the DM before this species differs mechanically from an '
-          + 'elf. Nothing has been guessed in their place.',
-        dmPromptable: true
-      }
-    ],
-    completeness: 'partial'
-  })
-}
 
 // ===========================================================================
 // Class — Druid, levels 1-5
@@ -560,7 +499,10 @@ export const DRUIDIC_FOCUS: ItemDefinition = {
   })
 }
 
-export const DRUID_SPECIES: SpeciesDefinition[] = [WOOD_ELF]
+// Wood Elf lives on srd:species.elf's own subspecies array in wizard.ts —
+// merged there rather than duplicated here, once every parallel content agent
+// had finished and there was no longer a collision risk in editing that file.
+export const DRUID_SPECIES: SpeciesDefinition[] = []
 export const DRUID_CLASSES: ClassDefinition[] = [DRUID]
 export const DRUID_ITEMS: ItemDefinition[] = [
   CLUB, DART, QUARTERSTAFF, SCIMITAR, SICKLE, SLING, SPEAR, DRUIDIC_FOCUS

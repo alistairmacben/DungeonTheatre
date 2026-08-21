@@ -14,7 +14,10 @@ import { useCampaignRole } from './useCampaignRole'
 import { Hud } from './ui/Hud'
 import { GameMenu, type MenuTab } from './ui/GameMenu'
 import { RollResult, type RollOutcome } from './ui/RollWidget'
+import { CreateCharacter } from './ui/CreateCharacter'
+import { claimAndCreateSheet } from './game/sheetStore'
 import { Solo } from './Solo'
+import { CreatePreview } from './CreatePreview'
 
 export function App(): React.JSX.Element {
   const { session, ready } = useSession()
@@ -34,6 +37,7 @@ export function App(): React.JSX.Element {
 
   // The vertical-slice harness, before auth: the theatre and HUD with no table.
   if (window.location.hash === '#solo') return <Solo />
+  if (window.location.hash === '#create-preview') return <CreatePreview />
 
   if (!ready) return <Centered>Loading…</Centered>
   if (!session) return <SignIn />
@@ -189,6 +193,28 @@ function Stage({
           onClose={() => setMenuTab(null)}
           dispatch={(c) => game.dispatch(c).then((r) => r.rejected)}
           onRoll={(spec) => { setMenuTab(null); void makeRoll(spec) }}
+        />
+      )}
+
+      {/* The DM already cast this player to a stage character; nobody has
+          built its rules sheet yet. Building one is what claims it. */}
+      {identity.characterId && !game.loading && !game.view && game.error && (
+        <CreateCharacter
+          content={game.content}
+          characterId={identity.characterId}
+          campaignId={campaignId}
+          suggestedName={identity.name}
+          onSubmit={async (character) => {
+            if (!character || !identity.profileId) {
+              return 'something went wrong building that character'
+            }
+            const result = await claimAndCreateSheet(
+              supabase(), identity.characterId!, campaignId, character, identity.profileId
+            )
+            if (!result.ok) return result.error ?? 'could not save that character'
+            game.reload()
+            return undefined
+          }}
         />
       )}
 

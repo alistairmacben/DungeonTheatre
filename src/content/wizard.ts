@@ -63,22 +63,46 @@ export const ELF: SpeciesDefinition = {
       dmPromptable: false
     }]
   }),
-  subspecies: [{
-    id: 'srd:species.elf.high', name: 'High Elf',
-    effects: source({
-      id: 'srd:species.elf.high', name: 'High Elf', kind: 'species',
-      modifiers: [add(abilityScorePath('int'), 1)],
-      // An innate cantrip arrives through the same SpellGrant a whole class
-      // list uses: a fixed id, always available, no slot group. Nothing about
-      // the shape is racial.
-      spells: [{
-        spellIds: ['srd:spell.prestidigitation'],
-        availability: 'always',
-        ability: 'int'
-      }],
-      proficiencies: [prof({ kind: 'weapon', itemId: 'srd:weapon.longsword' })]
-    })
-  }]
+  subspecies: [
+    {
+      id: 'srd:species.elf.high', name: 'High Elf',
+      effects: source({
+        id: 'srd:species.elf.high', name: 'High Elf', kind: 'species',
+        modifiers: [add(abilityScorePath('int'), 1)],
+        // An innate cantrip arrives through the same SpellGrant a whole class
+        // list uses: a fixed id, always available, no slot group. Nothing about
+        // the shape is racial.
+        spells: [{
+          spellIds: ['srd:spell.prestidigitation'],
+          availability: 'always',
+          ability: 'int'
+        }],
+        proficiencies: [prof({ kind: 'weapon', itemId: 'srd:weapon.longsword' })]
+      })
+    },
+    {
+      // SRD 5.1 defines only the high elf. Wood elf is a real 5e subrace but
+      // is not in this ruleset's source text, so its distinguishing traits —
+      // the Wisdom increase, the faster walking speed, weapon training, Mask
+      // of the Wild — are not modelled here rather than guessed at. What
+      // Fey Ancestry, Trance and the rest already give it is the base Elf
+      // above; this subspecies exists so it can be chosen and flagged
+      // honestly, not so it can pretend to be complete.
+      id: 'srd:species.elf.wood', name: 'Wood Elf',
+      effects: source({
+        id: 'srd:species.elf.wood', name: 'Wood Elf', kind: 'species',
+        narrative: [{
+          text: 'The wood elf subrace is not present in SRD 5.1, which carries '
+            + 'only the high elf. Its distinguishing traits — the Wisdom '
+            + 'increase, the faster walking speed, weapon training and Mask of '
+            + 'the Wild — must be supplied by the DM; nothing has been guessed '
+            + 'in their place. Mechanically this is a base elf until they are.',
+          dmPromptable: true
+        }],
+        completeness: 'partial'
+      })
+    }
+  ]
 }
 
 // ===========================================================================

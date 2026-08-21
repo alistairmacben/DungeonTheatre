@@ -128,3 +128,39 @@ export async function createSheet(
   if (error) return { ok: false, error: error.message }
   return { ok: true, revision: data?.revision ?? 1 }
 }
+
+/**
+ * Finishes character creation: claims the stage character as the caller's own,
+ * then writes its first sheet.
+ *
+ * The DM casts a Discord user to a stage character — name, portrait, colour —
+ * and that row starts with no owner, because nobody has built a rules sheet
+ * for it yet. Claiming happens here rather than earlier, so a player who opens
+ * the creation form and never finishes has not silently taken the character;
+ * finishing creation and taking ownership are the same action.
+ *
+ * `owner_id is null` in the query is not defence in depth, it is the actual
+ * check: the RLS policy only allows the update at all when the row is
+ * currently unowned (see `20260820_claim_unowned_character.sql`), so this
+ * fails safely against a character somebody already claimed.
+ */
+export async function claimAndCreateSheet(
+  db: SupabaseClient,
+  characterId: string,
+  campaignId: string,
+  character: Character,
+  profileId: string
+): Promise<SaveResult> {
+  const { data: claimed, error: claimError } = await db
+    .from('characters')
+    .update({ owner_id: profileId })
+    .eq('id', characterId)
+    .is('owner_id', null)
+    .select('id')
+    .maybeSingle()
+
+  if (claimError) return { ok: false, error: claimError.message }
+  if (!claimed) return { ok: false, error: 'this character already belongs to someone' }
+
+  return createSheet(db, characterId, campaignId, character)
+}
