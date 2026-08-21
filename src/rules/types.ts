@@ -643,6 +643,44 @@ export interface FeatDefinition extends Identity {
   effects: EffectSource
 }
 
+/** One typed damage die-pool, before any scaling is applied. */
+export interface SpellDamage {
+  dice: DiceExpr
+  type: DamageType
+}
+
+/**
+ * The mechanical shape of a spell's effect, distinct from `effects` (which is
+ * the ongoing EffectSource a buff like Mage Armor installs). This is the
+ * one-shot thing that happens when the spell lands: damage, healing, a save.
+ *
+ * Optional on purpose. A spell with no `effect` — Detect Magic, Prestidigitation
+ * — is pure narrative and resolves to nothing here, exactly as before. Adding
+ * this makes a damage spell surface a preview and hand the DM structured damage
+ * to apply, the same way a weapon attack already does. It does NOT auto-apply
+ * anything to a target: this is theatre-of-the-mind, and the DM adjudicates
+ * what the fireball actually hits.
+ */
+export interface SpellEffect {
+  /** How it lands: the caster's spell attack, the target's save, or automatic. */
+  delivery: 'attack' | 'save' | 'auto'
+  /** For delivery 'save': which ability the target rolls, and what success does. */
+  save?: { ability: Ability; onSuccess: 'half' | 'none' }
+  /** Damage on a hit / a failed save / automatically. Several entries mix types. */
+  damage?: SpellDamage[]
+  /** Separate instances of the damage — Magic Missile's three darts. Default 1. */
+  instances?: number
+  /** Healing: dice, plus the spellcasting ability modifier when `addSpellMod`. */
+  healing?: { dice: DiceExpr; addSpellMod?: boolean }
+  /**
+   * A cantrip's damage grows with CHARACTER level at 5/11/17 — a different axis
+   * from slot upcasting. When true, one extra damage die is added at each step.
+   */
+  cantripScaling?: boolean
+  /** Upcasting: what each slot level above the spell's own level adds. */
+  perSlotAbove?: { damageDice?: DiceExpr; instances?: number; healingDice?: DiceExpr }
+}
+
 export interface SpellDefinition extends Identity {
   level: number
   /** Class lists this spell appears on, for grants that take a whole list. */
@@ -656,6 +694,8 @@ export interface SpellDefinition extends Identity {
   durationSeconds?: number
   concentration: boolean
   effects: EffectSource
+  /** The one-shot damage/heal/save, when the spell has one. See SpellEffect. */
+  effect?: SpellEffect
   /** Upcasting is a lookup, not a formula — see srd/91-effect-vocabulary.md §8. */
   upcast?: { slotLevel: number; effects: EffectSource }[]
 }

@@ -404,10 +404,22 @@ function ActionRow({ action, dispatch }: {
           )}
         </div>
 
-        {action.preview?.attackBonusDisplay && (
+        {/* Attack bonus when there is one (weapons, spell attacks); otherwise
+            just the effect — a Magic Missile or Cure Wounds has no roll to
+            show, but it still has a number the player wants to see. */}
+        {(action.preview?.attackBonusDisplay || action.preview?.damageLabel || action.preview?.saveDc) && (
           <div className="shrink-0 text-right">
-            <p className="text-sm tabular-nums text-parchment">{action.preview.attackBonusDisplay}</p>
-            <p className="text-[11px] text-parchment/45">{action.preview.damageLabel}</p>
+            {action.preview.attackBonusDisplay && (
+              <p className="text-sm tabular-nums text-parchment">{action.preview.attackBonusDisplay}</p>
+            )}
+            {action.preview.damageLabel && (
+              <p className="text-[11px] text-parchment/45">{action.preview.damageLabel}</p>
+            )}
+            {action.preview.saveDc && !action.preview.attackBonusDisplay && (
+              <p className="text-[11px] text-parchment/45">
+                DC {action.preview.saveDc}{action.preview.saveAbility ? ` ${action.preview.saveAbility.toUpperCase()}` : ''}
+              </p>
+            )}
           </div>
         )}
       </button>
@@ -549,6 +561,20 @@ function SpellRow({ spell, dispatch }: {
             {spell.castingTimeLabel} · {spell.rangeLabel} · {spell.componentsLabel}
             {spell.durationLabel ? ` · ${spell.durationLabel}` : ''}
           </p>
+          {/* What the spell does when it lands — the same shape a weapon shows. */}
+          {spell.effectPreview && (
+            <p className="mt-1 flex flex-wrap items-center gap-2 text-[13px]">
+              <span className="tabular-nums text-parchment">{spell.effectPreview.label}</span>
+              {spell.effectPreview.attackBonusDisplay && (
+                <span className="text-[11px] text-parchment/45">
+                  spell attack {spell.effectPreview.attackBonusDisplay}
+                </span>
+              )}
+              {spell.effectPreview.saveLabel && (
+                <span className="text-[11px] text-parchment/45">{spell.effectPreview.saveLabel}</span>
+              )}
+            </p>
+          )}
           {!spell.available && (
             <p className="mt-1 text-[12px] text-ember">
               Unavailable — {spell.unavailableReasons.join(' · ')}

@@ -18,6 +18,7 @@ import { resolveCheck, resolvePassiveCheck } from '../rules/check.js'
 import { resolveAttack } from '../rules/attack.js'
 import { resolveResources, type ResourceValue } from '../rules/resources.js'
 import { resolveSpellcasting, type CastableSpell, type SlotOption } from '../rules/spells.js'
+import { resolveSpellEffect } from '../rules/spellEffect.js'
 import {
   abilityModifierPath, abilityScorePath, ARMOR_CLASS, HP_MAX, INITIATIVE,
   PROFICIENCY_BONUS, speedPath
@@ -665,6 +666,29 @@ function buildActions(
   // without a line of spell-specific presentation code.
   for (const c of resolveSpellcasting(r, content).accessible) {
     const cheapest = c.slotOptions.find((s: SlotOption) => s.remaining > 0)
+
+    // The one-shot effect at the cheapest slot the spell could use — a preview,
+    // so what a player reads before casting Fire Bolt is the same "1d10 fire"
+    // shape they read on a weapon before swinging it.
+    const castLevel = cheapest?.level ?? c.spell.level
+    const resolved = resolveSpellEffect(
+      c.spell,
+      { ability: c.ability, characterLevel: characterLevel(r.character), slotLevel: castLevel },
+      r
+    )
+    const preview: ActionView['preview'] | undefined = resolved
+      ? {
+        ...(resolved.attackBonus !== undefined
+          ? { attackBonus: resolved.attackBonus, attackBonusDisplay: signed(resolved.attackBonus) }
+          : {}),
+        ...(resolved.damage.length > 0 || resolved.healing
+          ? { damageLabel: resolved.label }
+          : {}),
+        ...(resolved.damage[0] ? { damageType: resolved.damage[0].type } : {}),
+        ...(resolved.save ? { saveDc: resolved.save.dc, saveAbility: resolved.save.ability } : {})
+      }
+      : undefined
+
     out.push({
       id: `cast:${c.spell.id}`,
       label: c.spell.name,
@@ -676,6 +700,7 @@ function buildActions(
       costs: cheapest
         ? [{ resourceId: cheapest.resourceId, amount: 1, label: `1 ${cheapest.label}` }]
         : c.costs.map((x: CastableSpell['costs'][number]) => ({ resourceId: x.resourceId, amount: x.amount, label: x.label })),
+      ...(preview ? { preview } : {}),
       available: c.available,
       unavailableReasons: c.unavailableReasons,
       command: { type: 'castSpell', characterId, spellId: c.spell.id },
@@ -778,32 +803,55 @@ function buildSpellcasting(
   const casting = resolveSpellcasting(r, content)
   if (!casting.active) return undefined
 
-  const spells: SpellView[] = casting.accessible.map((c: CastableSpell) => ({
-    id: c.spell.id,
-    label: c.spell.name,
-    level: c.spell.level,
-    levelLabel: LEVEL_LABEL[c.spell.level] ?? `${c.spell.level}th`,
-    school: c.spell.school,
-    castingTimeLabel: costView(c.spell.castingTime).label,
-    rangeLabel: rangeLabel(c.spell),
-    ...(durationLabel(c.spell.durationSeconds, c.spell.concentration)
-      ? { durationLabel: durationLabel(c.spell.durationSeconds, c.spell.concentration)! }
-      : {}),
-    concentration: c.spell.concentration,
-    ritual: c.spell.ritual,
-    componentsLabel: componentsLabel(c.spell.components),
-    ...(c.spell.effects.narrative?.[0]
-      ? { description: c.spell.effects.narrative[0].text }
-      : {}),
-    effects: describeSource(c.spell.effects, r, content),
-    prepared: c.prepared,
-    alwaysAvailable: c.alwaysAvailable,
-    available: c.available,
-    unavailableReasons: c.unavailableReasons,
-    slotOptions: c.slotOptions,
-    command: { type: 'castSpell', characterId, spellId: c.spell.id },
-    sourceLabel: c.grantSourceName
-  }))
+  const level = characterLevel(r.character)
+  const spells: SpellView[] = casting.accessible.map((c: CastableSpell) => {
+    // The effect at the cheapest slot it could use, so the Spells tab shows the
+    // same "2d10 fire" a weapon shows on the HUD — one shape for both.
+    const castLevel = c.slotOptions.find((s) => s.remaining > 0)?.level ?? c.spell.level
+    const resolved = resolveSpellEffect(
+      c.spell, { ability: c.ability, characterLevel: level, slotLevel: castLevel }, r
+    )
+    const effectPreview = resolved
+      ? {
+        label: resolved.label,
+        delivery: resolved.delivery,
+        ...(resolved.attackBonus !== undefined
+          ? { attackBonusDisplay: signed(resolved.attackBonus) }
+          : {}),
+        ...(resolved.save
+          ? { saveLabel: `DC ${resolved.save.dc} ${resolved.save.ability.toUpperCase()}` }
+          : {})
+      }
+      : undefined
+
+    return {
+      id: c.spell.id,
+      label: c.spell.name,
+      level: c.spell.level,
+      levelLabel: LEVEL_LABEL[c.spell.level] ?? `${c.spell.level}th`,
+      school: c.spell.school,
+      castingTimeLabel: costView(c.spell.castingTime).label,
+      rangeLabel: rangeLabel(c.spell),
+      ...(durationLabel(c.spell.durationSeconds, c.spell.concentration)
+        ? { durationLabel: durationLabel(c.spell.durationSeconds, c.spell.concentration)! }
+        : {}),
+      concentration: c.spell.concentration,
+      ritual: c.spell.ritual,
+      componentsLabel: componentsLabel(c.spell.components),
+      ...(c.spell.effects.narrative?.[0]
+        ? { description: c.spell.effects.narrative[0].text }
+        : {}),
+      effects: describeSource(c.spell.effects, r, content),
+      ...(effectPreview ? { effectPreview } : {}),
+      prepared: c.prepared,
+      alwaysAvailable: c.alwaysAvailable,
+      available: c.available,
+      unavailableReasons: c.unavailableReasons,
+      slotOptions: c.slotOptions,
+      command: { type: 'castSpell', characterId, spellId: c.spell.id },
+      sourceLabel: c.grantSourceName
+    }
+  })
 
   const concentrating = r.character.concentratingOn
   const concentratingDef = concentrating

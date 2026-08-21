@@ -52,6 +52,15 @@ const SORCERER = 'srd:list.sorcerer'
 export const FIRE_BOLT = spell({
   id: 'srd:spell.fire-bolt', name: 'Fire Bolt', level: 0, school: 'evocation',
   rangeFeet: 120,
+  // The first spell with a resolved effect: a spell attack for 1d10 fire that
+  // grows with character level. `cantripScaling` is the whole of the "increases
+  // at 5th/11th/17th" clause below — the resolver applies it, so a level-11
+  // wizard sees 3d10 with no second definition.
+  effect: {
+    delivery: 'attack',
+    damage: [{ dice: { count: 1, sides: 10 }, type: 'fire' }],
+    cantripScaling: true
+  },
   effects: effects({
     id: 'srd:spell.fire-bolt', name: 'Fire Bolt',
     narrative: [{
@@ -65,6 +74,13 @@ export const FIRE_BOLT = spell({
 export const RAY_OF_FROST = spell({
   id: 'srd:spell.ray-of-frost', name: 'Ray of Frost', level: 0, school: 'evocation',
   rangeFeet: 60,
+  // The speed reduction is a rider on the target the engine has no target to
+  // apply it to — it stays narrative. The damage is real.
+  effect: {
+    delivery: 'attack',
+    damage: [{ dice: { count: 1, sides: 8 }, type: 'cold' }],
+    cantripScaling: true
+  },
   effects: effects({
     id: 'srd:spell.ray-of-frost', name: 'Ray of Frost',
     narrative: [{
@@ -132,6 +148,15 @@ export const MENDING = spell({
 export const SACRED_FLAME = spell({
   id: 'srd:spell.sacred-flame', name: 'Sacred Flame', level: 0, school: 'evocation',
   rangeFeet: 60, components: { verbal: true, somatic: true },
+  // A save spell, not an attack: the target rolls, the caster does not. On a
+  // successful save it takes nothing ('none'), which the DC and ability let the
+  // DM adjudicate directly.
+  effect: {
+    delivery: 'save',
+    save: { ability: 'dex', onSuccess: 'none' },
+    damage: [{ dice: { count: 1, sides: 8 }, type: 'radiant' }],
+    cantripScaling: true
+  },
   effects: effects({
     id: 'srd:spell.sacred-flame', name: 'Sacred Flame',
     narrative: [{
@@ -276,6 +301,15 @@ export const IDENTIFY = spell({
 export const CURE_WOUNDS = spell({
   id: 'srd:spell.cure-wounds', name: 'Cure Wounds', level: 1, school: 'evocation',
   rangeKind: 'touch',
+  // Healing, not damage: 1d8 plus the caster's own spellcasting modifier, and
+  // an extra 1d8 for each slot level above 1st. `addSpellMod` reaches the
+  // ability the grant declared (wis for a cleric, cha for a bard) — nothing
+  // here names an ability, which is why the same definition works for both.
+  effect: {
+    delivery: 'auto',
+    healing: { dice: { count: 1, sides: 8 }, addSpellMod: true },
+    perSlotAbove: { healingDice: { count: 1, sides: 8 } }
+  },
   effects: effects({
     id: 'srd:spell.cure-wounds', name: 'Cure Wounds',
     narrative: [{
@@ -289,6 +323,16 @@ export const CURE_WOUNDS = spell({
 export const MAGIC_MISSILE = spell({
   id: 'srd:spell.magic-missile', name: 'Magic Missile', level: 1, school: 'evocation',
   rangeFeet: 120,
+  // Automatic damage — no attack, no save — as three darts, each 1d4+1 force,
+  // with one more dart per slot level above 1st. `instances` is what makes the
+  // preview read "3 × 1d4+1 force" rather than folding the darts into one pool,
+  // because each dart can be aimed separately.
+  effect: {
+    delivery: 'auto',
+    damage: [{ dice: { count: 1, sides: 4, modifier: 1 }, type: 'force' }],
+    instances: 3,
+    perSlotAbove: { instances: 1 }
+  },
   effects: effects({
     id: 'srd:spell.magic-missile', name: 'Magic Missile',
     narrative: [{

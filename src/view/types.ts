@@ -204,6 +204,8 @@ export interface ActionPreview {
   damageLabel?: string
   damageType?: DamageType
   saveDc?: number
+  /** The ability a save-based spell forces, so the preview can say "DC 14 DEX". */
+  saveAbility?: Ability
   rangeLabel?: string
   rollState?: 'advantage' | 'disadvantage' | 'normal'
 }
@@ -270,6 +272,20 @@ export interface SpellView {
   description?: string
   /** Plain-language consequences, from the spell's effect source. */
   effects: string[]
+  /**
+   * The one-shot damage/heal/save, when the spell has one — the same "2d10
+   * fire" a weapon shows. Present only for spells with a resolved effect;
+   * a buff or a utility spell leaves it undefined.
+   */
+  effectPreview?: {
+    /** "2d10 fire", "3 × 1d4+1 force", "heal 1d8+3". */
+    label: string
+    delivery: 'attack' | 'save' | 'auto'
+    /** "+6" for an attack spell. */
+    attackBonusDisplay?: string
+    /** "DC 14 DEX" for a save spell. */
+    saveLabel?: string
+  }
   prepared: boolean
   /** True for cantrips, domain and innate spells: preparation does not apply. */
   alwaysAvailable: boolean

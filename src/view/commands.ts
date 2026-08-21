@@ -12,9 +12,10 @@
 import type {
   Character, ContentIndex, EffectSource, GameEvent
 } from '../rules/types.js'
-import { createResolution } from '../rules/resolve.js'
+import { createResolution, characterLevel } from '../rules/resolve.js'
 import { resolveResources, applyRest } from '../rules/resources.js'
 import { cheapestSlot, resolveSpellcasting } from '../rules/spells.js'
+import { resolveSpellEffect } from '../rules/spellEffect.js'
 import { resolveCheck } from '../rules/check.js'
 import { resolveAttack } from '../rules/attack.js'
 import { applyOutcome } from '../rules/roll.js'
@@ -377,6 +378,19 @@ function castSpell(
     if (target.spell.concentration) next.concentratingOn = instanceId
   }
 
+  // The one-shot effect at the level it was actually cast, so the DM has a
+  // damage number to apply rather than a paragraph to read. Nothing is applied
+  // here — theatre-of-the-mind, the DM adjudicates what it hits.
+  const resolved = resolveSpellEffect(
+    target.spell,
+    {
+      ability: target.ability,
+      characterLevel: characterLevel(character),
+      slotLevel: slot?.level ?? target.spell.level
+    },
+    createResolution(character, content)
+  )
+
   events.unshift(event('SpellCast', next, {
     spellId: target.spell.id,
     label: target.spell.name,
@@ -385,7 +399,22 @@ function castSpell(
     upcast: slot !== undefined && slot.level > target.spell.level,
     concentration: target.spell.concentration,
     saveDc: casting.saveDc.total,
-    attackBonus: casting.attackBonus.total
+    attackBonus: casting.attackBonus.total,
+    // Structured, for the DM to act on in one click; absent for spells with no
+    // one-shot effect (Detect Magic and the like).
+    ...(resolved
+      ? {
+        effect: {
+          delivery: resolved.delivery,
+          summary: resolved.label,
+          damage: resolved.damage,
+          instances: resolved.instances,
+          ...(resolved.healing ? { healing: resolved.healing } : {}),
+          ...(resolved.save ? { save: resolved.save } : {}),
+          ...(resolved.attackBonus !== undefined ? { attackBonus: resolved.attackBonus } : {})
+        }
+      }
+      : {})
   }))
 
   return { character: next, events }
