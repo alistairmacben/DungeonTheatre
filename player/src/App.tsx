@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { StageView } from '@stage-ui/StageView'
 import { DiceTray } from '@stage-ui/DiceTray'
-import { totalOf } from '@shared/dice'
 import { supabase, storageUrl } from './supabase'
 import { useMemberships, useSession } from './useSession'
 import { useCampaignStage } from './useCampaignStage'
@@ -10,10 +9,11 @@ import { usePlayerIdentity } from './usePlayerIdentity'
 
 const LAST_CAMPAIGN_KEY = 'dungeon-stage:last-campaign'
 
-import { useGameState } from './game/useGameState'
+import { useServerGame } from './game/useServerGame'
+import { useCampaignRole } from './useCampaignRole'
 import { Hud } from './ui/Hud'
 import { GameMenu, type MenuTab } from './ui/GameMenu'
-import { RollResult, rollFor, type RollOutcome } from './ui/RollWidget'
+import { RollResult, type RollOutcome } from './ui/RollWidget'
 import { Solo } from './Solo'
 
 export function App(): React.JSX.Element {
@@ -81,30 +81,45 @@ function Stage({
   // The player's own game state. The engine is pure and portable, so the client
   // runs the same resolver the server will — see architecture.md §6. Swapping
   // to server-authoritative later changes where `view` comes from, nothing else.
-  const game = useGameState()
+  // The character this player is cast as, played against the server. Casting
+  // is what already decides which character is "yours" on the stage, so the
+  // same answer decides which sheet you are holding.
+  const { role, isDm } = useCampaignRole(campaignId, identity.profileId)
+  const game = useServerGame({
+    characterId: identity.characterId,
+    role,
+    viewer: { kind: isDm ? 'dm' : 'owner' }
+  })
   const [menuTab, setMenuTab] = useState<MenuTab | null>(null)
   const [actionNote, setActionNote] = useState<string | null>(null)
   const [outcome, setOutcome] = useState<RollOutcome | null>(null)
 
-  // One path for every roll. The engine says how many dice, the shared roller
-  // throws them, the reducer turns faces into a result — and the same roll goes
-  // to the table, so the 3D dice and the readout can never disagree.
-  const makeRoll = (spec: import('@engine').RollSpec): void => {
-    const dice = rollFor(spec)
-    const result = game.dispatch({ ...spec.command, faces: dice.map((d) => d.value) } as never)
+  // One path for every roll, and the order matters.
+  //
+  // The SERVER rolls — a client that supplies its own faces can supply
+  // twenties. So the command goes up with no faces, the authoritative result
+  // comes back, and only then does the stage animate. Rolling locally for the
+  // animation and letting the server roll separately would put a different
+  // number on the dice than in the result, which is the one thing a shared
+  // table cannot have.
+  const makeRoll = async (spec: import('@engine').RollSpec): Promise<void> => {
+    setActionNote(null)
+    const result = await game.dispatch({ ...spec.command, faces: [] } as never)
     if (result.rejected) { setActionNote(result.rejected.join(' · ')); return }
-    // From the returned events, not from `game.events` — that array is last
-    // render's, so reading it here silently drops the roll just made.
+
     const made = result.events.find((e) => e.type === 'RollMade')
-    if (made) setOutcome(made.payload as unknown as RollOutcome)
+    if (!made) return
+    const rolled = made.payload as unknown as RollOutcome
+    setOutcome(rolled)
+
+    // The dice everyone watches are the dice that counted.
     send({
-      notation: `${spec.diceCount}d20${spec.modifierDisplay}`,
-      dice,
-      modifier: spec.modifier,
-      total: totalOf(dice, spec.modifier),
+      notation: `${rolled.faces.length}d20${spec.modifierDisplay}`,
+      dice: rolled.faces.map((value) => ({ sides: 20 as const, value })),
+      modifier: rolled.modifier,
+      total: rolled.total,
       visibility: 'public'
     }, identity.diceTheme)
-    setActionNote(null)
   }
 
   // The stage is the point, so the UI gets out of the way on its own.
@@ -143,32 +158,37 @@ function Stage({
             {actionNote}
           </p>
         )}
-        <Hud
-          view={game.view}
-          onOpenMenu={(tab) => setMenuTab((tab as MenuTab) ?? 'character')}
-          onAction={(actionId) => {
-            const action = game.view.actions.find((a) => a.id === actionId)
-            if (!action) return
-            if (!action.available) {
-              setActionNote(action.unavailableReasons.join(' · '))
-              return
-            }
-            // An attack is a roll; everything else is a state transition.
-            if (action.roll) { makeRoll(action.roll); return }
-            const { rejected } = game.dispatch(action.command)
-            setActionNote(rejected ? rejected.join(' · ') : `${action.label} used`)
-          }}
-        />
+        {/* No HUD until there is a character. A player who has not been cast
+            yet, or whose character has no sheet, still gets the theatre —
+            which is the part that works without any of this. */}
+        {game.view && (
+          <Hud
+            view={game.view}
+            onOpenMenu={(tab) => setMenuTab((tab as MenuTab) ?? 'character')}
+            onAction={(actionId) => {
+              const action = game.view!.actions.find((a) => a.id === actionId)
+              if (!action) return
+              if (!action.available) {
+                setActionNote(action.unavailableReasons.join(' · '))
+                return
+              }
+              // An attack is a roll; everything else is a state transition.
+              if (action.roll) { void makeRoll(action.roll); return }
+              void game.dispatch(action.command).then(({ rejected }) =>
+                setActionNote(rejected ? rejected.join(' · ') : `${action.label} used`))
+            }}
+          />
+        )}
       </div>
 
-      {menuTab && (
+      {menuTab && game.view && (
         <GameMenu
           view={game.view}
           tab={menuTab}
           onTab={setMenuTab}
           onClose={() => setMenuTab(null)}
-          dispatch={(c) => game.dispatch(c).rejected}
-          onRoll={(spec) => { setMenuTab(null); makeRoll(spec) }}
+          dispatch={(c) => game.dispatch(c).then((r) => r.rejected)}
+          onRoll={(spec) => { setMenuTab(null); void makeRoll(spec) }}
         />
       )}
 

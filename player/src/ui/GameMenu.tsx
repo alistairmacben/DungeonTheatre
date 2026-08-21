@@ -31,7 +31,7 @@ export function GameMenu({
   tab: MenuTab
   onTab(tab: MenuTab): void
   onClose(): void
-  dispatch(command: PlayerCommand): string[] | undefined
+  dispatch(command: PlayerCommand): Promise<string[] | undefined> | string[] | undefined
   onRoll(spec: RollSpec): void
 }): React.JSX.Element {
   return (
@@ -216,14 +216,14 @@ function Stat({ label, children }: { label: string; children: React.ReactNode })
 
 function InventoryTab({
   view, dispatch
-}: { view: PlayerView; dispatch(c: PlayerCommand): string[] | undefined }): React.JSX.Element {
+}: { view: PlayerView; dispatch(c: PlayerCommand): Promise<string[] | undefined> | string[] | undefined }): React.JSX.Element {
   const [error, setError] = useState<string | null>(null)
 
   const equip = (item: ItemView): void => {
     const command: PlayerCommand = item.equipped
       ? { type: 'unequipItem', characterId: view.meta.characterId, slot: item.slot! }
       : { type: 'equipItem', characterId: view.meta.characterId, instanceId: item.instanceId, slot: item.slot! }
-    setError(dispatch(command)?.join(' · ') ?? null)
+    void Promise.resolve(dispatch(command)).then((r) => setError(r?.join(' · ') ?? null))
   }
 
   const groups: { id: ItemView['group']; label: string }[] = [
@@ -331,7 +331,7 @@ const FACETS = [
 
 function ActionsTab({ view, dispatch }: {
   view: PlayerView
-  dispatch(command: PlayerCommand): string[] | undefined
+  dispatch(command: PlayerCommand): Promise<string[] | undefined> | string[] | undefined
 }): React.JSX.Element {
   const [facet, setFacet] = useState<string>('all')
   const shown = facet === 'all'
@@ -372,7 +372,7 @@ function ActionsTab({ view, dispatch }: {
 
 function ActionRow({ action, dispatch }: {
   action: ActionView
-  dispatch(command: PlayerCommand): string[] | undefined
+  dispatch(command: PlayerCommand): Promise<string[] | undefined> | string[] | undefined
 }): React.JSX.Element {
   const [open, setOpen] = useState(false)
   const [rejected, setRejected] = useState<string[] | null>(null)
@@ -417,7 +417,7 @@ function ActionRow({ action, dispatch }: {
           <button
             type="button"
             disabled={!action.available}
-            onClick={() => setRejected(dispatch(action.command) ?? null)}
+            onClick={() => { void Promise.resolve(dispatch(action.command)).then((r) => setRejected(r ?? null)) }}
             className="rounded-lg border border-arcane/50 bg-arcane/10 px-3 py-1 text-xs text-parchment transition hover:bg-arcane/20 disabled:opacity-40"
           >
             Use
@@ -450,7 +450,7 @@ function ActionRow({ action, dispatch }: {
  */
 function SpellsTab({ view, dispatch }: {
   view: PlayerView
-  dispatch(command: PlayerCommand): string[] | undefined
+  dispatch(command: PlayerCommand): Promise<string[] | undefined> | string[] | undefined
 }): React.JSX.Element {
   const casting = view.spellcasting!
   const byLevel = new Map<number, SpellView[]>()
@@ -513,7 +513,7 @@ function SpellsTab({ view, dispatch }: {
 
 function SpellRow({ spell, dispatch }: {
   spell: SpellView
-  dispatch(command: PlayerCommand): string[] | undefined
+  dispatch(command: PlayerCommand): Promise<string[] | undefined> | string[] | undefined
 }): React.JSX.Element {
   const [open, setOpen] = useState(false)
   const [rejected, setRejected] = useState<string[] | null>(null)
@@ -576,7 +576,7 @@ function SpellRow({ spell, dispatch }: {
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <button
             type="button"
-            onClick={() => setRejected(dispatch(spell.command) ?? null)}
+            onClick={() => { void Promise.resolve(dispatch(spell.command)).then((r) => setRejected(r ?? null)) }}
             className="rounded-lg border border-arcane/50 bg-arcane/10 px-3 py-1 text-xs text-parchment transition hover:bg-arcane/20"
           >
             Cast
@@ -587,8 +587,11 @@ function SpellRow({ spell, dispatch }: {
             <button
               key={slot.resourceId}
               type="button"
-              onClick={() => setRejected(
-                dispatch({ ...spell.command, slotResourceId: slot.resourceId } as PlayerCommand) ?? null)}
+              onClick={() => {
+                void Promise.resolve(
+                  dispatch({ ...spell.command, slotResourceId: slot.resourceId } as PlayerCommand)
+                ).then((r) => setRejected(r ?? null))
+              }}
               className="rounded-lg border border-white/15 px-2.5 py-1 text-[11px] text-parchment/70 transition hover:border-arcane/50 hover:text-parchment"
             >
               at level {slot.level}

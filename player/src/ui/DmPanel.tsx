@@ -24,7 +24,7 @@ export function DmPanel({
   view, dispatch, onClose
 }: {
   view: PlayerView
-  dispatch(command: PlayerCommand): string[] | undefined
+  dispatch(command: PlayerCommand): Promise<string[] | undefined> | string[] | undefined
   onClose(): void
 }): React.JSX.Element {
   const [amount, setAmount] = useState(10)
@@ -32,8 +32,10 @@ export function DmPanel({
   const [note, setNote] = useState<string | null>(null)
 
   const send = (command: PlayerCommand, success: string): void => {
-    const rejected = dispatch(command)
-    setNote(rejected ? rejected.join(' · ') : success)
+    // The DM's own commands are authoritative, so the note reports what the
+    // server actually did rather than what was asked for.
+    void Promise.resolve(dispatch(command))
+      .then((rejected) => setNote(rejected ? rejected.join(' · ') : success))
   }
 
   const id = view.meta.characterId
