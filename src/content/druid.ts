@@ -60,6 +60,10 @@ const prof = (
  */
 const DRUID_LIST = 'srd:list.druid'
 
+// The pool a level-1 druid's "choose two cantrips" actually offers. Both
+// spells are quote-checked and registered in spells.ts, tagged for this list.
+const DRUID_CANTRIP_POOL = ['srd:spell.druidcraft', 'srd:spell.mending']
+
 // ===========================================================================
 // Class — Druid, levels 1-5
 // ===========================================================================
@@ -206,14 +210,16 @@ export const DRUID: ClassDefinition = {
         // every stat it touches as incomplete, and the save DC above is exact —
         // it must not inherit this feature's doubts.
         //
-        // Two doubts. `SelectionDefinition.kind` has no 'spell', so the closest
-        // honest kind is 'other'; and `count` is a plain number, so the third
+        // 'spellList' is a real SelectionDefinition kind — the bard grant next
+        // door already uses it correctly. This used 'other' with no pool at
+        // all, which made "choose two" unanswerable by construction. One doubt
+        // remains, and it is genuine: `count` is a plain number, so the third
         // cantrip a druid learns at 4th level cannot be expressed as growth.
         // The count below is the 1st-level value and the clause says so.
         selections: [{
           id: 'cantrips-known',
           prompt: 'Which two druid cantrips do you know?',
-          kind: 'other', count: 2
+          kind: 'spellList', count: 2, from: DRUID_CANTRIP_POOL
         }],
         spells: [{
           selectionId: 'cantrips-known', availability: 'always', ability: 'wis'
@@ -221,7 +227,9 @@ export const DRUID: ClassDefinition = {
         narrative: [{
           text: 'You know two cantrips of your choice from the druid spell list, '
             + 'and learn a third at 4th level. The count here is fixed at two — '
-            + 'add the third by hand at 4th level.',
+            + 'add the third by hand at 4th level. Only two druid cantrips are '
+            + 'in this content set so far, so that is also the full choice on '
+            + 'offer; more arriving later widens it without touching this file.',
           dmPromptable: true
         }],
         completeness: 'partial'

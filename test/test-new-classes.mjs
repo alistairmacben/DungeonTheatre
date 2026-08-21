@@ -131,8 +131,12 @@ function sane(label, character, expect = {}) {
   }
 }
 
-// --- Bard: expertise, Jack of All Trades, an empty spell list is not a crash -
+// --- Bard: expertise, Jack of All Trades, and a pool with something in it --
 {
+  // Bard's spellcasting is entirely selection-based — it never asks `lists`,
+  // it asks `character.selections`. A hand-built fixture answers it the same
+  // way `createCharacter`'s auto-selection now does, to prove the pool itself
+  // (fixed by adding Mending) is usable independent of who is answering it.
   const bard = base({
     id: 'c:bard', name: 'Lireael',
     speciesId: 'srd:species.half-elf',
@@ -143,23 +147,24 @@ function sane(label, character, expect = {}) {
       instances: [{ instanceId: 'rap', definitionId: 'srd:weapon.rapier', contentVersion: 1, identified: true }],
       equipped: { mainHand: 'rap' }, attunedInstanceIds: []
     },
-    spellsPrepared: []
+    spellsPrepared: [],
+    selections: {
+      'srd:class.bard.spellcasting': {
+        cantrips: ['srd:spell.prestidigitation', 'srd:spell.mending'],
+        spells: ['srd:spell.cure-wounds', 'srd:spell.detect-magic', 'srd:spell.identify', 'srd:spell.longstrider']
+      }
+    }
   })
-  const view = sane('bard', bard)
+  const view = sane('bard', bard, { spellcasting: true })
 
-  // FINDING. The bard references srd:list.bard, which has NO spells tagged, and
-  // its cantrips are selection-driven with no selection made. So it genuinely
-  // has zero castable spells and the view reports spellcasting.active = false —
-  // it renders as a non-caster. That is a content-and-character-data gap, not
-  // an engine fault, but it means the spellcasting FEATURE must still be present
-  // as machinery: the slots are resources regardless of whether a spell is
-  // known. Assert the machinery, and record that the section stays hidden until
-  // the list is populated (H-phase) — and that the view arguably should show a
-  // shell whenever slots exist.
-  if (view) {
-    check('bard: the spellcasting machinery is wired even with an empty list',
-      view.resources.some((r) => /slot/i.test(r.id)),
-      view.resources.map((r) => r.id).join(', '))
+  if (view && view.spellcasting) {
+    check('bard: an answered selection produces real castable spells',
+      view.spellcasting.spells.some((s) => s.available),
+      view.spellcasting.spells.map((s) => `${s.label}:${s.available}`).join(', '))
+    check('bard: cantrips need no slot',
+      view.spellcasting.spells.find((s) => s.label === 'Mending').slotOptions.length === 0)
+    check('bard: known spells are always available, never needing preparation',
+      view.spellcasting.spells.find((s) => s.label === 'Cure Wounds').alwaysAvailable === true)
   }
 }
 
@@ -177,14 +182,15 @@ function sane(label, character, expect = {}) {
     },
     spellsPrepared: []
   })
-  const view = sane('druid', druid)
+  const view = sane('druid', druid, { spellcasting: true })
 
-  // Same finding as the bard: srd:list.druid is empty, so the druid resolves
-  // with no castable spells. The slots must still be present as machinery.
-  if (view) {
-    check('druid: the spellcasting machinery is wired even with an empty list',
-      view.resources.some((r) => /slot/i.test(r.id)),
-      view.resources.map((r) => r.id).join(', '))
+  // Cure Wounds, Detect Magic and Longstrider are all now tagged for
+  // srd:list.druid, so a druid's `fromList` grant surfaces them with no
+  // selection needed — prepared casters draw from the whole list.
+  if (view && view.spellcasting) {
+    check('druid: the class spell list produces real castable spells',
+      view.spellcasting.spells.some((s) => s.label === 'Cure Wounds'),
+      view.spellcasting.spells.map((s) => s.label).join(', '))
   }
   // Wild Shape is the feature nobody could implement. It must appear as a
   // narrative effect or an unavailable action, never as something that silently

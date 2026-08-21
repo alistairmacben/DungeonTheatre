@@ -93,7 +93,11 @@ const INSTRUMENTS = [
  * in `spells.ts` are on the SRD bard list; that is a content-set limit, not a
  * modelling one, and it disappears the moment more spells carry `srd:list.bard`.
  */
-const BARD_CANTRIP_POOL = ['srd:spell.prestidigitation']
+// Two entries, matching the level-1 "choose two" exactly. Mending is also on
+// the SRD bard cantrip list (docs/srd/08-spell-lists.md) and quote-checked in
+// spells.ts; it was authored for the druid's own thin pool and reused here
+// rather than duplicated.
+const BARD_CANTRIP_POOL = ['srd:spell.prestidigitation', 'srd:spell.mending']
 const BARD_SPELL_POOL = [
   'srd:spell.cure-wounds', 'srd:spell.detect-magic', 'srd:spell.identify',
   'srd:spell.longstrider'

@@ -128,6 +128,38 @@ export function startingKitFor(classId: string): StartingKit | undefined {
   return STARTING_KITS[classId]?.()
 }
 
+/**
+ * Answers every "choose your spells" selection a level-1 class feature offers,
+ * by taking the first `count` entries from its own pool.
+ *
+ * A bard or druid built by `createCharacter` would otherwise know its class
+ * features but no actual spells: `character.selections` starts empty, and a
+ * grant behind an unanswered selection resolves to nothing — the character
+ * would be a caster with an empty spellbook. This is the same simplification
+ * as the fixed starting kit above and the standard-array-only abilities:
+ * where the SRD offers a real choice this module cannot yet put in front of a
+ * player, it makes the choice deterministically rather than leaving the
+ * character half-built. A later UI can let the player redo it; nothing here
+ * stops that, because `selections` is ordinary character state, not baked in.
+ */
+function defaultSelections(
+  classId: string, content: ContentIndex
+): Record<string, Record<string, string[]>> {
+  const klass = content.classes.get(classId)
+  if (!klass) return {}
+
+  const out: Record<string, Record<string, string[]>> = {}
+  for (const feature of klass.features) {
+    if (feature.grantedAtLevel > 1) continue
+    for (const sel of feature.effects.selections ?? []) {
+      if (sel.kind !== 'spellList' || !sel.from) continue
+      out[feature.effects.id] ??= {}
+      out[feature.effects.id]![sel.id] = sel.from.slice(0, sel.count)
+    }
+  }
+  return out
+}
+
 export interface CreateCharacterInput {
   id: string
   campaignId: string
@@ -201,6 +233,8 @@ export function createCharacter(
   // starting kit that equips armour should start with it worn.
   const wearingArmor = Object.keys(startKit?.equipped ?? {}).includes('armor')
 
+  const selections = defaultSelections(input.classId, content)
+
   const draft: Character = {
     id: input.id,
     campaignId: input.campaignId,
@@ -210,6 +244,7 @@ export function createCharacter(
     classLevels: [{ classId: input.classId, level: 1 }],
     abilityScoreBase: input.abilityScores,
     buildChoices: [],
+    ...(Object.keys(selections).length > 0 ? { selections } : {}),
     // Placeholder — never store a derived value, but this field cannot be
     // omitted, and the real number needs a resolution to compute. Replaced
     // below with the resolver's own answer before this ever leaves the module.

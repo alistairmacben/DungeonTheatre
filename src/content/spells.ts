@@ -88,6 +88,47 @@ export const PRESTIDIGITATION = spell({
   })
 })
 
+/**
+ * The druid's cantrip pool was a selection with nowhere to choose from — no
+ * `from:` list, because the agent who wrote it believed `SelectionDefinition`
+ * had no spell-list kind. It does (`'spellList'`, already in the vocabulary,
+ * used correctly by the bard next to it). This and Mending below give that
+ * pool two real, quote-checked cantrips so a level-1 druid's "choose two" is
+ * finally answerable.
+ */
+export const DRUIDCRAFT = spell({
+  id: 'srd:spell.druidcraft', name: 'Druidcraft', level: 0,
+  school: 'transmutation', rangeFeet: 30,
+  effects: effects({
+    id: 'srd:spell.druidcraft', name: 'Druidcraft',
+    narrative: [{
+      text: 'One of: a 24-hour weather prediction; make a flower bloom or a '
+        + 'seed pod open; a harmless sensory effect in a 5-foot cube — falling '
+        + 'leaves, a puff of wind, an animal sound, an odour; light or snuff a '
+        + 'candle, torch or small campfire.',
+      dmPromptable: true
+    }]
+  })
+})
+
+export const MENDING = spell({
+  id: 'srd:spell.mending', name: 'Mending', level: 0,
+  school: 'transmutation', castingTime: { minutes: 1 }, rangeKind: 'touch',
+  // A plain "M" with no listed cost is met by an ordinary component pouch or
+  // spellcasting focus under the core rules — the specific object is flavour,
+  // not a mechanical fact this extraction records, so none is claimed here.
+  components: { verbal: true, somatic: true, material: 'a component pouch or spellcasting focus' },
+  effects: effects({
+    id: 'srd:spell.mending', name: 'Mending',
+    narrative: [{
+      text: 'Repairs one break or tear no longer than a foot in any dimension, '
+        + 'leaving no trace. Can physically repair a magic item or construct '
+        + 'but cannot restore its magic.',
+      dmPromptable: false
+    }]
+  })
+})
+
 export const SACRED_FLAME = spell({
   id: 'srd:spell.sacred-flame', name: 'Sacred Flame', level: 0, school: 'evocation',
   rangeFeet: 60, components: { verbal: true, somatic: true },
@@ -263,6 +304,8 @@ export const MAGIC_MISSILE = spell({
 // ===========================================================================
 
 /** Every spell, with the class lists it appears on. */
+const DRUID = 'srd:list.druid'
+
 export const ALL_SPELLS: SpellDefinition[] = [
   { ...FIRE_BOLT, lists: [WIZARD, SORCERER] },
   { ...RAY_OF_FROST, lists: [WIZARD, SORCERER] },
@@ -271,12 +314,21 @@ export const ALL_SPELLS: SpellDefinition[] = [
   { ...MAGE_ARMOR, lists: [WIZARD, SORCERER] },
   { ...SHIELD_SPELL, lists: [WIZARD, SORCERER] },
   { ...BLESS, lists: [CLERIC] },
-  { ...LONGSTRIDER, lists: [WIZARD] },
+  // Longstrider, Detect Magic and Cure Wounds are all genuinely on the SRD
+  // druid list (docs/srd/08-spell-lists.md) — the druid's own content file
+  // said adding this tag was "a one-word data edit, not an engine change."
+  { ...LONGSTRIDER, lists: [WIZARD, DRUID] },
   { ...PROTECTION_FROM_ENERGY, lists: [WIZARD, SORCERER, CLERIC] },
-  { ...DETECT_MAGIC, lists: [WIZARD, SORCERER, CLERIC] },
+  { ...DETECT_MAGIC, lists: [WIZARD, SORCERER, CLERIC, DRUID] },
   { ...IDENTIFY, lists: [WIZARD] },
-  { ...CURE_WOUNDS, lists: [CLERIC] },
-  { ...MAGIC_MISSILE, lists: [WIZARD, SORCERER] }
+  { ...CURE_WOUNDS, lists: [CLERIC, DRUID] },
+  { ...MAGIC_MISSILE, lists: [WIZARD, SORCERER] },
+  { ...DRUIDCRAFT, lists: [DRUID] },
+  // Also genuinely on the bard cantrip list. Bard's own grant draws from a
+  // fixed pool rather than `lists` (see bard.ts), so this tag is accurate
+  // bookkeeping today rather than something anything currently reads — but a
+  // future fromList-based bard grant should find it already correct.
+  { ...MENDING, lists: [DRUID, 'srd:list.bard'] }
 ]
 
-export const SPELL_LISTS = { WIZARD, CLERIC, SORCERER }
+export const SPELL_LISTS = { WIZARD, CLERIC, SORCERER, DRUID }

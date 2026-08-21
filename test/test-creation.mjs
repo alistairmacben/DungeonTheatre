@@ -198,6 +198,51 @@ const standardAssignment = (order) => {
 }
 
 // ---------------------------------------------------------------------------
+// A caster built through creation, with no separate selection step, casts
+//
+// Bard and druid spellcasting is answered by `character.selections`, which
+// creation must fill in itself — nothing else in this flow ever asks a player
+// to answer one. The claim under test is specifically end to end: the wizard
+// asks nothing about spells, and the character it hands back can still cast.
+// ---------------------------------------------------------------------------
+
+{
+  const bardResult = createCharacter({
+    id: 'c:new-bard', campaignId: 'camp-1', name: 'New Bard',
+    speciesId: 'srd:species.half-elf', classId: 'srd:class.bard',
+    abilityScores: standardAssignment(['cha', 'dex', 'con', 'wis', 'int', 'str'])
+  }, content)
+  check('creation: a new bard is built with no problems', bardResult.character !== undefined,
+    bardResult.problems.map((p) => p.message).join('; '))
+
+  const bardView = playerViewOf(bardResult.character, content, { detail: 'inspect' })
+  check('creation: the new bard has spellcasting at all',
+    bardView.spellcasting !== undefined)
+  check('creation: and at least one spell it can actually cast right now',
+    bardView.spellcasting?.spells.some((s) => s.available),
+    (bardView.spellcasting?.spells ?? []).map((s) => `${s.label}:${s.available}`).join(', '))
+  check('creation: with the full count the SRD grants at level 1 — two cantrips',
+    bardView.spellcasting?.spells.filter((s) => s.level === 0).length === 2,
+    bardView.spellcasting?.spells.filter((s) => s.level === 0).map((s) => s.label).join(', '))
+
+  const druidResult = createCharacter({
+    id: 'c:new-druid', campaignId: 'camp-1', name: 'New Druid',
+    speciesId: 'srd:species.elf', subspeciesId: 'srd:species.elf.wood',
+    classId: 'srd:class.druid',
+    abilityScores: standardAssignment(['wis', 'dex', 'con', 'str', 'int', 'cha'])
+  }, content)
+  check('creation: a new druid is built with no problems', druidResult.character !== undefined,
+    druidResult.problems.map((p) => p.message).join('; '))
+
+  const druidView = playerViewOf(druidResult.character, content, { detail: 'inspect' })
+  check('creation: the new druid has spellcasting at all',
+    druidView.spellcasting !== undefined)
+  check('creation: with real cantrips known, not an unanswered selection',
+    druidView.spellcasting?.spells.filter((s) => s.level === 0 && s.alwaysAvailable).length === 2,
+    (druidView.spellcasting?.spells ?? []).filter((s) => s.level === 0).map((s) => `${s.label}:${s.alwaysAvailable}`).join(', '))
+}
+
+// ---------------------------------------------------------------------------
 // A blank name is refused
 // ---------------------------------------------------------------------------
 
