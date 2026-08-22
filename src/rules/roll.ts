@@ -17,7 +17,7 @@ import { scopeMatches } from './resolve.js'
 import { sortTerms } from './operations.js'
 import {
   abilityModifierPath, CRIT_RANGE, savePath, skillPath, PROFICIENCY_BONUS,
-  rollTargetPath
+  rollTargetPath, SPELL_ATTACK
 } from './statPaths.js'
 
 
@@ -86,11 +86,18 @@ export function resolveRoll(resolution: Resolution, request: RollRequest): RollR
   // --- flat modifiers targeting the roll's own stat path --------------------
   // skill.<id> and save.<ability> accumulate their own modifiers (a cloak of
   // protection's +1 to saves, pass without trace's +10 to Stealth).
+  // A spell attack joins this list rather than getting a branch of its own: its
+  // whole bonus — proficiency, the spellcasting ability, a wand's +1 — is
+  // already accumulated on `spell.attack` by the ordinary modifier machinery,
+  // so reading that path is the entire rule. It deliberately arrives with no
+  // `ability` set, so nothing is counted twice.
   const extraPath = request.kind === 'save' && request.ability
     ? savePath(request.ability)
     : request.skill
       ? skillPath(request.skill)
-      : undefined
+      : request.spellAttack
+        ? SPELL_ATTACK
+        : undefined
   if (extraPath) {
     const v = resolution.stat(extraPath)
     // The stat's own ability and proficiency contributions were added above, so

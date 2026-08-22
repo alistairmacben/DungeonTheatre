@@ -12,10 +12,33 @@
 // there are no targets to touch.
 
 import type {
-  Ability, DamageType, DiceExpr, SpellDamage, SpellDefinition
+  Ability, DamageType, DiceExpr, RollResolution, SpellDamage, SpellDefinition
 } from './types.js'
 import { abilityModifierPath, SPELL_ATTACK, SPELL_SAVE_DC } from './statPaths.js'
 import type { Resolution } from './resolve.js'
+import { resolveRoll } from './roll.js'
+
+/**
+ * The d20 a Fire Bolt needs before any damage is rolled.
+ *
+ * Deliberately thin: `kind: 'attack'` so it crits on a natural 20 exactly as a
+ * longsword does, `spellAttack` so the bonus is read off the spellcasting stat
+ * instead of an ability plus weapon proficiency, and nothing else. Advantage,
+ * Bless's extra die and every other roll-channel effect arrive through the
+ * ordinary pipeline without this function knowing they exist.
+ */
+export function resolveSpellAttackRoll(
+  r: Resolution,
+  opts: { targetAc?: number; electedOptions?: string[] } = {}
+): RollResolution {
+  return resolveRoll(r, {
+    kind: 'attack',
+    spellAttack: true,
+    activityTags: ['spell'],
+    ...(opts.targetAc !== undefined ? { target: { kind: 'ac' as const, value: opts.targetAc } } : {}),
+    ...(opts.electedOptions ? { electedOptions: opts.electedOptions } : {})
+  })
+}
 
 export interface ResolvedSpellEffect {
   delivery: 'attack' | 'save' | 'auto'

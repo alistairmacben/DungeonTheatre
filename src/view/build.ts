@@ -18,7 +18,7 @@ import { resolveCheck, resolvePassiveCheck } from '../rules/check.js'
 import { resolveAttack } from '../rules/attack.js'
 import { resolveResources, type ResourceValue } from '../rules/resources.js'
 import { resolveSpellcasting, type CastableSpell, type SlotOption } from '../rules/spells.js'
-import { resolveSpellEffect } from '../rules/spellEffect.js'
+import { resolveSpellAttackRoll, resolveSpellEffect } from '../rules/spellEffect.js'
 import {
   abilityModifierPath, abilityScorePath, ARMOR_CLASS, HP_MAX, INITIATIVE,
   PROFICIENCY_BONUS, speedPath
@@ -698,6 +698,20 @@ function buildActions(
       }
       : undefined
 
+    // Healing and damage roll the same way; instances (Magic Missile's darts)
+    // fold into one pool, since three 1d4+1 summed is 3d4+3 rolled once.
+    const spellPools = resolved?.healing
+      ? [{
+        type: 'healing' as const,
+        dice: { count: resolved.healing.dice.count, sides: resolved.healing.dice.sides },
+        flat: resolved.healing.flatAdd
+      }]
+      : (resolved?.damage ?? []).map((d) => ({
+        type: d.type,
+        dice: { count: d.dice.count * resolved!.instances, sides: d.dice.sides },
+        flat: (d.dice.modifier ?? 0) * resolved!.instances
+      }))
+
     out.push({
       id: `cast:${c.spell.id}`,
       label: c.spell.name,
@@ -713,6 +727,35 @@ function buildActions(
       available: c.available,
       unavailableReasons: c.unavailableReasons,
       command: { type: 'castSpell', characterId, spellId: c.spell.id },
+      // A spell that needs a d20 gets one, exactly as a weapon does. The UI
+      // treats the two identically because at this point they are identical.
+      ...(resolved?.delivery === 'attack'
+        ? {
+          roll: rollSpecOf(
+            { ...resolveSpellAttackRoll(r), label: `${c.spell.name} attack` },
+            {
+              type: 'castSpell', characterId, spellId: c.spell.id,
+              ...(cheapest ? { slotResourceId: cheapest.resourceId } : {}),
+              faces: []
+            }
+          )
+        }
+        : {}),
+      // What to roll once it lands — or immediately, for a spell with no
+      // to-hit roll at all. The slot is named explicitly: after casting, the
+      // cheapest remaining slot may be a different level than the one spent.
+      ...(spellPools.length > 0
+        ? {
+          damageRoll: {
+            pools: spellPools,
+            characterId,
+            source: {
+              kind: 'spell' as const, spellId: c.spell.id,
+              ...(cheapest ? { slotResourceId: cheapest.resourceId } : {})
+            }
+          }
+        }
+        : {}),
       sourceId: c.grantSourceId,
       sourceLabel: c.grantSourceName
     })

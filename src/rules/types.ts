@@ -912,6 +912,14 @@ export interface RollRequest {
    * a plain check leaves it empty.
    */
   externalModifiers?: ExternalModifier[]
+  /**
+   * This attack is a spell attack, so its bonus comes from `spell.attack`.
+   *
+   * It stays `kind: 'attack'` — a spell attack crits on a natural 20 like any
+   * other — but it draws its modifier from the spellcasting stat rather than
+   * from an ability plus weapon proficiency, which is why it needs saying.
+   */
+  spellAttack?: boolean
 }
 
 /** A modifier contributed by something other than the rolling character. */

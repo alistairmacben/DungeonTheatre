@@ -37,7 +37,10 @@ export const DM_ONLY_COMMANDS: readonly CommandType[] = [
  * whatever the client rolled and leave with whatever the server rolled.
  */
 export const SERVER_ROLLED_COMMANDS: readonly CommandType[] = [
-  'makeCheck', 'makeSave', 'makeAttack', 'rollDamage'
+  // `castSpell` is here for the spells that roll to hit. The rest ignore the
+  // faces entirely, and one wasted d20 costs nothing next to a client that
+  // gets to choose whether its Fire Bolt lands.
+  'makeCheck', 'makeSave', 'makeAttack', 'rollDamage', 'castSpell'
 ]
 
 const DM_ONLY = new Set<string>(DM_ONLY_COMMANDS)

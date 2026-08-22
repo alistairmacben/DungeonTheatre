@@ -28,6 +28,21 @@ export function rollDamageFaces(spec: DamageRollSpec, critical: boolean): number
   })
 }
 
+/** True when this roll restores hit points rather than removing them. */
+export function isHealing(spec: DamageRollSpec | null): boolean {
+  return spec?.pools.some((p) => p.type === 'healing') ?? false
+}
+
+/** "2d10 fire", "1d8+3 healing" — what is about to be thrown. */
+export function damageLabelOf(spec: DamageRollSpec): string {
+  return spec.pools
+    .map((p) => {
+      const flat = p.flat > 0 ? `+${p.flat}` : p.flat < 0 ? `${p.flat}` : ''
+      return `${p.dice.count}d${p.dice.sides}${flat} ${p.type}`
+    })
+    .join(' + ')
+}
+
 export interface DamageOutcome {
   label: string
   critical: boolean
@@ -103,12 +118,13 @@ export function RollChip({
  * arithmetic. Both are here, the second one folded away.
  */
 export function RollResult({
-  outcome, onDismiss, onRollDamage
+  outcome, onDismiss, onRollDamage, damageVerb = 'Roll Damage'
 }: {
   outcome: RollOutcome
   onDismiss(): void
   /** Present right after an attack roll that has damage waiting to be rolled. */
   onRollDamage?(): void
+  damageVerb?: string
 }): React.JSX.Element {
   const [open, setOpen] = React.useState(false)
   const tone = outcome.critical
@@ -161,7 +177,7 @@ export function RollResult({
           onClick={onRollDamage}
           className="mt-2 w-full rounded-lg border border-ember/40 bg-ember/10 py-1.5 text-[12px] font-medium text-ember transition hover:border-ember hover:bg-ember/20"
         >
-          {outcome.critical ? 'Roll Damage (critical!)' : 'Roll Damage'}
+          {outcome.critical ? 'Roll Damage (critical!)' : damageVerb}
         </button>
       )}
 
@@ -212,6 +228,43 @@ export function damageOutcomeFromEvents(
 ): DamageOutcome | null {
   const made = events.find((e) => e.type === 'RollMade' && e.payload['kind'] === 'damage')
   return made ? (made.payload as unknown as DamageOutcome) : null
+}
+
+/**
+ * "Cure Wounds — Roll Healing", for a spell with no to-hit roll in front of it.
+ *
+ * Magic Missile, Sacred Flame and Cure Wounds all land without a d20, so there
+ * is no attack result to hang the button off. Casting them used to end with a
+ * note saying the spell was used and no number anywhere, which is not a spell
+ * having been cast so much as a slot having been spent.
+ */
+export function DamagePrompt({
+  label, healing, onRoll, onDismiss
+}: {
+  label: string
+  healing: boolean
+  onRoll(): void
+  onDismiss(): void
+}): React.JSX.Element {
+  return (
+    <div className="pointer-events-auto flex w-[22rem] items-center gap-3 rounded-xl border border-ember/40 bg-ink/90 px-4 py-2.5 shadow-2xl backdrop-blur">
+      <span className="min-w-0 flex-1 truncate text-[13px] text-parchment/70">{label}</span>
+      <button
+        type="button"
+        onClick={onRoll}
+        className="shrink-0 rounded-lg border border-ember/50 bg-ember/10 px-3 py-1.5 text-[12px] font-medium text-ember transition hover:border-ember hover:bg-ember/20"
+      >
+        {healing ? 'Roll Healing' : 'Roll Damage'}
+      </button>
+      <button
+        type="button"
+        onClick={onDismiss}
+        className="shrink-0 text-[11px] text-parchment/40 transition hover:text-parchment/80"
+      >
+        skip
+      </button>
+    </div>
+  )
 }
 
 /** The total, front and centre — same idea as RollResult, no d20 involved. */

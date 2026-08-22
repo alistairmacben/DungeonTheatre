@@ -14,8 +14,8 @@ import { useCampaignRole } from './useCampaignRole'
 import { Hud } from './ui/Hud'
 import { GameMenu, type MenuTab } from './ui/GameMenu'
 import {
-  DamageResult, RollResult, damageOutcomeFromEvents, rollDamageFaces, outcomeFromEvents,
-  type DamageOutcome, type RollOutcome
+  DamagePrompt, DamageResult, RollResult, damageLabelOf, damageOutcomeFromEvents, isHealing,
+  rollDamageFaces, outcomeFromEvents, type DamageOutcome, type RollOutcome
 } from './ui/RollWidget'
 import { CreateCharacter } from './ui/CreateCharacter'
 import { HUD_RESERVED_PX } from './ui/usePinnedActions'
@@ -103,6 +103,7 @@ function Stage({
   const [outcome, setOutcome] = useState<RollOutcome | null>(null)
   const [damageSpec, setDamageSpec] = useState<import('@engine').DamageRollSpec | null>(null)
   const [damageOutcome, setDamageOutcome] = useState<DamageOutcome | null>(null)
+  const healingPending = isHealing(damageSpec)
 
   // One path for every roll, and the order matters.
   //
@@ -138,11 +139,15 @@ function Stage({
   // The follow-up: once an attack has landed, roll what it does. Same rule as
   // above — the server's dice are the ones that count, this just animates.
   const rollDamage = async (): Promise<void> => {
-    if (!damageSpec || !outcome) return
-    const faces = rollDamageFaces(damageSpec, Boolean(outcome.critical))
+    // No `outcome` is a legitimate state, not a missing one: Magic Missile and
+    // Cure Wounds land with no to-hit roll in front of them, and nothing that
+    // never rolled a d20 can have rolled a critical.
+    if (!damageSpec) return
+    const critical = Boolean(outcome?.critical)
+    const faces = rollDamageFaces(damageSpec, critical)
     const result = await game.dispatch({
       type: 'rollDamage', characterId: damageSpec.characterId,
-      source: damageSpec.source, critical: Boolean(outcome.critical), faces
+      source: damageSpec.source, critical, faces
     } as never)
     if (result.rejected) { setActionNote(result.rejected.join(' · ')); return }
     const rolled = damageOutcomeFromEvents(result.events)
@@ -197,6 +202,16 @@ function Stage({
             outcome={outcome}
             onDismiss={() => { setOutcome(null); setDamageSpec(null) }}
             onRollDamage={damageSpec ? () => void rollDamage() : undefined}
+            damageVerb={healingPending ? 'Roll Healing' : 'Roll Damage'}
+          />
+        )}
+        {/* No attack roll in front of it, so the prompt stands alone. */}
+        {!outcome && damageSpec && (
+          <DamagePrompt
+            label={damageLabelOf(damageSpec)}
+            healing={healingPending}
+            onRoll={() => void rollDamage()}
+            onDismiss={() => setDamageSpec(null)}
           />
         )}
         {damageOutcome && (
@@ -223,8 +238,16 @@ function Stage({
               }
               // An attack is a roll; everything else is a state transition.
               if (action.roll) { void makeRoll(action.roll, action.damageRoll); return }
-              void game.dispatch(action.command).then(({ rejected }) =>
-                setActionNote(rejected ? rejected.join(' · ') : `${action.label} used`))
+              void game.dispatch(action.command).then(({ rejected }) => {
+                if (rejected) { setActionNote(rejected.join(' · ')); return }
+                // A spell that lands without a to-hit roll — Magic Missile,
+                // Cure Wounds — still has a number to roll, and no attack
+                // result to hang the button off. Offer it on its own.
+                setOutcome(null)
+                setDamageOutcome(null)
+                setDamageSpec(action.damageRoll ?? null)
+                setActionNote(action.damageRoll ? null : `${action.label} used`)
+              })
             }}
           />
         )}

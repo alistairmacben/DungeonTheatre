@@ -219,7 +219,7 @@ export interface ActionPreview {
  * `diceNeededFor(pools, wasCritical)` once the caller knows.
  */
 export interface DamageRollSpec {
-  pools: { type: DamageType; dice: DiceExpr; flat: number }[]
+  pools: { type: DamageType | 'healing'; dice: DiceExpr; flat: number }[]
   characterId: string
   source: Extract<PlayerCommand, { type: 'rollDamage' }>['source']
 }
@@ -418,7 +418,16 @@ export type PlayerCommand =
   | { type: 'makeCheck'; characterId: string; checkType: 'ability' | 'skill'; ability?: Ability; skill?: SkillId; faces: number[] }
   | { type: 'makeSave'; characterId: string; ability: Ability; dc?: number; faces: number[] }
   | { type: 'useAbility'; characterId: string; actionId: string; sourceId: string }
-  | { type: 'castSpell'; characterId: string; spellId: string; slotResourceId?: string }
+  /**
+   * `faces` carries the to-hit d20 for a spell that needs one (Fire Bolt), and
+   * is ignored for every other spell. Casting and rolling to hit are one act
+   * at the table, and splitting them into two commands would let a player
+   * spend the slot and then decline to roll.
+   */
+  | {
+      type: 'castSpell'; characterId: string; spellId: string
+      slotResourceId?: string; faces?: number[]
+    }
   | { type: 'prepareSpells'; characterId: string; spellIds: string[] }
   | { type: 'endConcentration'; characterId: string }
   | { type: 'spendResource'; characterId: string; resourceId: string; amount: number }

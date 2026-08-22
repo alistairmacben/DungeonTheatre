@@ -15,9 +15,19 @@
 
 import type { DamageType, DiceExpr } from './types.js'
 
+/**
+ * What a pool of dice does to whoever it lands on.
+ *
+ * `healing` sits alongside the damage types because rolling Cure Wounds is the
+ * same act as rolling Fire Bolt — dice, a flat bonus, a number handed to the
+ * DM. Nothing here applies it, so the distinction that matters elsewhere
+ * (resistances apply to damage and not to healing) never comes up.
+ */
+export type PoolKind = DamageType | 'healing'
+
 /** One damage component's dice and flat bonus, already reduced to "roll this once". */
 export interface DamagePool {
-  type: DamageType
+  type: PoolKind
   dice: DiceExpr
   /** Never doubles on a crit — only the dice above do. */
   flat: number
@@ -25,7 +35,7 @@ export interface DamagePool {
 
 /** How many dice of what size each pool needs, crit already folded in. */
 export interface DiceNeed {
-  type: DamageType
+  type: PoolKind
   sides: number
   count: number
 }
@@ -39,7 +49,7 @@ export function diceNeededFor(pools: DamagePool[], critical: boolean): DiceNeed[
 }
 
 export interface RolledDamagePool {
-  type: DamageType
+  type: PoolKind
   rolls: number[]
   total: number
 }

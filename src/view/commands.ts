@@ -10,13 +10,13 @@
 // silent no-op.
 
 import type {
-  Character, ContentIndex, DamageType, EffectSource, GameEvent
+  Character, ContentIndex, EffectSource, GameEvent
 } from '../rules/types.js'
 import { createResolution, characterLevel } from '../rules/resolve.js'
 import { resolveResources, applyRest } from '../rules/resources.js'
 import { cheapestSlot, resolveSpellcasting } from '../rules/spells.js'
-import { resolveSpellEffect } from '../rules/spellEffect.js'
-import { diceMismatch, totalDamageRoll } from '../rules/rollDamage.js'
+import { resolveSpellAttackRoll, resolveSpellEffect } from '../rules/spellEffect.js'
+import { diceMismatch, totalDamageRoll, type PoolKind } from '../rules/rollDamage.js'
 import { resolveCheck } from '../rules/check.js'
 import { resolveAttack } from '../rules/attack.js'
 import { applyOutcome } from '../rules/roll.js'
@@ -393,6 +393,25 @@ function castSpell(
     createResolution(character, content)
   )
 
+  // The to-hit roll, for a spell that needs one. It happens here rather than in
+  // a follow-up command because casting and rolling to hit are a single act at
+  // the table — and because a separate command would let a player spend the
+  // slot, see something they disliked, and never roll.
+  if (resolved?.delivery === 'attack') {
+    const attackRoll = resolveSpellAttackRoll(createResolution(character, content))
+    const faces = command.faces ?? []
+    const problem = facesProblem(attackRoll, faces)
+    if (problem) return reject(character, [problem])
+    const result = applyOutcome(attackRoll, {
+      faces, keptIndex: keptIndexOf(faces, attackRoll.dice.keep)
+    })
+    events.push(rollEvent(next, `${target.spell.name} attack`, 'attack', attackRoll, result, {
+      spellId: target.spell.id,
+      spellName: target.spell.name,
+      damage: resolved.damage
+    }))
+  }
+
   events.unshift(event('SpellCast', next, {
     spellId: target.spell.id,
     label: target.spell.name,
@@ -634,7 +653,7 @@ export type DamageSource = Extract<PlayerCommand, { type: 'rollDamage' }>['sourc
  */
 export function resolveDamagePools(
   character: Character, source: DamageSource, content: ContentIndex
-): { pools: { type: DamageType; dice: { count: number; sides: number }; flat: number }[]; label: string }
+): { pools: { type: PoolKind; dice: { count: number; sides: number }; flat: number }[]; label: string }
   | { rejected: string } {
   const r = createResolution(character, content)
 
@@ -666,7 +685,22 @@ export function resolveDamagePools(
     { ability: target.ability, characterLevel: characterLevel(character), slotLevel: chosen?.level ?? target.spell.level },
     r
   )
-  if (!resolved || resolved.damage.length === 0) {
+  if (!resolved) return { rejected: `${target.spell.name} has nothing to roll` }
+
+  // Healing rolls exactly as damage does — dice plus a flat bonus, handed to
+  // the DM as a number. Only the word on the front differs.
+  if (resolved.healing) {
+    return {
+      label: target.spell.name,
+      pools: [{
+        type: 'healing',
+        dice: { count: resolved.healing.dice.count, sides: resolved.healing.dice.sides },
+        flat: resolved.healing.flatAdd
+      }]
+    }
+  }
+
+  if (resolved.damage.length === 0) {
     return { rejected: `${target.spell.name} has no damage to roll` }
   }
   // Instances (Magic Missile's three darts) fold into one pool per damage
@@ -701,10 +735,11 @@ function rollDamage(
   if (problem) return reject(character, [problem])
 
   const rolled = totalDamageRoll(pools, command.faces, command.critical)
+  const healing = pools.every((p) => p.type === 'healing')
   return {
     character,
     events: [event('RollMade', character, {
-      label: `${label} damage`,
+      label: `${label} ${healing ? 'healing' : 'damage'}`,
       kind: 'damage',
       critical: command.critical,
       pools: rolled.pools,

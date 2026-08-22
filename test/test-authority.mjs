@@ -113,8 +113,18 @@ const ALL_COMMANDS = [
   // The common case must stay optimistic, or the HUD waits on a round trip for
   // every shield equip.
   check('predict: ordinary play is still predicted',
-    ['equipItem', 'unequipItem', 'castSpell', 'useAbility', 'shortRest']
+    ['equipItem', 'unequipItem', 'useAbility', 'shortRest']
       .every((t) => isPredictable('owner', t)))
+
+  // Casting used to be on that list. It came off when spells that roll to hit
+  // started carrying their d20 in the cast command: a Fire Bolt's attack is
+  // randomness, and randomness is never predicted. The cost is that casting a
+  // spell with no roll in it — Mage Armor — now waits for the round trip too,
+  // because predictability is decided per command type and not per spell. That
+  // is the right way round: a wrong prediction on a to-hit roll shows the
+  // player a hit that then becomes a miss.
+  check('predict: casting is not predicted, because some spells roll to hit',
+    !isPredictable('owner', 'castSpell'))
 
   // A DM's own inflictions ARE predicted, and should be. dmDamage is
   // deterministic — the client applies the same resistances the server will —

@@ -20,8 +20,8 @@ import { Hud } from './ui/Hud'
 import { GameMenu, type MenuTab } from './ui/GameMenu'
 import { DmPanel } from './ui/DmPanel'
 import {
-  DamageResult, RollResult, damageOutcomeFromEvents, rollDamageFaces, rollFor, outcomeFromEvents,
-  type DamageOutcome, type RollOutcome
+  DamagePrompt, DamageResult, RollResult, damageLabelOf, damageOutcomeFromEvents, isHealing,
+  rollDamageFaces, rollFor, outcomeFromEvents, type DamageOutcome, type RollOutcome
 } from './ui/RollWidget'
 import { HUD_RESERVED_PX } from './ui/usePinnedActions'
 
@@ -84,6 +84,7 @@ function SoloCharacter({ character, dmOpen, onCloseDm }: {
   const [damageOutcome, setDamageOutcome] = useState<DamageOutcome | null>(null)
   const [roll, setRoll] = useState<DiceRoll | null>(null)
   const [rollSeq, setRollSeq] = useState(1)
+  const healingPending = isHealing(damageSpec)
 
   /**
    * One path for every roll in the product.
@@ -126,8 +127,11 @@ function SoloCharacter({ character, dmOpen, onCloseDm }: {
 
   // The follow-up: once an attack has landed, roll what it does.
   const rollDamage = (): void => {
-    if (!damageSpec || !outcome) return
-    const critical = Boolean(outcome.critical)
+    // No `outcome` is a legitimate state, not a missing one: Magic Missile and
+    // Cure Wounds land with no to-hit roll in front of them, and nothing that
+    // never rolled a d20 can have rolled a critical.
+    if (!damageSpec) return
+    const critical = Boolean(outcome?.critical)
     const faces = rollDamageFaces(damageSpec, critical)
     const result = game.dispatch({
       type: 'rollDamage', characterId: damageSpec.characterId,
@@ -176,6 +180,16 @@ function SoloCharacter({ character, dmOpen, onCloseDm }: {
             outcome={outcome}
             onDismiss={() => { setOutcome(null); setDamageSpec(null) }}
             onRollDamage={damageSpec ? rollDamage : undefined}
+            damageVerb={healingPending ? 'Roll Healing' : 'Roll Damage'}
+          />
+        )}
+        {/* No attack roll in front of it, so the prompt stands alone. */}
+        {!outcome && damageSpec && (
+          <DamagePrompt
+            label={damageLabelOf(damageSpec)}
+            healing={healingPending}
+            onRoll={rollDamage}
+            onDismiss={() => setDamageSpec(null)}
           />
         )}
         {damageOutcome && (
@@ -199,7 +213,14 @@ function SoloCharacter({ character, dmOpen, onCloseDm }: {
             // An attack is a roll; everything else is a state transition.
             if (action.roll) { makeRoll(action.roll, action.damageRoll); return }
             const { rejected } = game.dispatch(action.command)
-            setNote(rejected ? rejected.join(' · ') : `${action.label} used`)
+            if (rejected) { setNote(rejected.join(' · ')); return }
+            // A spell that lands without a to-hit roll — Magic Missile, Cure
+            // Wounds — still has a number to roll, and no attack result to
+            // hang the button off. Offer it on its own.
+            setOutcome(null)
+            setDamageOutcome(null)
+            setDamageSpec(action.damageRoll ?? null)
+            setNote(action.damageRoll ? null : `${action.label} used`)
           }}
         />
       </div>

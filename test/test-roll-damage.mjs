@@ -7,7 +7,8 @@
 // call, same as always.
 
 import {
-  applyCommand, diceMismatch, diceNeededFor, loadContent, resolveDamagePools, totalDamageRoll
+  applyCommand, diceMismatch, diceNeededFor, loadContent, playerViewOf, resolveDamagePools,
+  totalDamageRoll
 } from './bundle/engine.mjs'
 import { makeChecker } from './rules-fixtures.mjs'
 
@@ -146,6 +147,101 @@ function wizard(level, prepared = []) {
   }, content)
   check.eq('command: Magic Missile totals its three darts plus the folded flat bonus',
     spellCast.events[0].payload.total, 9)
+}
+
+// ---------------------------------------------------------------------------
+// Casting a spell that rolls to hit — the step that used to be missing
+// entirely, so Fire Bolt spent a turn and produced no number at all
+// ---------------------------------------------------------------------------
+
+{
+  const w = wizard(5)
+  const view = playerViewOf(w, content, { detail: 'inspect' })
+
+  const fireBolt = view.actions.find((a) => a.id === 'cast:srd:spell.fire-bolt')
+  check('spell attack: an attack cantrip carries a roll, as a weapon does',
+    fireBolt?.roll !== undefined)
+  // Proficiency +3 at level 5, Intelligence 17 (16 + High Elf) → +3. So +6.
+  check('spell attack: at the caster\'s spell attack bonus, not an ability alone',
+    fireBolt?.roll?.modifier === 6, fireBolt?.roll?.modifier)
+  check('spell attack: one d20 with no advantage in play',
+    fireBolt?.roll?.diceCount === 1)
+  check('spell attack: and damage waiting behind it',
+    fireBolt?.damageRoll?.pools?.[0]?.dice.count === 2
+      && fireBolt?.damageRoll?.pools?.[0]?.type === 'fire',
+    JSON.stringify(fireBolt?.damageRoll?.pools))
+
+  // Magic Missile never rolls to hit — it is the spell that cannot miss.
+  const missile = view.actions.find((a) => a.id === 'cast:srd:spell.magic-missile')
+  check('spell attack: an auto-hit spell has no attack roll',
+    missile !== undefined && missile.roll === undefined)
+  check('spell attack: but still has damage to roll',
+    missile?.damageRoll !== undefined)
+
+  const mageArmor = view.actions.find((a) => a.id === 'cast:srd:spell.mage-armor')
+  check('spell attack: a buff has neither',
+    mageArmor !== undefined && mageArmor.roll === undefined
+      && mageArmor.damageRoll === undefined)
+
+  // The cast itself now resolves the d20 and reports it.
+  const hit = applyCommand(w, {
+    type: 'castSpell', characterId: w.id, spellId: 'srd:spell.fire-bolt', faces: [14]
+  }, content)
+  check('cast: casting an attack spell is not rejected when faces are supplied',
+    hit.rejected === undefined, JSON.stringify(hit.rejected))
+  const roll = hit.events.find((e) => e.type === 'RollMade')
+  check('cast: it emits an attack roll alongside the SpellCast',
+    roll !== undefined && roll.payload.kind === 'attack')
+  check('cast: totalling the die plus the spell attack bonus', roll.payload.total === 20,
+    roll.payload.total)
+  check('cast: a natural 20 is a critical, exactly as a weapon\'s is',
+    applyCommand(w, {
+      type: 'castSpell', characterId: w.id, spellId: 'srd:spell.fire-bolt', faces: [20]
+    }, content).events.find((e) => e.type === 'RollMade').payload.critical === true)
+
+  check('cast: the wrong number of faces is rejected rather than guessed at',
+    applyCommand(w, {
+      type: 'castSpell', characterId: w.id, spellId: 'srd:spell.fire-bolt', faces: [10, 12]
+    }, content).rejected !== undefined)
+
+  // A spell with no attack roll must not start demanding one.
+  check('cast: a buff still casts with no faces at all',
+    applyCommand(wizard(5, ['srd:spell.mage-armor']), {
+      type: 'castSpell', characterId: 'c:w', spellId: 'srd:spell.mage-armor'
+    }, content).rejected === undefined)
+}
+
+// ---------------------------------------------------------------------------
+// Healing rolls the same way damage does
+// ---------------------------------------------------------------------------
+
+{
+  const cleric = {
+    ...wizard(5), id: 'c:h', speciesId: 'srd:species.human', subspeciesId: undefined,
+    classLevels: [{ classId: 'srd:class.cleric', level: 5 }],
+    abilityScoreBase: { str: 12, dex: 10, con: 14, int: 10, wis: 16, cha: 12 },
+    spellsPrepared: ['srd:spell.cure-wounds']
+  }
+  const resolved = resolveDamagePools(
+    cleric, { kind: 'spell', spellId: 'srd:spell.cure-wounds' }, content)
+  check('healing: Cure Wounds resolves a pool rather than being refused',
+    resolved.pools !== undefined, JSON.stringify(resolved))
+  check('healing: 1d8 plus the caster\'s Wisdom modifier of +3',
+    resolved.pools?.[0]?.dice.count === 1 && resolved.pools?.[0]?.dice.sides === 8
+      && resolved.pools?.[0]?.flat === 3, JSON.stringify(resolved.pools))
+  check('healing: marked as healing, not as a damage type',
+    resolved.pools?.[0]?.type === 'healing')
+
+  const rolled = applyCommand(cleric, {
+    type: 'rollDamage', characterId: cleric.id,
+    source: { kind: 'spell', spellId: 'srd:spell.cure-wounds' },
+    critical: false, faces: [[5]]
+  }, content)
+  check('healing: rolls to 5 + 3 = 8', rolled.events[0]?.payload?.total === 8,
+    rolled.events[0]?.payload?.total)
+  check('healing: and reads as healing for the DM',
+    rolled.events[0]?.payload?.damageLabel === '8 healing',
+    rolled.events[0]?.payload?.damageLabel)
 }
 
 check.report()
