@@ -23,6 +23,7 @@ import {
   DamageResult, RollResult, damageOutcomeFromEvents, rollDamageFaces, rollFor, outcomeFromEvents,
   type DamageOutcome, type RollOutcome
 } from './ui/RollWidget'
+import { HUD_RESERVED_PX } from './ui/usePinnedActions'
 
 export function Solo(): React.JSX.Element {
   const [who, setWho] = useState(0)
@@ -165,6 +166,7 @@ function SoloCharacter({ character, dmOpen, onCloseDm }: {
         resolveAsset={() => null}
         idleMessage="The hall is dark. Your torch gutters."
         roll={roll}
+        diceBottomInset={HUD_RESERVED_PX}
       />
 
       {/* The result sits above the HUD, where the eye already is. */}

@@ -11,6 +11,53 @@ import type {
 } from '@engine'
 import { RollChip } from './RollWidget'
 import { BreakdownList, Value } from './Readouts'
+import { suggestedBar } from './Hud'
+import { HUD_SLOTS, barFor, usePinnedActions, type PinnedActions } from './usePinnedActions'
+
+/**
+ * The pin toggle, shown on anything that could live on the bar.
+ *
+ * It reports the bar's *actual* state rather than just the stored preference,
+ * so a suggested action reads as already pinned — otherwise a player clicks
+ * "pin" on something that is visibly on their bar already and it disappears.
+ */
+function PinButton({ actionId, bar, prefs }: {
+  actionId: string
+  bar: Set<string>
+  prefs: PinnedActions
+}): React.JSX.Element {
+  const on = bar.has(actionId)
+  // The cap applies to the player's own picks, not to the bar. The bar always
+  // refills itself from the suggestion, so checking *its* size would mean it
+  // was permanently full and nothing new could ever be pinned. An explicit
+  // pick simply displaces the lowest-ranked suggestion, which is the point.
+  const disabled = !on && prefs.pinned.length >= HUD_SLOTS
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={(e) => {
+        e.stopPropagation()
+        // `on` is the bar's real state, which is what toggling has to act on —
+        // an action can be on the bar by the suggestion's doing rather than
+        // the player's, and both have to come off in one click.
+        prefs.toggle(actionId, on)
+      }}
+      title={disabled
+        ? `You have pinned ${HUD_SLOTS}, which is the whole bar. Unpin one first.`
+        : on ? 'Remove from the bar' : 'Add to the bar'}
+      className={`shrink-0 rounded-lg border px-2 py-1 text-[11px] transition ${
+        on
+          ? 'border-ember/50 bg-ember/10 text-ember hover:border-ember'
+          : disabled
+            ? 'cursor-not-allowed border-white/5 text-parchment/20'
+            : 'border-white/10 text-parchment/40 hover:border-arcane/50 hover:text-parchment'
+      }`}
+    >
+      {on ? '★ on bar' : '☆ pin'}
+    </button>
+  )
+}
 
 export type MenuTab = 'character' | 'inventory' | 'actions' | 'spells' | 'effects'
 
@@ -34,6 +81,10 @@ export function GameMenu({
   dispatch(command: PlayerCommand): Promise<string[] | undefined> | string[] | undefined
   onRoll(spec: RollSpec): void
 }): React.JSX.Element {
+  // The same answer the HUD computes, so a pin star and the bar cannot disagree.
+  const prefs = usePinnedActions(view.meta.characterId)
+  const bar = new Set(barFor(suggestedBar(view.actions), view.actions, prefs).map((a) => a.id))
+
   return (
     <div className="pointer-events-auto absolute inset-0 z-40 flex items-center justify-center bg-ink/70 backdrop-blur-sm">
       <div className="flex h-[82%] w-[86%] max-w-6xl flex-col overflow-hidden rounded-2xl border border-white/10 bg-ink/95 shadow-2xl">
@@ -93,9 +144,11 @@ export function GameMenu({
         <div className="flex-1 overflow-y-auto px-6 py-5">
           {tab === 'character' && <CharacterTab view={view} onRoll={onRoll} />}
           {tab === 'inventory' && <InventoryTab view={view} dispatch={dispatch} />}
-          {tab === 'actions' && <ActionsTab view={view} dispatch={dispatch} />}
+          {tab === 'actions' && (
+            <ActionsTab view={view} dispatch={dispatch} bar={bar} prefs={prefs} />
+          )}
           {tab === 'spells' && view.spellcasting && (
-            <SpellsTab view={view} dispatch={dispatch} />
+            <SpellsTab view={view} dispatch={dispatch} bar={bar} prefs={prefs} />
           )}
           {tab === 'effects' && <EffectsTab view={view} />}
         </div>
@@ -329,9 +382,11 @@ const FACETS = [
   { id: 'movement', label: 'Movement' }
 ] as const
 
-function ActionsTab({ view, dispatch }: {
+function ActionsTab({ view, dispatch, bar, prefs }: {
   view: PlayerView
   dispatch(command: PlayerCommand): Promise<string[] | undefined> | string[] | undefined
+  bar: Set<string>
+  prefs: PinnedActions
 }): React.JSX.Element {
   const [facet, setFacet] = useState<string>('all')
   const shown = facet === 'all'
@@ -340,6 +395,25 @@ function ActionsTab({ view, dispatch }: {
 
   return (
     <div>
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <p className="text-[12px] text-parchment/45">
+          The bar at the bottom of the screen holds {HUD_SLOTS}. Pin the ones you want;
+          the rest are filled in for you.
+          {prefs.pinned.length > 0 && (
+            <span className="text-parchment/30"> You have pinned {prefs.pinned.length}.</span>
+          )}
+        </p>
+        {prefs.customized && (
+          <button
+            type="button"
+            onClick={prefs.reset}
+            className="shrink-0 text-[11px] text-parchment/40 underline transition hover:text-parchment/80"
+          >
+            reset to suggested
+          </button>
+        )}
+      </div>
+
       <div className="mb-4 flex gap-1">
         {FACETS.map((f) => {
           const count = f.id === 'all'
@@ -364,15 +438,19 @@ function ActionsTab({ view, dispatch }: {
       </div>
 
       <ul className="space-y-2">
-        {shown.map((a) => <ActionRow key={a.id} action={a} dispatch={dispatch} />)}
+        {shown.map((a) => (
+          <ActionRow key={a.id} action={a} dispatch={dispatch} bar={bar} prefs={prefs} />
+        ))}
       </ul>
     </div>
   )
 }
 
-function ActionRow({ action, dispatch }: {
+function ActionRow({ action, dispatch, bar, prefs }: {
   action: ActionView
   dispatch(command: PlayerCommand): Promise<string[] | undefined> | string[] | undefined
+  bar: Set<string>
+  prefs: PinnedActions
 }): React.JSX.Element {
   const [open, setOpen] = useState(false)
   const [rejected, setRejected] = useState<string[] | null>(null)
@@ -424,8 +502,8 @@ function ActionRow({ action, dispatch }: {
         )}
       </button>
 
-      {(action.available || rejected) && (
-        <div className="mt-2 flex items-center gap-3">
+      <div className="mt-2 flex items-center gap-3">
+        {(action.available || rejected) && (
           <button
             type="button"
             disabled={!action.available}
@@ -434,13 +512,17 @@ function ActionRow({ action, dispatch }: {
           >
             Use
           </button>
-          {/* A rejection is a result, not an error — it says why, like any
-              unavailable action would have. */}
-          {rejected && rejected.length > 0 && (
-            <span className="text-[12px] text-ember">{rejected.join(' · ')}</span>
-          )}
-        </div>
-      )}
+        )}
+        {/* Pinning is offered even for something unavailable right now: a
+            once-a-day ability is exactly the sort of thing worth keeping a
+            slot for, and it comes back after a rest. */}
+        <PinButton actionId={action.id} bar={bar} prefs={prefs} />
+        {/* A rejection is a result, not an error — it says why, like any
+            unavailable action would have. */}
+        {rejected && rejected.length > 0 && (
+          <span className="text-[12px] text-ember">{rejected.join(' · ')}</span>
+        )}
+      </div>
 
       {open && action.breakdown && (
         <div className="mt-3 border-t border-white/10 pt-3">
@@ -460,9 +542,11 @@ function ActionRow({ action, dispatch }: {
  * the level is also what a slot pays for. Everything shown is a field on
  * SpellView — this component computes nothing and knows no spell by name.
  */
-function SpellsTab({ view, dispatch }: {
+function SpellsTab({ view, dispatch, bar, prefs }: {
   view: PlayerView
   dispatch(command: PlayerCommand): Promise<string[] | undefined> | string[] | undefined
+  bar: Set<string>
+  prefs: PinnedActions
 }): React.JSX.Element {
   const casting = view.spellcasting!
   const byLevel = new Map<number, SpellView[]>()
@@ -514,7 +598,7 @@ function SpellsTab({ view, dispatch }: {
         <Section key={level} title={level === 0 ? 'Cantrips' : `Level ${level}`}>
           <ul className="space-y-2">
             {byLevel.get(level)!.map((s) => (
-              <SpellRow key={s.id} spell={s} dispatch={dispatch} />
+              <SpellRow key={s.id} spell={s} dispatch={dispatch} bar={bar} prefs={prefs} />
             ))}
           </ul>
         </Section>
@@ -523,9 +607,11 @@ function SpellsTab({ view, dispatch }: {
   )
 }
 
-function SpellRow({ spell, dispatch }: {
+function SpellRow({ spell, dispatch, bar, prefs }: {
   spell: SpellView
   dispatch(command: PlayerCommand): Promise<string[] | undefined> | string[] | undefined
+  bar: Set<string>
+  prefs: PinnedActions
 }): React.JSX.Element {
   const [open, setOpen] = useState(false)
   const [rejected, setRejected] = useState<string[] | null>(null)
@@ -598,36 +684,40 @@ function SpellRow({ spell, dispatch }: {
         </div>
       )}
 
-      {spell.available && (
-        <div className="mt-2 flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => { void Promise.resolve(dispatch(spell.command)).then((r) => setRejected(r ?? null)) }}
-            className="rounded-lg border border-arcane/50 bg-arcane/10 px-3 py-1 text-xs text-parchment transition hover:bg-arcane/20"
-          >
-            Cast
-          </button>
-          {/* More than one viable slot is exactly what upcasting is, so the
-              higher slots are offered rather than hidden behind a stepper. */}
-          {spell.slotOptions.filter((s) => s.remaining > 0).slice(1).map((slot) => (
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        {spell.available && (
+          <>
             <button
-              key={slot.resourceId}
               type="button"
-              onClick={() => {
-                void Promise.resolve(
-                  dispatch({ ...spell.command, slotResourceId: slot.resourceId } as PlayerCommand)
-                ).then((r) => setRejected(r ?? null))
-              }}
-              className="rounded-lg border border-white/15 px-2.5 py-1 text-[11px] text-parchment/70 transition hover:border-arcane/50 hover:text-parchment"
+              onClick={() => { void Promise.resolve(dispatch(spell.command)).then((r) => setRejected(r ?? null)) }}
+              className="rounded-lg border border-arcane/50 bg-arcane/10 px-3 py-1 text-xs text-parchment transition hover:bg-arcane/20"
             >
-              at level {slot.level}
+              Cast
             </button>
-          ))}
-          {rejected && rejected.length > 0 && (
-            <span className="text-[12px] text-ember">{rejected.join(' · ')}</span>
-          )}
-        </div>
-      )}
+            {/* More than one viable slot is exactly what upcasting is, so the
+                higher slots are offered rather than hidden behind a stepper. */}
+            {spell.slotOptions.filter((s) => s.remaining > 0).slice(1).map((slot) => (
+              <button
+                key={slot.resourceId}
+                type="button"
+                onClick={() => {
+                  void Promise.resolve(
+                    dispatch({ ...spell.command, slotResourceId: slot.resourceId } as PlayerCommand)
+                  ).then((r) => setRejected(r ?? null))
+                }}
+                className="rounded-lg border border-white/15 px-2.5 py-1 text-[11px] text-parchment/70 transition hover:border-arcane/50 hover:text-parchment"
+              >
+                at level {slot.level}
+              </button>
+            ))}
+          </>
+        )}
+        {/* The cast action's id, which is what the bar actually holds. */}
+        <PinButton actionId={`cast:${spell.id}`} bar={bar} prefs={prefs} />
+        {rejected && rejected.length > 0 && (
+          <span className="text-[12px] text-ember">{rejected.join(' · ')}</span>
+        )}
+      </div>
     </li>
   )
 }

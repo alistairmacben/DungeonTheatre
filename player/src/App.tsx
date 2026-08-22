@@ -18,6 +18,7 @@ import {
   type DamageOutcome, type RollOutcome
 } from './ui/RollWidget'
 import { CreateCharacter } from './ui/CreateCharacter'
+import { HUD_RESERVED_PX } from './ui/usePinnedActions'
 import { claimAndCreateSheet } from './game/sheetStore'
 import { Solo } from './Solo'
 import { CreatePreview } from './CreatePreview'
@@ -185,6 +186,8 @@ function Stage({
         resolveAsset={storageUrl}
         idleMessage={live ? 'The table is quiet…' : 'Waiting for your DM…'}
         roll={roll}
+        // Only when there is a HUD down there to clear.
+        diceBottomInset={game.view ? HUD_RESERVED_PX : 0}
       />
 
       {/* The HUD sits over the theatre and never competes with it. */}

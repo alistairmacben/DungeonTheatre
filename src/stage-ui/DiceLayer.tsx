@@ -15,7 +15,11 @@ import { DieBadge } from './DieBadge'
 const HOLD_MS = 3000
 const FADE_MS = 550
 
-export function DiceLayer({ roll }: { roll: DiceRoll | null }): React.JSX.Element {
+export function DiceLayer({ roll, bottomInset = 0 }: {
+  roll: DiceRoll | null
+  /** Pixels of bottom edge the host has already spoken for — a HUD, a toolbar. */
+  bottomInset?: number
+}): React.JSX.Element {
   const mountRef = useRef<HTMLDivElement>(null)
   const sceneRef = useRef<DiceScene | null>(null)
   const timers = useRef<number[]>([])
@@ -92,8 +96,12 @@ export function DiceLayer({ roll }: { roll: DiceRoll | null }): React.JSX.Elemen
 
       {current && (
         <div
-          className="absolute inset-x-0 bottom-[6%] flex justify-center transition-all duration-500"
+          className="absolute inset-x-0 flex justify-center transition-all duration-500"
           style={{
+            // Clear of whatever the host parks along the bottom edge. The DM's
+            // stage has nothing there and passes 0; the player's HUD is a solid
+            // bar, and a result hidden behind it may as well not have been rolled.
+            bottom: `calc(6% + ${bottomInset}px)`,
             opacity: visible && showResult ? 1 : 0,
             transform: showResult ? 'translateY(0)' : 'translateY(14px)'
           }}

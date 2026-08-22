@@ -21,13 +21,16 @@ export function StageView({
   snapshot,
   resolveAsset,
   idleMessage,
-  roll
+  roll,
+  diceBottomInset = 0
 }: {
   snapshot: AppSnapshot
   resolveAsset: AssetResolver
   idleMessage?: string
   /** Latest dice roll to play over the scene. */
   roll?: DiceRoll | null
+  /** Bottom pixels the host covers with its own chrome, so dice clear it. */
+  diceBottomInset?: number
 }): React.JSX.Element {
   const { ref, scale } = useFitScale()
 
@@ -36,7 +39,7 @@ export function StageView({
   const scene = snapshot.campaign.scenes.find((s) => s.id === snapshot.campaign.activeSceneId)
 
   return (
-    <div ref={ref} className="grid h-full w-full place-items-center overflow-hidden bg-black">
+    <div ref={ref} className="relative grid h-full w-full place-items-center overflow-hidden bg-black">
       <StageCanvas
         scale={scale}
         width={CANVAS_W}
@@ -63,13 +66,20 @@ export function StageView({
         ) : (
           <CardStage presences={presences} settings={settings} />
         )}
-
-        {/* Dice are a flourish. If the renderer fails — no WebGL, a driver
-            quirk — the scene must carry on without them. */}
-        <ErrorBoundary label="dice" fallback={null}>
-          <DiceLayer roll={roll ?? null} />
-        </ErrorBoundary>
       </StageCanvas>
+
+      {/*
+        Dice sit over the stage rather than inside it. Inside, they were scaled
+        along with the artwork — so the result shrank on a small window — and
+        their stacking order was trapped in the canvas's own context, which put
+        the number the player just rolled *underneath* the HUD.
+
+        Dice are also a flourish: if the renderer fails — no WebGL, a driver
+        quirk — the scene must carry on without them.
+      */}
+      <ErrorBoundary label="dice" fallback={null}>
+        <DiceLayer roll={roll ?? null} bottomInset={diceBottomInset} />
+      </ErrorBoundary>
     </div>
   )
 }
