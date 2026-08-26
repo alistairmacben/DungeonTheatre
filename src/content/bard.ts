@@ -181,43 +181,68 @@ export const HALF_ELF: SpeciesDefinition = {
 }
 
 // ===========================================================================
-// Class — Bard, levels 1-5
+// Class — Bard, levels 1-5, except Spells Known which now runs the full
+// table to 20. The class's other features (Song of Rest's rising die,
+// Magical Secrets as a mechanic rather than a count, Peerless Skill,
+// Superior Inspiration, College of Lore past 3rd) are still not authored
+// past 5th — a separate, larger pass, not this one.
 // ===========================================================================
 
 /**
- * One row of the Spells Known column.
+ * Cantrips Known and Spells Known, transcribed from the Bard table
+ * (docs/srd-source/classes.pdf p11, "The Bard"). `values[0]` is level 1.
  *
- * `SelectionDefinition.count` is a constant, but a bard's spells known climbs
- * 4 → 8 across levels 1-5 and cantrips known 2 → 3 at 4th. Flattening that into
- * a single 1st-level allowance would be wrong at four levels out of five, so
- * each increment is authored as its own level-gated grant. `grantedAtLevel` is
- * already exactly this mechanism; the cost is one feature entry per table row.
+ * Spells Known jumps by 2 rather than 1 at 10th, 14th and 18th — the levels
+ * Magical Secrets lands. The real rule lets those two be learned from *any*
+ * class's spell list, not just the bard's own; this table only has the count
+ * right, and the selection pool below still draws bard spells only. Said once
+ * here rather than approximated into a grant that looks complete and isn't.
+ */
+const BARD_CANTRIPS_KNOWN = [2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4]
+const BARD_SPELLS_KNOWN = [
+  4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 15, 16, 18, 19, 19, 20, 22, 22, 22
+]
+
+/**
+ * One level's worth of the Cantrips/Spells Known columns, as the increase
+ * over the level before.
+ *
+ * `SelectionDefinition.count` is a constant, so each increment is authored as
+ * its own level-gated grant — `grantedAtLevel` is already exactly this
+ * mechanism. A level where neither column moves (12th, 16th, 19th, 20th — all
+ * Ability Score Improvement levels instead) grants nothing, since a selection
+ * asking for zero of anything is not a choice and the content integrity check
+ * already rejects one.
  */
 function spellsKnownAtLevel(
   level: number, cantrips: number, spells: number
-): ClassFeatureDefinition {
+): ClassFeatureDefinition | undefined {
+  if (cantrips === 0 && spells === 0) return undefined
+
   const fid = `${BARD}.spells-known-${level}`
   const selections: SelectionDefinition[] = []
   const grants: EffectSource['spells'] = []
 
   if (cantrips > 0) {
     selections.push({
-      id: 'cantrips', prompt: `Learn ${cantrips} more bard cantrip`,
+      id: 'cantrips', prompt: `Learn ${cantrips} more bard cantrip${cantrips === 1 ? '' : 's'}`,
       kind: 'spellList', count: cantrips, from: BARD_CANTRIP_POOL
     })
     // No slotGroup: that, and nothing else, is what makes a cantrip a cantrip.
     grants.push({ selectionId: 'cantrips', availability: 'always', ability: 'cha' })
   }
 
-  selections.push({
-    id: 'spells', prompt: `Learn ${spells} more bard spell`,
-    kind: 'spellList', count: spells, from: BARD_SPELL_POOL
-  })
-  // 'always' rather than 'prepared': a bard knows spells, it does not prepare
-  // them, so preparation is not a question this grant asks.
-  grants.push({
-    selectionId: 'spells', availability: 'always', slotGroup: 'bard', ability: 'cha'
-  })
+  if (spells > 0) {
+    selections.push({
+      id: 'spells', prompt: `Learn ${spells} more bard spell${spells === 1 ? '' : 's'}`,
+      kind: 'spellList', count: spells, from: BARD_SPELL_POOL
+    })
+    // 'always' rather than 'prepared': a bard knows spells, it does not
+    // prepare them, so preparation is not a question this grant asks.
+    grants.push({
+      selectionId: 'spells', availability: 'always', slotGroup: 'bard', ability: 'cha'
+    })
+  }
 
   return {
     id: fid, name: `Spells Known (level ${level})`,
@@ -225,6 +250,17 @@ function spellsKnownAtLevel(
     effects: source({ id: fid, name: `Spells Known (level ${level})`, selections, spells: grants })
   }
 }
+
+/** One feature per level with a nonzero delta, in the order the table has them. */
+const BARD_KNOWN_FEATURES = BARD_CANTRIPS_KNOWN
+  .map((cantrips, i) => {
+    const level = i + 1
+    if (level === 1) return undefined // Granted directly by the level-1 Spellcasting feature.
+    const spells = BARD_SPELLS_KNOWN[i]! - BARD_SPELLS_KNOWN[i - 1]!
+    const cantripDelta = cantrips - BARD_CANTRIPS_KNOWN[i - 1]!
+    return spellsKnownAtLevel(level, cantripDelta, spells)
+  })
+  .filter((f): f is ClassFeatureDefinition => f !== undefined)
 
 export const BARD_CLASS: ClassDefinition = {
   id: BARD, name: 'Bard', provenance: 'srd', contentVersion: 1,
@@ -323,10 +359,9 @@ export const BARD_CLASS: ClassDefinition = {
         }]
       })
     },
-    spellsKnownAtLevel(2, 0, 1),
-    spellsKnownAtLevel(3, 0, 1),
-    spellsKnownAtLevel(4, 1, 1),
-    spellsKnownAtLevel(5, 0, 1),
+    // One feature per level the Cantrips/Spells Known columns actually move,
+    // built above from the transcribed table.
+    ...BARD_KNOWN_FEATURES,
     {
       id: `${BARD}.bardic-inspiration`, name: 'Bardic Inspiration',
       provenance: 'srd', contentVersion: 1, grantedAtLevel: 1,
