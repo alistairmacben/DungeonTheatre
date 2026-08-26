@@ -113,6 +113,12 @@ export function resolveSpellcasting(
       if (!def.spellSlot) continue
       const value = resources.find((x) => x.id === def.id)
       if (!value) continue
+      // A full caster declares all nine tiers from 1st level so the ladder is
+      // one table rather than nine conditional grants; the ones it has not
+      // climbed to yet resolve to a maximum of 0 and are not slots it has.
+      // Filtered on the maximum and not on what remains, because a wizard who
+      // has burned every 1st-level slot still has 1st-level slots.
+      if (value.maximum <= 0) continue
       const option: SlotOption = {
         resourceId: def.id, label: def.name,
         level: def.spellSlot.level, remaining: value.remaining

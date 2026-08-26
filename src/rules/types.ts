@@ -76,6 +76,22 @@ export type ValueExpr =
   | { stat: StatPath }
   | { characterLevel: true }
   | { classLevel: string }
+  /**
+   * A value read straight out of a level column, `values[0]` being level 1.
+   *
+   * Most SRD progressions are not formulas. A wizard's 1st-level slots go
+   * 2, 3, 4, 4, 4… and a barbarian's rages go 2, 2, 3, 3, 3, 4… — sequences
+   * with no closed form, printed in the book as a column of numbers. Writing
+   * them as a stack of `classLevelAtLeast`-gated increments is possible but
+   * turns a table anyone can check against the page into arithmetic nobody
+   * can, which at twelve classes is exactly how a wrong number survives.
+   *
+   * So the table is transcribed as a table. Levels past the end of the array
+   * hold its last value, which is what "and it stays there" means in a book
+   * that stops printing at 20.
+   */
+  | { characterLevelTable: number[] }
+  | { classLevelTable: { classId: string; values: number[] } }
   | { sum: ValueExpr[] }
   | { product: ValueExpr[] }
   | { min: ValueExpr[] }

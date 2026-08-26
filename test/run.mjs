@@ -58,6 +58,7 @@ for (const suite of [
   'test-authority.mjs',
   'test-creation.mjs',
   'test-spell-effect.mjs',
+  'test-level-tables.mjs',
   'test-roll-damage.mjs'
 ]) {
   console.log(`\n───── ${suite} ─────`)

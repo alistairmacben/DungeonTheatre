@@ -27,6 +27,19 @@ export function averageOfDice(expr: DiceExpr): number {
   return expr.count * ((expr.sides + 1) / 2) + (expr.modifier ?? 0)
 }
 
+/**
+ * Reads a level column: `values[0]` is the value at level 1.
+ *
+ * Below level 1 the answer is 0 — a class contributes nothing until it has a
+ * level in it, which is what makes a multiclass character's tables behave.
+ * Past the end of the array the last entry holds, because a book that stops
+ * printing at 20 means "and it stays there", not "and then it is undefined".
+ */
+function fromLevelTable(values: number[], level: number): number {
+  if (level < 1 || values.length === 0) return 0
+  return values[Math.min(level, values.length) - 1] ?? 0
+}
+
 export function evaluateValue(expr: ValueExpr | undefined, env: ValueEnv): number {
   if (expr === undefined) return 0
   if (typeof expr === 'number') return expr
@@ -35,6 +48,13 @@ export function evaluateValue(expr: ValueExpr | undefined, env: ValueEnv): numbe
   if ('stat' in expr) return env.stat(expr.stat)
   if ('characterLevel' in expr) return env.characterLevel()
   if ('classLevel' in expr) return env.classLevel(expr.classLevel)
+  if ('characterLevelTable' in expr) {
+    return fromLevelTable(expr.characterLevelTable, env.characterLevel())
+  }
+  if ('classLevelTable' in expr) {
+    return fromLevelTable(
+      expr.classLevelTable.values, env.classLevel(expr.classLevelTable.classId))
+  }
   if ('sum' in expr) return expr.sum.reduce<number>((n, e) => n + evaluateValue(e, env), 0)
   if ('product' in expr) return expr.product.reduce<number>((n, e) => n * evaluateValue(e, env), 1)
   if ('min' in expr) return Math.min(...expr.min.map((e) => evaluateValue(e, env)))
@@ -56,6 +76,8 @@ export function describeValue(expr: ValueExpr | undefined): string {
   if ('stat' in expr) return expr.stat
   if ('characterLevel' in expr) return 'character level'
   if ('classLevel' in expr) return `${expr.classLevel} level`
+  if ('characterLevelTable' in expr) return 'by character level'
+  if ('classLevelTable' in expr) return `by ${expr.classLevelTable.classId} level`
   if ('sum' in expr) return expr.sum.map(describeValue).join(' + ')
   if ('product' in expr) return expr.product.map(describeValue).join(' × ')
   if ('min' in expr) return `min(${expr.min.map(describeValue).join(', ')})`
@@ -70,6 +92,7 @@ export function describeValue(expr: ValueExpr | undefined): string {
 export function isDynamic(expr: ValueExpr | undefined): boolean {
   if (expr === undefined || typeof expr === 'number' || isDiceExpr(expr)) return false
   if ('stat' in expr || 'characterLevel' in expr || 'classLevel' in expr || 'selection' in expr) return true
+  if ('characterLevelTable' in expr || 'classLevelTable' in expr) return true
   if ('sum' in expr) return expr.sum.some(isDynamic)
   if ('product' in expr) return expr.product.some(isDynamic)
   if ('min' in expr) return expr.min.some(isDynamic)

@@ -15,6 +15,10 @@ import {
   SPELL_ATTACK, SPELL_SAVE_DC, SPELLS_PREPARED_MAX, speedPath
 } from '../rules/statPaths.js'
 import { SPELL_LISTS } from './spells.js'
+import { fullCasterSlots } from './progression.js'
+
+/** The Wizard table's slot columns, 1st through 9th. */
+const WIZARD_SLOTS = fullCasterSlots('srd:class.wizard', 'wizard')
 
 const V = '2014'
 let n = 0
@@ -157,25 +161,13 @@ export const WIZARD: ClassDefinition = {
                 { classLevel: 'srd:class.wizard' }
               ]
             }]
-          }, { note: 'Intelligence modifier + wizard level, minimum 1' })
+          }, { note: 'Intelligence modifier + wizard level, minimum 1' }),
+          ...WIZARD_SLOTS.modifiers
         ],
-        resources: [
-          {
-            id: 'wizard.slots.1', name: '1st-level Slots', max: 4,
-            refresh: { kind: 'longRest' }, display: 'slots', group: 'Spell Slots',
-            order: 1, spellSlot: { group: 'wizard', level: 1 }
-          },
-          {
-            id: 'wizard.slots.2', name: '2nd-level Slots', max: 3,
-            refresh: { kind: 'longRest' }, display: 'slots', group: 'Spell Slots',
-            order: 2, spellSlot: { group: 'wizard', level: 2 }
-          },
-          {
-            id: 'wizard.slots.3', name: '3rd-level Slots', max: 2,
-            refresh: { kind: 'longRest' }, display: 'slots', group: 'Spell Slots',
-            order: 3, spellSlot: { group: 'wizard', level: 3 }
-          }
-        ],
+        // The full ladder, 1st through 9th, read off the Wizard table rather
+        // than frozen at one row. This is what a level-9 wizard needs to have
+        // 5th-level slots at all.
+        resources: WIZARD_SLOTS.resources,
         // Two grants, one type. Cantrips are always available; everything in
         // the spellbook must be prepared. The difference is data.
         spells: [

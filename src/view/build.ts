@@ -359,6 +359,14 @@ function buildResources(r: Resolution, detail: DetailLevel): ResourceView[] {
   }
 
   return resolveResources(r)
+    // A maximum of 0 is not a resource you have. Full casters now declare all
+    // nine slot tiers from 1st level so the ladder can be one table rather
+    // than nine conditional grants, which means a 5th-level wizard resolves
+    // six tiers of 0 — and a HUD showing "0/0 7th-level Slots" is reporting a
+    // row of a table, not a thing the player owns. The engine still sees them
+    // (spending one is refused for having none left, as it should be); this is
+    // only about what a sheet shows.
+    .filter((v: ResourceValue) => v.maximum > 0)
     .map((v: ResourceValue) => {
       const found = defs.get(v.id)
       const def = found?.def

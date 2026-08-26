@@ -247,14 +247,16 @@ export const BARBARIAN: ClassDefinition = {
       effects: source({
         id: 'srd:class.barbarian.rage', name: 'Rage',
         modifiers: [
-          // The Rages column of the class table. Clamping the barbarian level
-          // between 2 and 3 reproduces it exactly across levels 1-5, which is
-          // the whole range this file authors. The column beyond that (4 at 6,
-          // 5 at 12, 6 at 17, unlimited at 20) is a step table and not a
-          // formula; expressing it would need a lookup ValueExpr rather than a
-          // cleverer clamp, so it is deliberately not attempted here.
-          add(RAGES_MAX, { min: [3, { max: [2, { classLevel: 'srd:class.barbarian' }] }] },
-            { note: 'two rages at 1st and 2nd level, three from 3rd' }),
+          // The Rages column of the class table, transcribed. The 20th-level
+          // row reads "Unlimited", which a column of numbers cannot say — it
+          // holds at 6 here, and Primal Champion below is where the real
+          // answer belongs once resources can be uncapped.
+          add(RAGES_MAX, {
+            classLevelTable: {
+              classId: 'srd:class.barbarian',
+              values: [2, 2, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 6, 6, 6, 6]
+            }
+          }, { note: 'Rages column of the Barbarian table' }),
 
           // Advantage on Strength checks and Strength saving throws. Two
           // scopes, not one: a check and a save are different roll kinds even
