@@ -64,6 +64,7 @@ export function createContentIndex(): ContentIndex {
   return {
     species: new Map(),
     classes: new Map(),
+    subclasses: new Map(),
     feats: new Map(),
     items: new Map(),
     spells: new Map(),

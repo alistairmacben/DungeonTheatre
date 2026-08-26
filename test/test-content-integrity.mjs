@@ -66,13 +66,17 @@ function catches(name, mutate, expected) {
   // decided are acceptable. Counted by kind rather than by total, so adding a
   // class does not fail this and adding a new *kind* of problem does.
   const warnings = warningsIn(content)
-  const subclassDebt = warnings.filter((p) => p.message.includes('subclasses are not implemented'))
+  const subclassDebt = warnings.filter((p) => p.message.includes('not authored yet'))
   const sharedResources = warnings.filter((p) => p.message.includes('never be active at once'))
 
-  const withSubclassSlots = [...content.classes.values()]
-    .reduce((n, c) => n + (c.subclassSlot?.options.length ?? 0), 0)
-  check.eq('live content: subclass debt is exactly the declared subclass options',
-    subclassDebt.length, withSubclassSlots)
+  // Every subclass a class offers but nobody has written. Counted against the
+  // real gap rather than a fixed number, so authoring one lowers it and adding
+  // a class that needs one raises it, without either failing this test.
+  const unauthored = [...content.classes.values()]
+    .flatMap((c) => c.subclassSlot?.options ?? [])
+    .filter((option) => !content.subclasses.has(option))
+  check.eq('live content: subclass debt is exactly the subclasses nobody has written',
+    subclassDebt.length, unauthored.length)
 
   check.eq('live content: one deliberate shared-resource pair (the bard\'s)',
     sharedResources.length, 1)

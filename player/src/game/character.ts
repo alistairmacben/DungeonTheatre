@@ -182,7 +182,9 @@ export const WEN_SHAO: Character = {
   name: 'Wen Shao',
   playerId: 'player-5',
   speciesId: 'srd:species.human',
-  classLevels: [{ classId: 'srd:class.monk', level: 10 }],
+  classLevels: [{
+    classId: 'srd:class.monk', level: 10, subclassId: 'srd:subclass.open-hand'
+  }],
   abilityScoreBase: { str: 10, dex: 16, con: 14, int: 10, wis: 15, cha: 8 },
   buildChoices: [{ atLevel: 4, kind: 'feat', value: 'srd:feat.athlete' }],
   // 8 + CON at 1st (10), then 5 + CON per level after (7 × 9 = 63): 73.

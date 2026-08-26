@@ -61,6 +61,7 @@ for (const suite of [
   'test-level-tables.mjs',
   'test-content-integrity.mjs',
   'test-monk.mjs',
+  'test-subclass.mjs',
   'test-sorcerer.mjs',
   'test-bard-known-spells.mjs',
   'test-roll-damage.mjs'

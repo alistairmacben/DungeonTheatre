@@ -5,7 +5,7 @@
 // of silently omitting it.
 
 import type {
-  Character, CollectedSources, ContentIndex, EffectSource, ItemDefinition,
+  Character, ClassFeatureDefinition, CollectedSources, ContentIndex, EffectSource, ItemDefinition,
   ItemInstance, Modifier, ProficiencyGrant
 } from './types.js'
 import { evaluate, type PredicateEnv } from './predicates.js'
@@ -100,15 +100,67 @@ export function collectCandidates(character: Character, content: ContentIndex): 
   for (const cl of character.classLevels) {
     const def = content.classes.get(cl.classId)
     if (!def) continue
-    for (const feature of def.features) {
-      if (feature.grantedAtLevel > cl.level) {
-        out.push({
+
+    const featureCandidate = (
+      feature: ClassFeatureDefinition, ownerName: string
+    ): Candidate => (
+      feature.grantedAtLevel > cl.level
+        ? {
           source: stamp(feature.effects),
-          preconditionReason: `${def.name} level ${feature.grantedAtLevel} required (currently ${cl.level})`
+          preconditionReason:
+            `${ownerName} level ${feature.grantedAtLevel} required (currently ${cl.level})`
+        }
+        : { source: stamp(feature.effects) }
+    )
+
+    for (const feature of def.features) out.push(featureCandidate(feature, def.name))
+
+    // A subclass is a second feature list on the same level track, not a
+    // different kind of thing — so once the choice is made its features go
+    // through exactly the machinery above. What differs is only whether the
+    // choice was made, and whether it was a legal one to make.
+    if (!def.subclassSlot) continue
+
+    // A subclass counts only if it exists AND belongs to this class. Nothing in
+    // the type system stops a stored row saying a barbarian took College of
+    // Lore, so the check lives here, where the grant happens.
+    const named = cl.subclassId ? content.subclasses.get(cl.subclassId) : undefined
+    const subclass = named?.classId === cl.classId ? named : undefined
+
+    if (!subclass) {
+      // No usable subclass — never chosen, an id nothing defines, or one
+      // belonging to another class. All three are the same thing from here:
+      // the character is owed a decision, and is told so from the level it was
+      // offered. The alternative is a 17th-level monk quietly missing four
+      // features and looking identical to one who has them.
+      if (cl.level >= def.subclassSlot.grantedAtLevel) {
+        const why = cl.subclassId
+          ? `"${cl.subclassId}" is not one of its subclasses`
+          : 'it has not been chosen'
+        out.push({
+          source: stamp({
+            id: `${def.id}.subclass-pending`,
+            name: `${def.name}: subclass not chosen`,
+            provenance: def.provenance,
+            contentVersion: def.contentVersion,
+            kind: 'feature',
+            activation: { always: true },
+            modifiers: [],
+            completeness: 'complete',
+            narrative: [{
+              text: `Choose your ${def.name} subclass — ${why}. It was available at `
+                + `level ${def.subclassSlot.grantedAtLevel} and grants features you `
+                + 'are not receiving until you do.',
+              dmPromptable: true
+            }]
+          })
         })
-      } else {
-        out.push({ source: stamp(feature.effects) })
       }
+      continue
+    }
+
+    for (const feature of subclass.features) {
+      out.push(featureCandidate(feature, subclass.name))
     }
   }
 

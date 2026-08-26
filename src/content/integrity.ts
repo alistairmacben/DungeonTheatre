@@ -15,7 +15,11 @@
 //     new druid was created with no cantrips and no way to pick any.
 //   - Wood Elf was authored as a top-level species while Elf already carried
 //     it as a subspecies, so the same race existed twice with different stats.
-//   - Every subclass id referenced by a class points at nothing at all.
+//   - Every subclass id referenced by a class pointed at nothing at all. That
+//     was a warning here while subclasses did not exist as a concept; now that
+//     they do, it is an error, along with its two quieter cousins — a subclass
+//     filed under a class that never offers it, and one whose features start
+//     before the level the choice is made.
 //
 // The rule of thumb for what belongs here: if it can be wrong without being
 // *malformed*, it belongs here. Structure is validate.ts's job; meaning is
@@ -70,6 +74,11 @@ function* allSources(content: ContentIndex): Generator<{ source: EffectSource; w
       yield { source: f.effects, where: `class ${key} › feature ${f.id}` }
     }
   }
+  for (const [key, sc] of content.subclasses) {
+    for (const f of sc.features) {
+      yield { source: f.effects, where: `subclass ${key} › feature ${f.id}` }
+    }
+  }
   for (const [key, f] of content.feats) yield { source: f.effects, where: `feat ${key}` }
   for (const [key, i] of content.items) yield { source: i.effects, where: `item ${key}` }
   for (const [key, s] of content.spells) {
@@ -110,6 +119,7 @@ function checkKeysMatchIds(ctx: Ctx): void {
   const maps: [string, Map<string, { id: string }>][] = [
     ['species', ctx.content.species],
     ['class', ctx.content.classes],
+    ['subclass', ctx.content.subclasses],
     ['feat', ctx.content.feats],
     ['item', ctx.content.items],
     ['spell', ctx.content.spells],
@@ -345,14 +355,23 @@ function checkClasses(ctx: Ctx): void {
       if (options.length === 0) {
         err(ctx, `class ${key}`, 'declares a subclass slot with no options')
       }
-      // Subclasses have no definitions anywhere yet — there is no subclass map
-      // in ContentIndex and nothing reads subclassSlot. Reported as a warning
-      // rather than an error because it is known, deliberate and tracked; it
-      // becomes an error the moment subclasses are real.
+      // Two different things, kept apart on purpose.
+      //
+      // An option with no definition is a class whose subclass has not been
+      // authored yet — known, tracked, and shrinking to zero as the remaining
+      // classes are written. A warning, so the gate stays meaningful while the
+      // debt is still countable.
+      //
+      // An option that IS defined but belongs to another class is a mistake:
+      // the collector silently refuses to grant it, so the menu offers a
+      // tradition that does nothing when taken. That is an error.
       for (const option of options) {
-        if (!featureIds.has(option) && !ctx.content.classes.has(option)) {
-          warn(ctx, `class ${key}`,
-            `subclass "${option}" has no definition — subclasses are not implemented yet`)
+        const subclass = ctx.content.subclasses.get(option)
+        if (!subclass) {
+          warn(ctx, `class ${key}`, `offers subclass "${option}", which is not authored yet`)
+        } else if (subclass.classId !== key) {
+          err(ctx, `class ${key}`,
+            `offers subclass "${option}", which belongs to ${subclass.classId}`)
         }
       }
     }
@@ -365,6 +384,56 @@ function checkClasses(ctx: Ctx): void {
         `${c.savingThrowProficiencies.length} saving throw proficiencies; every SRD class has two`)
     }
   }
+}
+
+/**
+ * Subclass shape, and the one relationship that cannot be typechecked: a
+ * subclass must belong to a class that exists, and no class may reach it
+ * except through that class's own slot.
+ */
+function checkSubclasses(ctx: Ctx): void {
+  const offered = new Set<string>()
+  for (const c of ctx.content.classes.values()) {
+    for (const option of c.subclassSlot?.options ?? []) offered.add(option)
+  }
+
+  for (const [key, sc] of ctx.content.subclasses) {
+    const owner = ctx.content.classes.get(sc.classId)
+    if (!owner) {
+      err(ctx, `subclass ${key}`, `belongs to class "${sc.classId}", which no content defines`)
+    } else if (!(owner.subclassSlot?.options ?? []).includes(key)) {
+      // Defined, owned, and unreachable: the class it claims never offers it,
+      // so no character can ever choose it.
+      err(ctx, `subclass ${key}`,
+        `is not among the subclasses ${sc.classId} offers — nothing can choose it`)
+    }
+
+    if (sc.features.length === 0) {
+      err(ctx, `subclass ${key}`, 'grants no features at all')
+    }
+
+    const featureIds = new Set<string>()
+    for (const f of sc.features) {
+      if (featureIds.has(f.id)) err(ctx, `subclass ${key}`, `duplicate feature id "${f.id}"`)
+      featureIds.add(f.id)
+      if (!Number.isInteger(f.grantedAtLevel)
+        || f.grantedAtLevel < 1 || f.grantedAtLevel > MAX_LEVEL) {
+        err(ctx, `subclass ${key}`, `feature "${f.id}" is granted at level ${f.grantedAtLevel}`)
+      }
+    }
+
+    // A subclass whose first feature lands before the class offers the choice
+    // would be granted to a character who has not chosen it yet.
+    const earliest = Math.min(...sc.features.map((f) => f.grantedAtLevel))
+    const offeredAt = owner?.subclassSlot?.grantedAtLevel
+    if (offeredAt !== undefined && earliest < offeredAt) {
+      err(ctx, `subclass ${key}`,
+        `grants a feature at level ${earliest}, before ${sc.classId} offers the choice at ${offeredAt}`)
+    }
+  }
+
+  // The other direction — an offered id with no definition — is checked in
+  // checkClasses, where the offer lives.
 }
 
 /** Species shape: a subspecies menu of one is a menu, not a mistake, but zero is. */
@@ -399,6 +468,7 @@ export function checkContentIntegrity(content: ContentIndex): Problem[] {
   checkKeysMatchIds(ctx)
   checkNoDuplicateRaces(ctx)
   checkClasses(ctx)
+  checkSubclasses(ctx)
   checkSpecies(ctx)
   checkResources(ctx)
 

@@ -645,6 +645,25 @@ export interface ClassFeatureDefinition extends Identity {
   effects: EffectSource
 }
 
+/**
+ * A subclass: Path of the Berserker, College of Lore, School of Evocation.
+ *
+ * Deliberately the same shape as a class's own feature list rather than a new
+ * kind of thing. A subclass is not a special case in the SRD — it is a second
+ * source of features on the same level track, gated on having chosen it. So it
+ * carries `features` exactly as ClassDefinition does, and the collector treats
+ * both identically once the choice is made.
+ *
+ * `classId` is what makes a wrong choice detectable: nothing stops a character
+ * row naming College of Lore on a barbarian, so the collector checks that the
+ * subclass belongs to the class before granting anything.
+ */
+export interface SubclassDefinition extends Identity {
+  /** The class this subclass belongs to. A mismatch grants nothing. */
+  classId: ClassId
+  features: ClassFeatureDefinition[]
+}
+
 export interface ClassDefinition extends Identity {
   hitDie: number
   savingThrowProficiencies: Ability[]
@@ -1034,6 +1053,7 @@ export interface GameEvent {
 export interface ContentIndex {
   species: Map<string, SpeciesDefinition>
   classes: Map<string, ClassDefinition>
+  subclasses: Map<string, SubclassDefinition>
   feats: Map<string, FeatDefinition>
   items: Map<string, ItemDefinition>
   spells: Map<string, SpellDefinition>

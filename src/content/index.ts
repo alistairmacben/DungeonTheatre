@@ -4,7 +4,7 @@
 
 import type {
   ClassDefinition, ContentIndex, ItemDefinition, SpeciesDefinition,
-  SpellDefinition
+  SpellDefinition, SubclassDefinition
 } from '../rules/types.js'
 import { createContentIndex } from '../rules/index.js'
 import {
@@ -15,7 +15,7 @@ import { ALL_SPELLS } from './spells.js'
 import { WIZARD_CLASSES, WIZARD_ITEMS, WIZARD_SPECIES } from './wizard.js'
 import { PARTY_CLASSES, PARTY_ITEMS, PARTY_SPECIES } from './party.js'
 import { BARBARIAN_CLASSES, BARBARIAN_ITEMS, BARBARIAN_SPECIES } from './barbarian.js'
-import { MONK_CLASS } from './monk.js'
+import { MONK_CLASS, MONK_SUBCLASSES } from './monk.js'
 import { BARD_CLASSES, BARD_ITEMS, BARD_SPECIES } from './bard.js'
 import { WARLOCK_CLASSES, WARLOCK_ITEMS, WARLOCK_SPECIES, WARLOCK_SPELLS } from './warlock.js'
 import { DRUID_CLASSES, DRUID_ITEMS, DRUID_SPECIES } from './druid.js'
@@ -50,11 +50,13 @@ const ITEMS: ItemDefinition[] = [
   ...BARBARIAN_ITEMS, ...BARD_ITEMS, ...WARLOCK_ITEMS, ...DRUID_ITEMS
 ]
 const SPELLS: SpellDefinition[] = [...ALL_SPELLS, ...WARLOCK_SPELLS]
+const SUBCLASSES: SubclassDefinition[] = [...MONK_SUBCLASSES]
 
 export function loadContent(): ContentIndex {
   const content = createContentIndex()
   for (const s of SPECIES) content.species.set(s.id, s)
   for (const c of CLASSES) content.classes.set(c.id, c)
+  for (const sc of SUBCLASSES) content.subclasses.set(sc.id, sc)
   for (const f of ALL_FEATS) content.feats.set(f.id, f)
   for (const i of ITEMS) content.items.set(i.id, i)
   for (const sp of SPELLS) content.spells.set(sp.id, sp)

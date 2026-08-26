@@ -33,7 +33,7 @@
 //     it would make the sheet lie. Each one degrades to something visible.
 
 import type {
-  ClassDefinition, EffectSource, Modifier, Predicate, ProficiencyGrant
+  ClassDefinition, EffectSource, Modifier, Predicate, ProficiencyGrant, SubclassDefinition
 } from '../rules/types.js'
 import {
   abilityModifierPath, ARMOR_CLASS, declareFeatureDc, declareResourceMax,
@@ -73,6 +73,9 @@ const KI_MAX = declareResourceMax('monk.ki')
 
 /** "Ki save DC = 8 + your proficiency bonus + your Wisdom modifier." */
 const KI_SAVE_DC = declareFeatureDc('monk.ki', 'wis')
+
+/** Way of the Open Hand's once-a-long-rest self-heal. */
+const WHOLENESS_MAX = declareResourceMax('monk.wholeness-of-body')
 
 // ---------------------------------------------------------------------------
 // The Monk table (SRD p26), transcribed
@@ -595,6 +598,127 @@ export const MONK_TABLE = {
   kiPoints: KI_POINTS,
   unarmoredMovement: UNARMORED_MOVEMENT
 }
+
+// ===========================================================================
+// Subclass — Way of the Open Hand (SRD p28-29)
+// ===========================================================================
+
+/**
+ * The first subclass in the content set, and the reference for the other
+ * eleven.
+ *
+ * It is deliberately not a new kind of thing: a SubclassDefinition carries the
+ * same `features` array a ClassDefinition does, on the same level track, and
+ * the collector runs both through identical code once the choice is made. What
+ * a subclass adds is a gate — you get these features only if you chose this
+ * tradition, and only if it belongs to the class you are actually playing.
+ *
+ * All four features here are `partial`, which is not a failure of this file.
+ * Every one of them acts on a *target* — knock it prone, push it, end its
+ * reactions, reduce it to 0 hit points — and there are no targets in
+ * theatre-of-the-mind. The ki costs are real, the DCs are real, the healing is
+ * real; the rest is the DM's to adjudicate, and each says so.
+ */
+export const WAY_OF_THE_OPEN_HAND: SubclassDefinition = {
+  id: 'srd:subclass.open-hand', name: 'Way of the Open Hand',
+  provenance: 'srd', contentVersion: 1,
+  classId: MONK,
+  features: [
+    {
+      id: 'srd:subclass.open-hand.technique', name: 'Open Hand Technique',
+      provenance: 'srd', contentVersion: 1, grantedAtLevel: 3,
+      effects: source({
+        id: 'srd:subclass.open-hand.technique', name: 'Open Hand Technique',
+        completeness: 'partial',
+        // Three riders on a Flurry of Blows hit, each landing on the target.
+        // Nothing here can reach a target, so the ki that Flurry already
+        // spends is the whole mechanical part and the choice is the player's.
+        narrative: [{
+          text: 'When you hit with a Flurry of Blows attack, you may impose one '
+            + 'of: a Dexterity save or knocked prone; a Strength save or pushed '
+            + '15 feet; or no reactions until the end of your next turn. Both '
+            + 'saves are against your ki save DC. Tell the DM which — the app '
+            + 'does not apply it.',
+          dmPromptable: true
+        }]
+      })
+    },
+    {
+      id: 'srd:subclass.open-hand.wholeness-of-body', name: 'Wholeness of Body',
+      provenance: 'srd', contentVersion: 1, grantedAtLevel: 6,
+      effects: source({
+        id: 'srd:subclass.open-hand.wholeness-of-body', name: 'Wholeness of Body',
+        completeness: 'partial',
+        modifiers: [
+          add(WHOLENESS_MAX, 1, { note: 'once per long rest' })
+        ],
+        resources: [{
+          id: 'monk.wholeness-of-body', name: 'Wholeness of Body',
+          max: WHOLENESS_MAX,
+          refresh: { kind: 'longRest' }, display: 'uses', order: 2
+        }],
+        actions: [{
+          id: 'monk.wholeness-of-body', name: 'Wholeness of Body',
+          kind: 'ability', cost: 'action',
+          description: 'Regain hit points equal to three times your monk level.',
+          requirements: { resourceAtLeast: ['monk.wholeness-of-body', 1] },
+          costs: { 'monk.wholeness-of-body': 1 }
+        }]
+        ,
+        // The use is spent correctly; the healing is not applied, because an
+        // action cannot yet restore hit points — the same wall Second Wind and
+        // Lay on Hands are behind.
+        narrative: [{
+          text: 'Regain hit points equal to three times your monk level. The use '
+            + 'is tracked; ask the DM to apply the healing.',
+          dmPromptable: true
+        }]
+      })
+    },
+    {
+      id: 'srd:subclass.open-hand.tranquility', name: 'Tranquility',
+      provenance: 'srd', contentVersion: 1, grantedAtLevel: 11,
+      effects: source({
+        id: 'srd:subclass.open-hand.tranquility', name: 'Tranquility',
+        completeness: 'partial',
+        // Note the DC: 8 + WIS + proficiency, which is the same arithmetic as
+        // the ki save DC and so reads off the same stat rather than a second
+        // one that could drift from it.
+        narrative: [{
+          text: 'At the end of a long rest you gain the effect of a sanctuary '
+            + 'spell until your next long rest. Its save DC equals your ki save '
+            + 'DC. Sanctuary is not in the content set, so the DM tracks it.',
+          dmPromptable: true
+        }]
+      })
+    },
+    {
+      id: 'srd:subclass.open-hand.quivering-palm', name: 'Quivering Palm',
+      provenance: 'srd', contentVersion: 1, grantedAtLevel: 17,
+      effects: source({
+        id: 'srd:subclass.open-hand.quivering-palm', name: 'Quivering Palm',
+        completeness: 'partial',
+        actions: [{
+          id: 'monk.quivering-palm', name: 'Quivering Palm',
+          kind: 'ability', cost: 'free',
+          description: 'On an unarmed strike hit, spend 3 ki to start lethal vibrations.',
+          requirements: { resourceAtLeast: ['monk.ki', 3] },
+          costs: { 'monk.ki': 3 }
+        }],
+        narrative: [{
+          text: 'The vibrations last a number of days equal to your monk level. '
+            + 'Ending them with your action forces a Constitution save against '
+            + 'your ki save DC: on a failure the target drops to 0 hit points, '
+            + 'on a success it takes 10d10 necrotic. One creature at a time. '
+            + 'The ki is spent here; everything after it is the DM\'s.',
+          dmPromptable: true
+        }]
+      })
+    }
+  ]
+}
+
+export const MONK_SUBCLASSES: SubclassDefinition[] = [WAY_OF_THE_OPEN_HAND]
 
 export const MONK_STATS = { KI_MAX, KI_SAVE_DC }
 export const MONK_RULESET = V
