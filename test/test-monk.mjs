@@ -10,9 +10,7 @@
 // When the remaining eleven classes are authored, this file is the shape their
 // tests should take.
 
-import {
-  checkContentIntegrity, createResolution, loadContent, playerViewOf
-} from './bundle/engine.mjs'
+import { checkContentIntegrity, loadContent, playerViewOf } from './bundle/engine.mjs'
 import { makeChecker } from './rules-fixtures.mjs'
 
 const check = makeChecker()
@@ -212,15 +210,16 @@ const featureNames = (view) => view.effects.map((e) => e.label)
   }
 
   // Purity of Body is the interesting one: half of it resolves and half does
-  // not, and both halves are stated. The half that resolves is checked against
-  // the engine rather than the view, because — found while writing this test —
-  // PlayerView has no resistances section at all. A 10th-level monk is immune
-  // to poison, the engine knows it, and the sheet has nowhere to say so. That
-  // is a gap in the view contract rather than in this class, and it belongs to
-  // whoever adds a defences section, not to the monk.
-  const resolution = createResolution(monk(20), content)
-  check.eq('partial: Purity of Body\'s poison immunity resolves in the engine',
-    resolution.stat('resistance.poison').total, 2)
+  // not, and both halves are stated. The half that resolves now reaches the
+  // sheet through PlayerView.defenses.
+  const poison = view.defenses.find((d) => d.type === 'poison')
+  check('partial: Purity of Body\'s poison immunity reaches the sheet',
+    poison?.state === 'immune', JSON.stringify(poison))
+
+  // And it is absent before 10th level, same as every other level-gated
+  // feature here.
+  const early = viewAt(9).defenses.find((d) => d.type === 'poison')
+  check.eq('partial: and is not shown before 10th level', early, undefined)
 }
 
 // ---------------------------------------------------------------------------

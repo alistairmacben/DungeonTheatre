@@ -189,6 +189,30 @@ function CharacterTab({ view, onRoll }: {
         </div>
       </Section>
 
+      {/* Only shown when there is one — a character with nothing unusual has
+          nothing to say here, same as the effects list below it. */}
+      {view.defenses.length > 0 && (
+        <Section title="Defenses">
+          <div className="flex flex-wrap gap-2">
+            {view.defenses.map((d) => (
+              <span
+                key={d.type}
+                className={`rounded-lg border px-2.5 py-1 text-[12px] capitalize ${
+                  d.state === 'immune'
+                    ? 'border-verdigris/40 bg-verdigris/10 text-verdigris'
+                    : d.state === 'vulnerable'
+                      ? 'border-ember/40 bg-ember/10 text-ember'
+                      : 'border-arcane/40 bg-arcane/10 text-arcane'
+                }`}
+              >
+                {d.type} {d.state}
+                {d.reduction ? ` (−${d.reduction})` : ''}
+              </span>
+            ))}
+          </div>
+        </Section>
+      )}
+
       <Section title="Abilities">
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
           {view.abilities.map((a) => (

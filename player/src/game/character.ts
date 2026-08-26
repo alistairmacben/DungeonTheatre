@@ -167,7 +167,49 @@ export const BROTHER_ALDWIN: Character = {
   ]
 }
 
+/**
+ * Wen Shao, Human Monk 10 — the level-scaling test.
+ *
+ * Ten rather than five on purpose: the monk was the first class authored past
+ * the level-5 ceiling every other file in this party stops at, and 10th level
+ * is where that actually shows — a ki pool of 10, +20 feet of Unarmored
+ * Movement, and Purity of Body's poison immunity, none of which a level-5
+ * character could ever have demonstrated.
+ */
+export const WEN_SHAO: Character = {
+  id: 'char:wen',
+  campaignId: 'camp-1',
+  name: 'Wen Shao',
+  playerId: 'player-5',
+  speciesId: 'srd:species.human',
+  classLevels: [{ classId: 'srd:class.monk', level: 10 }],
+  abilityScoreBase: { str: 10, dex: 16, con: 14, int: 10, wis: 15, cha: 8 },
+  buildChoices: [{ atLevel: 4, kind: 'feat', value: 'srd:feat.athlete' }],
+  // 8 + CON at 1st (10), then 5 + CON per level after (7 × 9 = 63): 73.
+  hitPointsCurrent: 73,
+  hitPointsTemp: 0,
+  hitDiceSpent: {},
+  resourcesSpent: {},
+  conditions: [],
+  effectInstances: [],
+  exhaustionLevel: 0,
+  inventory: {
+    instances: [
+      { instanceId: 'm-shortsword', definitionId: 'srd:weapon.shortsword', contentVersion: 1, identified: true },
+      { instanceId: 'm-darts', definitionId: 'srd:weapon.dart', contentVersion: 1, quantity: 10, identified: true },
+      { instanceId: 'm-potion', definitionId: 'srd:item.potion-of-healing', contentVersion: 1, quantity: 2, identified: true }
+    ],
+    // No armour, no shield, nothing in mainHand: Unarmored Defense and
+    // Unarmored Movement both gate on it, and a monk fighting bare-handed
+    // needs no weapon equipped for Martial Arts to apply.
+    equipped: {},
+    attunedInstanceIds: []
+  },
+  deathSaves: { successes: 0, failures: 0 },
+  toggles: {}
+}
+
 /** The party. One entry per archetype the content can express today. */
 export const PARTY: Character[] = [
-  SIR_ALDREN, ILYANA_VESS, PIP_UNDERBOUGH, BROTHER_ALDWIN
+  SIR_ALDREN, ILYANA_VESS, PIP_UNDERBOUGH, BROTHER_ALDWIN, WEN_SHAO
 ]

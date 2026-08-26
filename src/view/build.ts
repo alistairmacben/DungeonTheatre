@@ -7,7 +7,7 @@
 // here, which every class gets at once.
 
 import type {
-  Ability, ActionDefinition, ClassDefinition, ContentIndex, EffectSource,
+  Ability, ActionDefinition, ClassDefinition, ContentIndex, DamageType, EffectSource,
   ItemDefinition, ResourceDefinition, RollResolution, SpellDefinition, StatValue, Term
 } from '../rules/types.js'
 import { ABILITIES } from '../rules/types.js'
@@ -15,17 +15,17 @@ import type { Resolution } from '../rules/resolve.js'
 import { createResolution, characterLevel } from '../rules/resolve.js'
 import { describeProficiency, evaluate } from '../rules/predicates.js'
 import { resolveCheck, resolvePassiveCheck } from '../rules/check.js'
-import { resolveAttack } from '../rules/attack.js'
+import { resistancesOf, resolveAttack } from '../rules/attack.js'
 import { resolveResources, type ResourceValue } from '../rules/resources.js'
 import { resolveSpellcasting, type CastableSpell, type SlotOption } from '../rules/spells.js'
 import { resolveSpellAttackRoll, resolveSpellEffect } from '../rules/spellEffect.js'
 import {
-  abilityModifierPath, abilityScorePath, ARMOR_CLASS, HP_MAX, INITIATIVE,
-  PROFICIENCY_BONUS, speedPath
+  abilityModifierPath, abilityScorePath, ARMOR_CLASS, damageReductionPath, DAMAGE_TYPE_PATHS,
+  HP_MAX, INITIATIVE, PROFICIENCY_BONUS, speedPath
 } from '../rules/statPaths.js'
 import { SRD_SKILLS } from '../rules/index.js'
 import type {
-  AbilityView, ActionView, Breakdown, DetailLevel, EffectView,
+  AbilityView, ActionView, Breakdown, DefenseView, DetailLevel, EffectView,
   EquipmentSlotView, ItemGroup, ItemView, NoticeView, PlayerView,
   PlayerCommand, ProgressionView, ProficiencyState, Readout, ResourceView,
   RollSpec, SkillView, SpellcastingView, SpellView, Viewer, VitalsView
@@ -235,6 +235,33 @@ function buildVitals(r: Resolution, detail: DetailLevel): VitalsView {
     deathSaves: c.deathSaves,
     exhaustion: c.exhaustionLevel
   }
+}
+
+/**
+ * Only the damage types where something is actually true — the same
+ * "only what's active" shape `buildEffects` uses.
+ *
+ * `resistancesOf` is the function `applyAttackOutcome` already calls to know
+ * what a real attack should do to this character; reusing it here is what
+ * guarantees the sheet can never claim a resistance combat would not honour.
+ */
+function buildDefenses(r: Resolution): DefenseView[] {
+  const states = resistancesOf(r)
+  const out: DefenseView[] = []
+  for (const t of DAMAGE_TYPE_PATHS) {
+    if (t === 'all') continue
+    const type = t as DamageType
+    const state = states[type]
+    const reduction = r.stat(damageReductionPath(type)).total
+    if (state && state !== 'none') {
+      out.push({ type, state, ...(reduction > 0 ? { reduction } : {}) })
+    } else if (reduction > 0) {
+      // A flat subtraction with no resistance threshold of its own — Heavy
+      // Armor Master's -3 against nonmagical bludgeoning/piercing/slashing.
+      out.push({ type, state: 'reduced', reduction })
+    }
+  }
+  return out
 }
 
 /**
@@ -1106,6 +1133,7 @@ export function buildPlayerView(
       diagnostics: resolution.diagnostics
     },
     vitals: buildVitals(resolution, detail),
+    defenses: buildDefenses(resolution),
     abilities: buildAbilities(resolution, detail, c.id),
     skills: buildSkills(resolution, detail, c.id),
     resources,

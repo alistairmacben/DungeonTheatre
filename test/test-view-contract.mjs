@@ -622,4 +622,41 @@ const view = (c, detail = 'inspect') => playerViewOf(c, content, { detail })
     passive.flatMap((e) => e.effects).filter((l) => /(srd|dm):/.test(l)).join('; '))
 }
 
+// ---------------------------------------------------------------------------
+// Defenses — only shown where a character actually has one
+// ---------------------------------------------------------------------------
+
+{
+  // FIGHTER is itself a dwarf, so it is not the "nothing unusual" baseline —
+  // that has to be a species with no resistance modifiers of its own.
+  const human = base({ speciesId: 'srd:species.human', subspeciesId: undefined })
+  const plain = playerViewOf(human, content, { detail: 'inspect' })
+  check.eq('defenses: a character with nothing unusual shows nothing',
+    plain.defenses.length, 0, JSON.stringify(plain.defenses))
+
+  // The dwarf's own Dwarven Resilience: poison resistance, unconditional.
+  const dwarf = base({ speciesId: 'srd:species.dwarf', subspeciesId: 'srd:species.dwarf.hill' })
+  const view = playerViewOf(dwarf, content, { detail: 'inspect' })
+  const poison = view.defenses.find((d) => d.type === 'poison')
+  check('defenses: a dwarf resists poison', poison?.state === 'resistant', JSON.stringify(poison))
+
+  // Every other damage type stays off the list — this is not thirteen rows of
+  // "none", it is one row that means something.
+  check.eq('defenses: and nothing else is listed for a plain dwarf',
+    view.defenses.length, 1, JSON.stringify(view.defenses))
+
+  // What resistancesOf resolves is what the sheet shows — the same function
+  // applyAttackOutcome calls to decide what a real hit does, so the sheet
+  // cannot claim a resistance combat would not honour.
+  const resolution = createResolution(dwarf, content)
+  check.eq('defenses: matches what an actual hit would resolve',
+    view.defenses.find((d) => d.type === 'poison')?.state,
+    resolutionResistanceState(resolution, 'poison'))
+}
+
+function resolutionResistanceState(resolution, damageType) {
+  const value = resolution.stat(`resistance.${damageType}`).total
+  return value >= 2 ? 'immune' : value === 1 ? 'resistant' : value < 0 ? 'vulnerable' : 'none'
+}
+
 check.report()

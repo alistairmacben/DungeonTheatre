@@ -76,6 +76,30 @@ export interface VitalsView {
   exhaustion: number
 }
 
+/**
+ * What this character shrugs off, only for the damage types where it matters.
+ *
+ * The engine has resolved a state for all thirteen damage types since the
+ * resistance stat paths were declared; nothing before this surfaced it. A
+ * monk's poison immunity, a barbarian's resistance to everything while
+ * raging, a cloak's fire resistance — all real, all resolved, none visible.
+ * Only non-'none' entries are listed, the same "only what's active" shape
+ * `effects` already uses, so a character with nothing unusual shows nothing.
+ */
+export interface DefenseView {
+  type: DamageType
+  /**
+   * 'reduced' is a flat subtraction with no halving threshold of its own —
+   * Heavy Armor Master's "-3 bludgeoning/piercing/slashing" is exactly this,
+   * and is not resistance: it does not become "no damage on a resisted
+   * critical" the way real resistance does, so it needs its own word rather
+   * than borrowing 'resistant' for a mechanic that isn't.
+   */
+  state: 'resistant' | 'immune' | 'vulnerable' | 'reduced'
+  /** A flat reduction, present alongside 'resistant'/'immune' or standing alone as 'reduced'. */
+  reduction?: number
+}
+
 export interface AbilityView {
   ability: Ability
   label: string
@@ -377,6 +401,8 @@ export interface PlayerViewMeta {
 export interface PlayerView {
   meta: PlayerViewMeta
   vitals: VitalsView
+  /** Only the damage types this character resists, is immune to, or reduces. */
+  defenses: DefenseView[]
   abilities: AbilityView[]
   skills: SkillView[]
   resources: ResourceView[]
