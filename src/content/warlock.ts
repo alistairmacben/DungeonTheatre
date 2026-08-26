@@ -63,6 +63,7 @@ const prof = (
 
 const WARLOCK_LIST = 'srd:list.warlock'
 const CLERIC_LIST = 'srd:list.cleric'
+const SORCERER_LIST = 'srd:list.sorcerer'
 
 function spell(o: Partial<SpellDefinition> & {
   id: string; name: string; level: number; school: string; effects: EffectSource
@@ -764,10 +765,14 @@ export const WARLOCK_FEATS: FeatDefinition[] = [
 /** Tagged with their class lists on the way out, as ALL_SPELLS does. */
 export const WARLOCK_SPELLS: SpellDefinition[] = [
   { ...ELDRITCH_BLAST, lists: [WARLOCK_LIST] },
-  { ...CHILL_TOUCH, lists: [WARLOCK_LIST] },
-  { ...POISON_SPRAY, lists: [WARLOCK_LIST] },
+  // Chill Touch, Poison Spray and Charm Person are also genuinely on the SRD
+  // sorcerer list (docs/srd/08-spell-lists.md), needed for the sorcerer's own
+  // known-spells grant in classes-extra.ts — the sorcerer's cantrip pool would
+  // otherwise be one spell short of what 1st level requires.
+  { ...CHILL_TOUCH, lists: [WARLOCK_LIST, SORCERER_LIST] },
+  { ...POISON_SPRAY, lists: [WARLOCK_LIST, SORCERER_LIST] },
   { ...THAUMATURGY, lists: [CLERIC_LIST] },
-  { ...CHARM_PERSON, lists: [WARLOCK_LIST] },
+  { ...CHARM_PERSON, lists: [WARLOCK_LIST, SORCERER_LIST] },
   { ...HELLISH_REBUKE, lists: [WARLOCK_LIST] },
   { ...DARKNESS, lists: [WARLOCK_LIST] }
 ]

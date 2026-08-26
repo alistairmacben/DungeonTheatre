@@ -4,7 +4,10 @@
 // Each declares resources carrying a `display` hint, and the player view
 // renders whatever it is given. The UI never learns that sorcery points exist.
 
-import type { ClassDefinition, EffectSource, ItemDefinition, Modifier, ProficiencyGrant } from '../rules/types.js'
+import type {
+  ClassDefinition, ClassFeatureDefinition, EffectSource, ItemDefinition, Modifier,
+  ProficiencyGrant, SelectionDefinition
+} from '../rules/types.js'
 import {
   abilityModifierPath, ARMOR_CLASS, declareResourceMax, HP_MAX, passivePath
 } from '../rules/statPaths.js'
@@ -45,17 +48,90 @@ const prof = (
 // ---------------------------------------------------------------------------
 
 /**
- * KNOWN GAP, found while converting this class's slots to the level ladder:
- * the sorcerer has no `spells` grant at all — no cantrips, no known-spells
- * selection, nothing on either the Sorcerer Cantrips Known or Spells Known
- * columns of the class table. It now has real slots with correct spellSlot
- * tags, and nothing to spend them on. Fixing this needs those two columns
- * transcribed from docs/srd-source/classes.pdf and a `spellList`-kind
- * selection sized off them (the same shape wizard.ts's spellbook grant uses,
- * but "known" rather than "prepared") — deliberately not attempted here,
- * since it is content authoring rather than the mechanical slot conversion
- * this pass was scoped to.
+ * Cantrips Known and Spells Known, transcribed from the Sorcerer table
+ * (docs/srd-source/classes.pdf p42, "The Sorcerer"). `values[0]` is level 1.
+ *
+ * Neither column is a formula — cantrips sit at 4 for three levels, jump to 5,
+ * hold six levels, then settle at 6; spells known climbs by exactly one most
+ * levels but flatlines at 12, 13, 14 and 15 on the levels an Ability Score
+ * Improvement lands instead. A table is the only honest way to say that.
  */
+const SORCERER_CANTRIPS_KNOWN = [4, 4, 4, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6]
+const SORCERER_SPELLS_KNOWN = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 12, 13, 13, 14, 14, 15, 15, 15, 15]
+
+/**
+ * The sorcerer's cantrip and spell candidates.
+ *
+ * Genuinely on the SRD sorcerer list (docs/srd/08-spell-lists.md) and already
+ * in the content set — nothing here is invented to fill the pool. Short for
+ * the same reason the bard's is short: five spells is what the content set
+ * currently has tagged, not a ceiling the mechanism imposes. It grows the
+ * moment more spells carry `srd:list.sorcerer`.
+ */
+const SORCERER_CANTRIP_POOL = [
+  'srd:spell.fire-bolt', 'srd:spell.ray-of-frost', 'srd:spell.prestidigitation',
+  'srd:spell.chill-touch', 'srd:spell.poison-spray'
+]
+const SORCERER_SPELL_POOL = [
+  'srd:spell.magic-missile', 'srd:spell.mage-armor', 'srd:spell.shield',
+  'srd:spell.detect-magic', 'srd:spell.charm-person'
+]
+
+/**
+ * One level's worth of the Cantrips/Spells Known columns, as the increase
+ * over the level before — the same shape bard.ts's spellsKnownAtLevel uses,
+ * generalised to skip a column that does not move. Four levels in twenty
+ * (12th, 14th, 16th, 18th+) add no new spell at all, and a selection asking
+ * for zero of anything is not a choice — the content integrity check already
+ * rejects one, correctly, so this never builds one.
+ */
+function sorcererKnownAtLevel(
+  level: number, cantrips: number, spells: number
+): ClassFeatureDefinition | undefined {
+  if (cantrips === 0 && spells === 0) return undefined
+
+  const fid = `srd:class.sorcerer.known-${level}`
+  const selections: SelectionDefinition[] = []
+  const grants: EffectSource['spells'] = []
+
+  if (cantrips > 0) {
+    selections.push({
+      id: 'cantrips', prompt: `Learn ${cantrips} more sorcerer cantrip${cantrips === 1 ? '' : 's'}`,
+      kind: 'spellList', count: cantrips, from: SORCERER_CANTRIP_POOL
+    })
+    grants.push({ selectionId: 'cantrips', availability: 'always', ability: 'cha' })
+  }
+
+  if (spells > 0) {
+    selections.push({
+      id: 'spells', prompt: `Learn ${spells} more sorcerer spell${spells === 1 ? '' : 's'}`,
+      kind: 'spellList', count: spells, from: SORCERER_SPELL_POOL
+    })
+    // 'always', not 'prepared': a sorcerer knows a fixed repertoire and casts
+    // any of it at will, spending only the slot — there is no daily choice of
+    // which known spells are active the way a cleric or wizard has.
+    grants.push({
+      selectionId: 'spells', availability: 'always', slotGroup: 'sorcerer', ability: 'cha'
+    })
+  }
+
+  return {
+    id: fid, name: `Spells Known (level ${level})`,
+    provenance: 'srd', contentVersion: 1, grantedAtLevel: level,
+    effects: source({ id: fid, name: `Spells Known (level ${level})`, selections, spells: grants })
+  }
+}
+
+/** One feature per level with a nonzero delta, in the order the table has them. */
+const SORCERER_KNOWN_FEATURES = SORCERER_CANTRIPS_KNOWN
+  .map((cantrips, i) => {
+    const level = i + 1
+    const spells = SORCERER_SPELLS_KNOWN[i]! - (SORCERER_SPELLS_KNOWN[i - 1] ?? 0)
+    const cantripDelta = level === 1 ? cantrips : cantrips - SORCERER_CANTRIPS_KNOWN[i - 1]!
+    return sorcererKnownAtLevel(level, cantripDelta, spells)
+  })
+  .filter((f): f is ClassFeatureDefinition => f !== undefined)
+
 export const SORCERER: ClassDefinition = {
   id: 'srd:class.sorcerer', name: 'Sorcerer', provenance: 'srd', contentVersion: 1,
   hitDie: 6, savingThrowProficiencies: ['con', 'cha'],
@@ -92,11 +168,13 @@ export const SORCERER: ClassDefinition = {
         // The full ladder, 1st through 9th, off the same slot table the
         // wizard uses. Previously three slots with no `spellSlot` tag at
         // all — undiscoverable by resolveSpellcasting, and frozen at the
-        // level-5 row. A sorcerer still has no spells to spend them on; see
-        // the note on SORCERER below.
+        // level-5 row.
         resources: SORCERER_SLOTS.resources
       })
     },
+    // One feature per level the Cantrips/Spells Known columns actually move,
+    // built above from the transcribed table.
+    ...SORCERER_KNOWN_FEATURES,
     {
       id: 'srd:class.sorcerer.font-of-magic', name: 'Font of Magic',
       provenance: 'srd', contentVersion: 1, grantedAtLevel: 2,
