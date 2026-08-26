@@ -24,12 +24,16 @@ import {
   abilityModifierPath, abilityScorePath, declareResourceMax, HP_MAX,
   PROFICIENCY_BONUS, SPELL_ATTACK, SPELL_SAVE_DC, speedPath
 } from '../rules/statPaths.js'
+import { fullCasterSlots } from './progression.js'
 
 const V = '2014'
 let n = 0
 const id = () => `bd${++n}`
 
 const BARD = 'srd:class.bard'
+
+/** The Bard table's slot columns, 1st through 9th. */
+const BARD_SLOTS = fullCasterSlots(BARD, 'bard')
 
 // Bardic Inspiration's maximum is a formula (Charisma modifier, minimum one),
 // so it is an ordinary derived stat like a sorcerer's point total rather than a
@@ -290,28 +294,12 @@ export const BARD_CLASS: ClassDefinition = {
           {
             id: id(), channel: 'capability', capability: 'castSpells',
             capOp: 'grant', permanence: 'persistent'
-          }
-        ],
-        resources: [
-          // The 5th-level row of the class table, matching how wizard.ts and
-          // the cleric author theirs. A slot maximum that tracks level needs a
-          // step table, and ValueExpr has no lookup — see the notes.
-          {
-            id: 'bard.slots.1', name: '1st-level Slots', max: 4,
-            refresh: { kind: 'longRest' }, display: 'slots', group: 'Spell Slots',
-            order: 1, spellSlot: { group: 'bard', level: 1 }
           },
-          {
-            id: 'bard.slots.2', name: '2nd-level Slots', max: 3,
-            refresh: { kind: 'longRest' }, display: 'slots', group: 'Spell Slots',
-            order: 2, spellSlot: { group: 'bard', level: 2 }
-          },
-          {
-            id: 'bard.slots.3', name: '3rd-level Slots', max: 2,
-            refresh: { kind: 'longRest' }, display: 'slots', group: 'Spell Slots',
-            order: 3, spellSlot: { group: 'bard', level: 3 }
-          }
+          ...BARD_SLOTS.modifiers
         ],
+        // The full ladder, 1st through 9th, read off the Bard table rather
+        // than frozen at one row.
+        resources: BARD_SLOTS.resources,
         selections: [
           {
             id: 'cantrips', prompt: 'Choose two bard cantrips',

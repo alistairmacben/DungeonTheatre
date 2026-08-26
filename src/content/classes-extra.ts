@@ -8,6 +8,7 @@ import type { ClassDefinition, EffectSource, ItemDefinition, Modifier, Proficien
 import {
   abilityModifierPath, ARMOR_CLASS, declareResourceMax, HP_MAX, passivePath
 } from '../rules/statPaths.js'
+import { fullCasterSlots } from './progression.js'
 
 // Resource maxima are ordinary derived stats, declared once and then fed by
 // modifiers like anything else — which is why the view can explain where a
@@ -15,6 +16,10 @@ import {
 const SORCERY_POINTS_MAX = declareResourceMax('sorceryPoints')
 const LAY_ON_HANDS_MAX = declareResourceMax('layOnHands')
 const DIVINE_SENSE_MAX = declareResourceMax('divineSense')
+
+/** The Sorcerer table's slot columns, 1st through 9th — identical to the
+ *  wizard's; the two classes share one progression, not a coincidence. */
+const SORCERER_SLOTS = fullCasterSlots('srd:class.sorcerer', 'sorcerer')
 
 const V = '2014'
 let n = 0
@@ -39,6 +44,18 @@ const prof = (
 
 // ---------------------------------------------------------------------------
 
+/**
+ * KNOWN GAP, found while converting this class's slots to the level ladder:
+ * the sorcerer has no `spells` grant at all — no cantrips, no known-spells
+ * selection, nothing on either the Sorcerer Cantrips Known or Spells Known
+ * columns of the class table. It now has real slots with correct spellSlot
+ * tags, and nothing to spend them on. Fixing this needs those two columns
+ * transcribed from docs/srd-source/classes.pdf and a `spellList`-kind
+ * selection sized off them (the same shape wizard.ts's spellbook grant uses,
+ * but "known" rather than "prepared") — deliberately not attempted here,
+ * since it is content authoring rather than the mechanical slot conversion
+ * this pass was scoped to.
+ */
 export const SORCERER: ClassDefinition = {
   id: 'srd:class.sorcerer', name: 'Sorcerer', provenance: 'srd', contentVersion: 1,
   hitDie: 6, savingThrowProficiencies: ['con', 'cha'],
@@ -62,7 +79,8 @@ export const SORCERER: ClassDefinition = {
           {
             id: id(), channel: 'capability', capability: 'castSpells',
             capOp: 'grant', permanence: 'persistent'
-          }
+          },
+          ...SORCERER_SLOTS.modifiers
         ],
         proficiencies: [
           prof({ kind: 'save', ability: 'con' }),
@@ -71,20 +89,12 @@ export const SORCERER: ClassDefinition = {
           prof({ kind: 'skill', id: 'arcana' }),
           prof({ kind: 'skill', id: 'persuasion' })
         ],
-        resources: [
-          {
-            id: 'sorcerer.slots.1', name: '1st-level Slots', max: 4,
-            refresh: { kind: 'longRest' }, display: 'slots', group: 'Spell Slots', order: 1
-          },
-          {
-            id: 'sorcerer.slots.2', name: '2nd-level Slots', max: 3,
-            refresh: { kind: 'longRest' }, display: 'slots', group: 'Spell Slots', order: 2
-          },
-          {
-            id: 'sorcerer.slots.3', name: '3rd-level Slots', max: 2,
-            refresh: { kind: 'longRest' }, display: 'slots', group: 'Spell Slots', order: 3
-          }
-        ]
+        // The full ladder, 1st through 9th, off the same slot table the
+        // wizard uses. Previously three slots with no `spellSlot` tag at
+        // all — undiscoverable by resolveSpellcasting, and frozen at the
+        // level-5 row. A sorcerer still has no spells to spend them on; see
+        // the note on SORCERER below.
+        resources: SORCERER_SLOTS.resources
       })
     },
     {

@@ -25,6 +25,10 @@ import {
   abilityModifierPath, HP_MAX, PROFICIENCY_BONUS,
   SPELL_ATTACK, SPELL_SAVE_DC, SPELLS_PREPARED_MAX
 } from '../rules/statPaths.js'
+import { fullCasterSlots } from './progression.js'
+
+/** The Druid table's slot columns, 1st through 9th. */
+const DRUID_SLOTS = fullCasterSlots('srd:class.druid', 'druid')
 
 const V = '2014'
 let n = 0
@@ -169,29 +173,12 @@ export const DRUID: ClassDefinition = {
           {
             id: id(), channel: 'capability', capability: 'castSpells',
             capOp: 'grant', permanence: 'persistent'
-          }
-        ],
-        // The level-5 row of the druid table. A full caster's ladder is a
-        // per-level lookup and `max` is a constant or a stat path, not a
-        // ValueExpr, so the 1-5 slice states its top row exactly as the wizard,
-        // cleric and sorcerer files do.
-        resources: [
-          {
-            id: 'druid.slots.1', name: '1st-level Slots', max: 4,
-            refresh: { kind: 'longRest' }, display: 'slots', group: 'Spell Slots',
-            order: 1, spellSlot: { group: 'druid', level: 1 }
           },
-          {
-            id: 'druid.slots.2', name: '2nd-level Slots', max: 3,
-            refresh: { kind: 'longRest' }, display: 'slots', group: 'Spell Slots',
-            order: 2, spellSlot: { group: 'druid', level: 2 }
-          },
-          {
-            id: 'druid.slots.3', name: '3rd-level Slots', max: 2,
-            refresh: { kind: 'longRest' }, display: 'slots', group: 'Spell Slots',
-            order: 3, spellSlot: { group: 'druid', level: 3 }
-          }
+          ...DRUID_SLOTS.modifiers
         ],
+        // The full ladder, 1st through 9th, read off the Druid table rather
+        // than frozen at one row.
+        resources: DRUID_SLOTS.resources,
         // Prepared casting from the whole class list, which is the cleric's
         // grant with one identifier changed. The druid's spellbook is the list
         // itself; nothing about "prepared" is class knowledge.

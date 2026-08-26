@@ -17,6 +17,10 @@ import {
   SPELL_ATTACK, SPELL_SAVE_DC, SPELLS_PREPARED_MAX, speedPath
 } from '../rules/statPaths.js'
 import { SPELL_LISTS } from './spells.js'
+import { fullCasterSlots } from './progression.js'
+
+/** The Cleric table's slot columns, 1st through 9th. */
+const CLERIC_SLOTS = fullCasterSlots('srd:class.cleric', 'cleric')
 
 const V = '2014'
 let n = 0
@@ -258,25 +262,12 @@ export const CLERIC: ClassDefinition = {
                 { classLevel: 'srd:class.cleric' }
               ]
             }]
-          }, { note: 'Wisdom modifier + cleric level, minimum 1' })
+          }, { note: 'Wisdom modifier + cleric level, minimum 1' }),
+          ...CLERIC_SLOTS.modifiers
         ],
-        resources: [
-          {
-            id: 'cleric.slots.1', name: '1st-level Slots', max: 4,
-            refresh: { kind: 'longRest' }, display: 'slots', group: 'Spell Slots',
-            order: 1, spellSlot: { group: 'cleric', level: 1 }
-          },
-          {
-            id: 'cleric.slots.2', name: '2nd-level Slots', max: 3,
-            refresh: { kind: 'longRest' }, display: 'slots', group: 'Spell Slots',
-            order: 2, spellSlot: { group: 'cleric', level: 2 }
-          },
-          {
-            id: 'cleric.slots.3', name: '3rd-level Slots', max: 2,
-            refresh: { kind: 'longRest' }, display: 'slots', group: 'Spell Slots',
-            order: 3, spellSlot: { group: 'cleric', level: 3 }
-          }
-        ],
+        // The full ladder, 1st through 9th, read off the Cleric table rather
+        // than frozen at one row.
+        resources: CLERIC_SLOTS.resources,
         spells: [
           {
             spellIds: ['srd:spell.sacred-flame'],
