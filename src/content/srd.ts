@@ -229,6 +229,16 @@ export const LONGSWORD = weapon('srd:weapon.longsword', 'Longsword', {
   properties: ['versatile'], versatileDamage: { count: 1, sides: 10 }
 })
 
+// Dwarven Combat Training has granted proficiency with this since the dwarf
+// was written, against a weapon nobody had defined — so every dwarf carried a
+// proficiency that silently did nothing. Found by the content integrity check
+// on its first run, which is the entire argument for having one.
+export const BATTLEAXE = weapon('srd:weapon.battleaxe', 'Battleaxe', {
+  category: 'martial', reach: 'melee',
+  damage: { count: 1, sides: 8 }, damageType: 'slashing',
+  properties: ['versatile'], versatileDamage: { count: 1, sides: 10 }
+})
+
 export const GREATSWORD = weapon('srd:weapon.greatsword', 'Greatsword', {
   category: 'martial', reach: 'melee',
   damage: { count: 2, sides: 6 }, damageType: 'slashing',
@@ -554,7 +564,7 @@ export const MEDIUM_ARMOR_MASTER = feat('srd:feat.medium-armor-master', 'Medium 
 export const ALL_SPECIES = [HILL_DWARF]
 export const ALL_CLASSES = [FIGHTER]
 export const ALL_ITEMS = [
-  LONGSWORD, GREATSWORD, DAGGER, LONGBOW, HANDAXE,
+  LONGSWORD, BATTLEAXE, GREATSWORD, DAGGER, LONGBOW, HANDAXE,
   LEATHER, HALF_PLATE, CHAIN_MAIL, SHIELD,
   CLOAK_OF_PROTECTION, FLAMEFANG
 ]

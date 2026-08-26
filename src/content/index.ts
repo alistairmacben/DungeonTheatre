@@ -28,6 +28,8 @@ export * from './barbarian.js'
 export * from './bard.js'
 export * from './warlock.js'
 export * from './druid.js'
+export * from './progression.js'
+export * from './integrity.js'
 
 // One list per content kind, so adding a module is one line in one place rather
 // than four edits scattered through loadContent. The last writer for a given id
