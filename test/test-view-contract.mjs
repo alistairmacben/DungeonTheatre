@@ -623,6 +623,66 @@ const view = (c, detail = 'inspect') => playerViewOf(c, content, { detail })
 }
 
 // ---------------------------------------------------------------------------
+// Nor a stat path — the other half of "never show the player a database key"
+// ---------------------------------------------------------------------------
+
+{
+  // Every class at a level where its resources are live. A raw path reaching a
+  // description ("+3 resource.barbarianRages.max") is the app talking to itself
+  // in front of the player, and it survived a long time because no assertion
+  // looked for it.
+  const RAW_PATH = /resource\.|feature\.[a-z]|damageReduction\.|movementCost\.|\.max\b|\.saveDc\b/
+
+  const subjects = [
+    ['barbarian', 'srd:class.barbarian', 5, undefined],
+    ['monk', 'srd:class.monk', 10, 'srd:subclass.open-hand'],
+    ['sorcerer', 'srd:class.sorcerer', 5, undefined],
+    ['bard', 'srd:class.bard', 5, undefined],
+    ['wizard', 'srd:class.wizard', 5, undefined],
+    ['cleric', 'srd:class.cleric', 5, undefined],
+    ['paladin', 'srd:class.paladin', 5, undefined],
+    ['rogue', 'srd:class.rogue', 5, undefined],
+    ['warlock', 'srd:class.warlock', 5, undefined],
+    ['druid', 'srd:class.druid', 5, undefined],
+    ['fighter', 'srd:class.fighter', 5, undefined]
+  ]
+
+  for (const [label, classId, level, subclassId] of subjects) {
+    const view = playerViewOf(base({
+      speciesId: 'srd:species.human', subspeciesId: undefined,
+      classLevels: [{ classId, level, ...(subclassId ? { subclassId } : {}) }]
+    }), content, { detail: 'inspect' })
+
+    const leaked = view.effects
+      .flatMap((e) => e.effects.map((l) => `${e.label}: ${l}`))
+      .filter((l) => RAW_PATH.test(l))
+
+    check(`effects: ${label} descriptions name things, not stat paths`,
+      leaked.length === 0, leaked.join(' | '))
+  }
+
+  // And the positive case: the name actually used is the one the resource
+  // definition carries, not a guess derived from its id.
+  const monk = playerViewOf(base({
+    speciesId: 'srd:species.human', subspeciesId: undefined,
+    classLevels: [{ classId: 'srd:class.monk', level: 10 }]
+  }), content, { detail: 'inspect' })
+  const ki = monk.effects.flatMap((e) => e.effects).find((l) => l.includes('Ki Points'))
+  check('effects: a resource is named as its definition names it', ki !== undefined,
+    JSON.stringify(monk.effects.flatMap((e) => e.effects).filter((l) => /max/.test(l))))
+
+  // A modifier contributing nothing is not listed at all: a level-5 caster
+  // declares all nine slot tiers, and six of them add 0.
+  const sorcerer = playerViewOf(base({
+    speciesId: 'srd:species.human', subspeciesId: undefined,
+    classLevels: [{ classId: 'srd:class.sorcerer', level: 5 }]
+  }), content, { detail: 'inspect' })
+  const zeroes = sorcerer.effects.flatMap((e) => e.effects).filter((l) => l.startsWith('+0 '))
+  check('effects: a modifier adding zero is not described', zeroes.length === 0,
+    zeroes.join(' | '))
+}
+
+// ---------------------------------------------------------------------------
 // Defenses — only shown where a character actually has one
 // ---------------------------------------------------------------------------
 

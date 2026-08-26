@@ -21,7 +21,8 @@ import { resolveSpellcasting, type CastableSpell, type SlotOption } from '../rul
 import { resolveSpellAttackRoll, resolveSpellEffect } from '../rules/spellEffect.js'
 import {
   abilityModifierPath, abilityScorePath, ARMOR_CLASS, damageReductionPath, DAMAGE_TYPE_PATHS,
-  HP_MAX, INITIATIVE, PROFICIENCY_BONUS, speedPath
+  HP_MAX, INITIATIVE, PROFICIENCY_BONUS, speedPath,
+  SPELL_ATTACK, SPELL_SAVE_DC, SPELLS_PREPARED_MAX
 } from '../rules/statPaths.js'
 import { SRD_SKILLS } from '../rules/index.js'
 import type {
@@ -117,6 +118,19 @@ function describeSource(
   source: EffectSource, resolution: Resolution, content?: ContentIndex
 ): string[] {
   const out: string[] = []
+
+  // A resource's human name lives on whichever source declares it, which is
+  // rarely the source whose modifier is being described — Font of Magic feeds
+  // a pool the sorcerer's Spellcasting feature declared. So the lookup spans
+  // every active source rather than just this one.
+  const resourceName = (resourceId: string): string | undefined => {
+    for (const s of resolution.sources.active) {
+      const def = s.resources?.find((d) => d.id === resourceId)
+      if (def) return def.name
+    }
+    return undefined
+  }
+
   for (const m of source.modifiers) {
     // A note annotates the mechanics; it does not stand in for them. Letting it
     // replace them is how a shield ends up describing itself as "shield" and
@@ -124,7 +138,13 @@ function describeSource(
     const mech: string[] = []
     if (m.channel === 'value' && m.target && m.op) {
       const n = resolution.evaluateValue(m.value, source.id)
-      const stat = prettyPath(m.target)
+      const stat = prettyPath(m.target, resourceName)
+      // An `add` of nothing is not something a player is doing. A level-5
+      // caster declares all nine slot tiers so the ladder is one table, and
+      // six of them evaluate to 0 — "+0 max 9th-level Slots" six times over is
+      // the table's shape leaking onto the sheet, not a fact about the
+      // character. `base 0` and `set 0` are left alone: those are assertions.
+      if (m.op === 'add' && n === 0) continue
       if (m.op === 'add') mech.push(`${signed(n)} ${stat}`)
       else if (m.op === 'base') mech.push(`${stat} ${n}`)
       else if (m.op === 'set') {
@@ -183,11 +203,22 @@ function describeSource(
   return out
 }
 
-function prettyPath(path: string): string {
+/**
+ * A stat path in words.
+ *
+ * `nameOf` resolves a resource id to the name its definition carries, the same
+ * way `describeProficiency` resolves an item id. Without it a barbarian's Rage
+ * reads "+3 resource.barbarianRages.max" on the character sheet — the app
+ * talking to itself in front of the player.
+ */
+function prettyPath(path: string, nameOf?: (resourceId: string) => string | undefined): string {
   if (path === ARMOR_CLASS) return 'AC'
   if (path === HP_MAX) return 'max HP'
   if (path === INITIATIVE) return 'initiative'
   if (path === PROFICIENCY_BONUS) return 'proficiency bonus'
+  if (path === SPELL_SAVE_DC) return 'spell save DC'
+  if (path === SPELL_ATTACK) return 'spell attack bonus'
+  if (path === SPELLS_PREPARED_MAX) return 'spells prepared'
   if (path.startsWith('speed.')) return `${path.slice(6)} speed`
   if (path.startsWith('save.')) return `${path.slice(5).toUpperCase()} saves`
   if (path.startsWith('skill.')) return `${path.slice(6)} checks`
@@ -197,7 +228,36 @@ function prettyPath(path: string): string {
   }
   if (path.startsWith('resistance.')) return `${path.slice(11)} resistance`
   if (path.startsWith('damageReduction.')) return `${path.slice(16)} damage taken`
+
+  // resource.<id>.max — the id is a key, the name is on the definition.
+  if (path.startsWith('resource.') && path.endsWith('.max')) {
+    const resourceId = path.slice('resource.'.length, -'.max'.length)
+    return `max ${nameOf?.(resourceId) ?? humanise(resourceId)}`
+  }
+  // feature.<id>.saveDc — a monk's ki DC, a dragonborn's breath DC.
+  if (path.startsWith('feature.') && path.endsWith('.saveDc')) {
+    const featureId = path.slice('feature.'.length, -'.saveDc'.length)
+    return `${humanise(featureId)} save DC`
+  }
   return path
+}
+
+/**
+ * Last-resort readable form of an id, for when no definition can be found to
+ * supply a real name: "monk.wholeness-of-body" → "wholeness of body",
+ * "sorceryPoints" → "sorcery points".
+ *
+ * The camelCase case is not hypothetical. A resource's stat-path key and its
+ * ResourceDefinition id are separate strings and several classes let them
+ * differ — the barbarian declares `resource.barbarianRages.max` for a resource
+ * whose id is `barbarian.rages` — so the lookup misses and this is what the
+ * player would otherwise read.
+ */
+function humanise(id: string): string {
+  return (id.split('.').pop() ?? id)
+    .replace(/[-_]/g, ' ')
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .toLowerCase()
 }
 
 function describeScope(m: { scope?: { kinds?: string[]; skills?: string[]; abilities?: string[]; againstTags?: string[] } }): string {
