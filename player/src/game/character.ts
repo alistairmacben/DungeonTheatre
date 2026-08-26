@@ -37,7 +37,9 @@ export const SIR_ALDREN: Character = {
     attunedInstanceIds: ['i-cloak']
   },
   deathSaves: { successes: 0, failures: 0 },
-  toggles: { 'wearing-armor': true }
+  toggles: { 'wearing-armor': true, 'fighter.style.defense': true },
+  // Fighting Style and the two skills are choices now, not defaults.
+  selections: { 'srd:class.fighter.proficiencies': { skills: ['athletics', 'perception'] } }
 }
 
 /**

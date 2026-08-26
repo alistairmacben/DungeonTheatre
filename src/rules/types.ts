@@ -330,6 +330,17 @@ export type ProficiencyCategory =
   | { kind: 'skill'; id: SkillId }
   | { kind: 'tool'; id: ToolId }
   | { kind: 'save'; ability: Ability }
+  /**
+   * A raw ability check, not a skill: the bard's Jack of All Trades and the
+   * Champion's Remarkable Athlete both grant half proficiency to checks made
+   * with an ability rather than to any named skill.
+   *
+   * "That doesn't already include your proficiency bonus" needs no rule of its
+   * own — the resolver takes the highest multiplier among matching grants, so
+   * a check the character is already proficient in keeps full proficiency and
+   * everything else takes the half.
+   */
+  | { kind: 'abilityCheck'; ability: Ability }
   | { kind: 'armor'; category: ArmorCategory }
   | { kind: 'weaponCategory'; category: WeaponCategory }
   | { kind: 'weapon'; itemId: string }

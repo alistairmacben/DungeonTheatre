@@ -139,6 +139,9 @@ export function scopeOfCategory(category: ProficiencyCategory): RollScope | unde
     case 'skill': return { kinds: ['check'], skills: [category.id] }
     case 'tool': return { kinds: ['check'], tools: [category.id] }
     case 'save': return { kinds: ['save'], abilities: [category.ability] }
+    // Ability checks only — a skill check names its skill and is matched by
+    // the 'skill' case above, so this does not double up on one.
+    case 'abilityCheck': return { kinds: ['check'], abilities: [category.ability] }
     default: return undefined
   }
 }
@@ -148,6 +151,7 @@ export function sameCategory(a: ProficiencyCategory, b: ProficiencyCategory): bo
   if (a.kind === 'skill' && b.kind === 'skill') return a.id === b.id
   if (a.kind === 'tool' && b.kind === 'tool') return a.id === b.id
   if (a.kind === 'save' && b.kind === 'save') return a.ability === b.ability
+  if (a.kind === 'abilityCheck' && b.kind === 'abilityCheck') return a.ability === b.ability
   if (a.kind === 'armor' && b.kind === 'armor') return a.category === b.category
   if (a.kind === 'weaponCategory' && b.kind === 'weaponCategory') return a.category === b.category
   if (a.kind === 'weapon' && b.kind === 'weapon') return a.itemId === b.itemId

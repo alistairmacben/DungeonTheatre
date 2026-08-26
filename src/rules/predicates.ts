@@ -60,6 +60,7 @@ export function describeProficiency(
     case 'skill': return `the ${c.id} skill`
     case 'tool': return `${c.id}`
     case 'save': return `${c.ability.toUpperCase()} saving throws`
+    case 'abilityCheck': return `${c.ability.toUpperCase()} checks`
     case 'armor': return `${c.category} armour`
     case 'weaponCategory': return `${c.category} weapons`
     case 'weapon': return nameOf(c.itemId)

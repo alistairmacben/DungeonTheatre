@@ -57,7 +57,8 @@ function sirAldren(overrides = {}) {
       attunedInstanceIds: ['i-cloak']
     },
     deathSaves: { successes: 0, failures: 0 },
-    toggles: { 'wearing-armor': true },
+    toggles: { 'wearing-armor': true, 'fighter.style.defense': true },
+    selections: { 'srd:class.fighter.proficiencies': { skills: ['athletics', 'perception'] } },
     ...overrides
   }
 }
@@ -152,7 +153,7 @@ check('character: state validates', validateCharacter(sirAldren()).length === 0)
   check.eq('skill: History without Stonecunning is INT +0', off.modifierTotal, 0)
 
   const on = resolveCheck(
-    R(sirAldren({ toggles: { 'wearing-armor': true, 'dwarf.stonecunning': true } })),
+    R(sirAldren({ toggles: { 'wearing-armor': true, 'fighter.style.defense': true, 'dwarf.stonecunning': true } })),
     { checkType: 'skill', skill: 'history' })
   check.eq('skill: Stonecunning grants History and doubles it', on.modifierTotal, 6)
 }
@@ -541,12 +542,29 @@ const flamefang = content.items.get('dm:weapon.flamefang')
     contributors.has('system:baseline') &&
     contributors.has('srd:armor.chain-mail') &&
     contributors.has('srd:armor.shield') &&
-    contributors.has('srd:class.fighter.defense') &&
+    contributors.has('srd:class.fighter.fighting-style') &&
     contributors.has('srd:item.cloak-of-protection'))
 
   check('chain: no diagnostics were raised', r.diagnostics.length === 0,
     r.diagnostics.join('; '))
-  check('chain: nothing is incomplete', ac.incomplete === false)
+
+  // This asserted `incomplete === false` while the fighter was a levels-1-to-2
+  // sketch that modelled almost nothing and admitted nothing. Now that it is
+  // authored to 20, three of its features are honestly `partial` — Second
+  // Wind's healing, Action Surge's extra action and Extra Attack's count all
+  // need mechanisms that do not exist — and a partial source anywhere marks
+  // every stat incomplete.
+  //
+  // That propagation is coarse: none of those three touches AC, so an AC of 20
+  // is exactly right and still reads as uncertain. Every other honestly
+  // authored class already behaves this way (monk, barbarian, rogue and
+  // warlock all report incomplete at 5th), so this is the engine being
+  // consistent rather than the fighter being wrong. Narrowing `incomplete` to
+  // the stats a partial source actually contributes to is its own change.
+  check('chain: the AC total itself is right', ac.total === 20, ac.total)
+  check('chain: and reads as incomplete, because three fighter features are partial',
+    ac.incomplete === true,
+    `partial sources: ${r.partialSources.map((s) => s.id).join(', ')}`)
 }
 
 check.report()

@@ -125,88 +125,13 @@ export const HILL_DWARF: SpeciesDefinition = {
 }
 
 // ===========================================================================
-// Class — Fighter, levels 1-5
+// Class — Fighter
 // ===========================================================================
-
-export const FIGHTER: ClassDefinition = {
-  id: 'srd:class.fighter', name: 'Fighter', provenance: 'srd', contentVersion: 1,
-  hitDie: 10, savingThrowProficiencies: ['str', 'con'],
-  subclassSlot: { grantedAtLevel: 3, options: ['srd:subclass.champion'] },
-  features: [
-    {
-      id: 'srd:class.fighter.proficiencies', name: 'Fighter Proficiencies',
-      provenance: 'srd', contentVersion: 1, grantedAtLevel: 1,
-      effects: source({
-        id: 'srd:class.fighter.proficiencies', name: 'Fighter Proficiencies',
-        modifiers: [
-          // Hit points: the class die average plus Constitution, every level.
-          // Level 1 takes the full die, so the formula is (die - average) more.
-          add(HP_MAX, {
-            sum: [
-              { product: [{ characterLevel: true }, 6] },
-              { product: [{ characterLevel: true }, { stat: abilityModifierPath('con') }] },
-              4
-            ]
-          }, { note: 'd10 hit die: 6 per level after the first, +4 at 1st, + CON per level' })
-        ],
-        proficiencies: [
-          prof({ kind: 'save', ability: 'str' }),
-          prof({ kind: 'save', ability: 'con' }),
-          prof({ kind: 'armor', category: 'light' }),
-          prof({ kind: 'armor', category: 'medium' }),
-          prof({ kind: 'armor', category: 'heavy' }),
-          prof({ kind: 'armor', category: 'shield' }),
-          prof({ kind: 'weaponCategory', category: 'simple' }),
-          prof({ kind: 'weaponCategory', category: 'martial' }),
-          prof({ kind: 'skill', id: 'athletics' }),
-          prof({ kind: 'skill', id: 'perception' })
-        ]
-      })
-    },
-    {
-      id: 'srd:class.fighter.second-wind', name: 'Second Wind',
-      provenance: 'srd', contentVersion: 1, grantedAtLevel: 1,
-      effects: source({
-        id: 'srd:class.fighter.second-wind', name: 'Second Wind',
-        resources: [{
-          id: 'fighter.second-wind', name: 'Second Wind', max: 1, refresh: { kind: 'shortRest' }
-        }],
-        actions: [{
-          id: 'fighter.second-wind.use', name: 'Second Wind', cost: 'bonusAction',
-          requirements: { resourceAtLeast: ['fighter.second-wind', 1] },
-          costs: { 'fighter.second-wind': 1 }
-        }]
-      })
-    },
-    {
-      id: 'srd:class.fighter.defense', name: 'Fighting Style: Defense',
-      provenance: 'srd', contentVersion: 1, grantedAtLevel: 1,
-      effects: source({
-        id: 'srd:class.fighter.defense', name: 'Fighting Style: Defense',
-        // Only while wearing armour — an ordinary situational gate.
-        modifiers: [add(ARMOR_CLASS, 1, {
-          condition: { playerToggle: 'wearing-armor' },
-          note: '+1 AC while wearing armour'
-        })]
-      })
-    },
-    {
-      id: 'srd:class.fighter.action-surge', name: 'Action Surge',
-      provenance: 'srd', contentVersion: 1, grantedAtLevel: 2,
-      effects: source({
-        id: 'srd:class.fighter.action-surge', name: 'Action Surge',
-        resources: [{
-          id: 'fighter.action-surge', name: 'Action Surge', max: 1, refresh: { kind: 'shortRest' }
-        }],
-        actions: [{
-          id: 'fighter.action-surge.use', name: 'Action Surge', cost: 'free',
-          requirements: { resourceAtLeast: ['fighter.action-surge', 1] },
-          costs: { 'fighter.action-surge': 1 }
-        }]
-      })
-    }
-  ]
-}
+//
+// Moved to fighter.ts when it was authored to level 20 with its Champion
+// archetype. It lived here as a levels-1-to-2 reference sketch while this
+// file was the whole content set; keeping a second, shallower Fighter here
+// would have been two classes with one id.
 
 // ===========================================================================
 // Weapons
@@ -562,7 +487,7 @@ export const MEDIUM_ARMOR_MASTER = feat('srd:feat.medium-armor-master', 'Medium 
 // ===========================================================================
 
 export const ALL_SPECIES = [HILL_DWARF]
-export const ALL_CLASSES = [FIGHTER]
+export const ALL_CLASSES: ClassDefinition[] = []
 export const ALL_ITEMS = [
   LONGSWORD, BATTLEAXE, GREATSWORD, DAGGER, LONGBOW, HANDAXE,
   LEATHER, HALF_PLATE, CHAIN_MAIL, SHIELD,

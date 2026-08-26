@@ -40,7 +40,8 @@ const item = (instanceId, definitionId) =>
 const FIGHTER = base({
   id: 'char:fighter', name: 'Sir Aldren',
   buildChoices: [{ atLevel: 4, kind: 'feat', value: 'srd:feat.tough' }],
-  toggles: { 'wearing-armor': true },
+  toggles: { 'wearing-armor': true, 'fighter.style.defense': true },
+  selections: { 'srd:class.fighter.proficiencies': { skills: ['athletics', 'perception'] } },
   inventory: {
     instances: [
       item('i-mail', 'srd:armor.chain-mail'),

@@ -36,7 +36,8 @@ const FIGHTER = {
     attunedInstanceIds: ['i-cloak']
   },
   deathSaves: { successes: 0, failures: 0 },
-  toggles: { 'wearing-armor': true }
+  toggles: { 'wearing-armor': true, 'fighter.style.defense': true },
+  selections: { 'srd:class.fighter.proficiencies': { skills: ['athletics', 'perception'] } }
 }
 
 // ---------------------------------------------------------------------------

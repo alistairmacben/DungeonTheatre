@@ -29,7 +29,9 @@ const FIGHTER = base({
   speciesId: 'srd:species.dwarf', subspeciesId: 'srd:species.dwarf.hill',
   classLevels: [{ classId: 'srd:class.fighter', level: 5 }],
   abilityScoreBase: { str: 16, dex: 12, con: 13, int: 10, wis: 12, cha: 8 },
-  hitPointsCurrent: 47, toggles: { 'wearing-armor': true },
+  hitPointsCurrent: 47,
+  toggles: { 'wearing-armor': true, 'fighter.style.defense': true },
+  selections: { 'srd:class.fighter.proficiencies': { skills: ['athletics', 'perception'] } },
   inventory: {
     instances: [
       item('i-mail', 'srd:armor.chain-mail'), item('i-shield', 'srd:armor.shield'),
