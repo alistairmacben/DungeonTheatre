@@ -15,6 +15,7 @@ import { ALL_SPELLS } from './spells.js'
 import { WIZARD_CLASSES, WIZARD_ITEMS, WIZARD_SPECIES } from './wizard.js'
 import { PARTY_CLASSES, PARTY_ITEMS, PARTY_SPECIES } from './party.js'
 import { BARBARIAN_CLASSES, BARBARIAN_ITEMS, BARBARIAN_SPECIES } from './barbarian.js'
+import { MONK_CLASS } from './monk.js'
 import { BARD_CLASSES, BARD_ITEMS, BARD_SPECIES } from './bard.js'
 import { WARLOCK_CLASSES, WARLOCK_ITEMS, WARLOCK_SPECIES, WARLOCK_SPELLS } from './warlock.js'
 import { DRUID_CLASSES, DRUID_ITEMS, DRUID_SPECIES } from './druid.js'
@@ -30,6 +31,7 @@ export * from './warlock.js'
 export * from './druid.js'
 export * from './progression.js'
 export * from './integrity.js'
+export * from './monk.js'
 
 // One list per content kind, so adding a module is one line in one place rather
 // than four edits scattered through loadContent. The last writer for a given id
@@ -40,7 +42,8 @@ const SPECIES: SpeciesDefinition[] = [
 ]
 const CLASSES: ClassDefinition[] = [
   ...ALL_CLASSES, ...EXTRA_CLASSES, ...WIZARD_CLASSES, ...PARTY_CLASSES,
-  ...BARBARIAN_CLASSES, ...BARD_CLASSES, ...WARLOCK_CLASSES, ...DRUID_CLASSES
+  ...BARBARIAN_CLASSES, ...BARD_CLASSES, ...WARLOCK_CLASSES, ...DRUID_CLASSES,
+  MONK_CLASS
 ]
 const ITEMS: ItemDefinition[] = [
   ...ALL_ITEMS, ...EXTRA_ITEMS, ...WIZARD_ITEMS, ...PARTY_ITEMS,

@@ -60,6 +60,7 @@ for (const suite of [
   'test-spell-effect.mjs',
   'test-level-tables.mjs',
   'test-content-integrity.mjs',
+  'test-monk.mjs',
   'test-roll-damage.mjs'
 ]) {
   console.log(`\n───── ${suite} ─────`)

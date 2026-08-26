@@ -62,14 +62,23 @@ function catches(name, mutate, expected) {
     errors.map((p) => `${p.where}: ${p.message}`).join('\n    '))
 
   // Warnings are debt, and are expected to be non-zero while the SRD is being
-  // authored — but they are supposed to be *known* debt. If this number moves,
-  // something was added without anyone deciding it was acceptable.
+  // authored — but they are supposed to be *known* debt, of kinds somebody has
+  // decided are acceptable. Counted by kind rather than by total, so adding a
+  // class does not fail this and adding a new *kind* of problem does.
   const warnings = warningsIn(content)
   const subclassDebt = warnings.filter((p) => p.message.includes('subclasses are not implemented'))
-  check.eq('live content: every class with a subclass slot is still waiting on one',
-    subclassDebt.length, 8)
-  check.eq('live content: and one deliberate shared-resource pair (the bard\'s)',
-    warnings.length - subclassDebt.length, 1)
+  const sharedResources = warnings.filter((p) => p.message.includes('never be active at once'))
+
+  const withSubclassSlots = [...content.classes.values()]
+    .reduce((n, c) => n + (c.subclassSlot?.options.length ?? 0), 0)
+  check.eq('live content: subclass debt is exactly the declared subclass options',
+    subclassDebt.length, withSubclassSlots)
+
+  check.eq('live content: one deliberate shared-resource pair (the bard\'s)',
+    sharedResources.length, 1)
+
+  check.eq('live content: and no warnings of any other kind',
+    warnings.length - subclassDebt.length - sharedResources.length, 0)
 }
 
 // ---------------------------------------------------------------------------

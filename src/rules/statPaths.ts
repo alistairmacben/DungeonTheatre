@@ -302,6 +302,36 @@ export function declareSpellcasting(classId: string, ability: Ability): void {
   })
 }
 
+// --- save DCs that are not spell save DCs ----------------------------------
+
+export const featureDcPath = (featureId: string): StatPath => `feature.${featureId}.saveDc`
+
+/**
+ * The DC for a class feature that forces a saving throw without being a spell:
+ * a monk's Stunning Strike, a dragonborn's breath weapon, a battle master's
+ * manoeuvres. All of them read "8 + your proficiency bonus + your <ability>
+ * modifier" and none of them is spellcasting.
+ *
+ * Declared the same way `declareSpellcasting` declares a caster's DC, because
+ * it is the same formula wearing a different name — and declared at all so a
+ * Rod of the Pact Keeper's cousin could raise it with an ordinary `add`, and
+ * so the number can explain itself in a breakdown instead of being computed
+ * inside whatever renders it.
+ */
+export function declareFeatureDc(featureId: string, ability: Ability): StatPath {
+  const path = featureDcPath(featureId)
+  if (!registry.has(path)) {
+    declare({
+      path,
+      dependsOn: [abilityModifierPath(ability), PROFICIENCY_BONUS],
+      rounding: 'floor',
+      multiplyComposition: 'product',
+      compute: (ctx) => 8 + ctx.get(abilityModifierPath(ability)) + ctx.get(PROFICIENCY_BONUS)
+    })
+  }
+  return path
+}
+
 // --- crit range and resistances -------------------------------------------
 
 export const CRIT_RANGE: StatPath = 'critRange'
