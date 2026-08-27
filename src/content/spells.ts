@@ -127,6 +127,85 @@ export const DRUIDCRAFT = spell({
   })
 })
 
+// ---------------------------------------------------------------------------
+// Cleric cantrips
+//
+// Added so a cleric's Cantrips Known column has something to draw from: the
+// class knows three at 1st and five by 10th, and the content set held two.
+// All four are on the SRD cleric cantrip list (docs/srd/08-spell-lists.md) and
+// were checked against docs/srd/08b-spell-descriptions.md.
+// ---------------------------------------------------------------------------
+
+export const GUIDANCE = spell({
+  id: 'srd:spell.guidance', name: 'Guidance', level: 0,
+  school: 'divination', rangeKind: 'touch',
+  components: { verbal: true, somatic: true },
+  concentration: true, durationSeconds: 60,
+  effects: effects({
+    id: 'srd:spell.guidance', name: 'Guidance',
+    narrative: [{
+      // The SRD explicitly permits deciding after the d20 is seen, which the
+      // roll pipeline has no window for — a modifier joins a roll as it is
+      // resolved, not after the player has read it.
+      text: 'Once before the spell ends, the target adds 1d4 to one ability check '
+        + 'of its choice, and may roll the die before or after making the check. '
+        + 'Then the spell ends. Roll and add the d4 yourself — the app cannot '
+        + 'reopen a roll you have already seen.',
+      dmPromptable: true
+    }]
+  })
+})
+
+export const RESISTANCE = spell({
+  id: 'srd:spell.resistance', name: 'Resistance', level: 0,
+  school: 'abjuration', rangeKind: 'touch',
+  components: { verbal: true, somatic: true, material: 'a miniature cloak' },
+  concentration: true, durationSeconds: 60,
+  effects: effects({
+    id: 'srd:spell.resistance', name: 'Resistance',
+    narrative: [{
+      text: 'Once before the spell ends, the target adds 1d4 to one saving throw '
+        + 'of its choice, rolling the die before or after the save. Then the '
+        + 'spell ends. The saving-throw twin of Guidance, and the same manual roll.',
+      dmPromptable: true
+    }]
+  })
+})
+
+export const SPARE_THE_DYING = spell({
+  id: 'srd:spell.spare-the-dying', name: 'Spare the Dying', level: 0,
+  school: 'necromancy', rangeKind: 'touch',
+  components: { verbal: true, somatic: true },
+  effects: effects({
+    id: 'srd:spell.spare-the-dying', name: 'Spare the Dying',
+    narrative: [{
+      text: 'A living creature at 0 hit points becomes stable. No effect on undead '
+        + 'or constructs. Stabilising another character is the DM\'s to apply.',
+      dmPromptable: true
+    }]
+  })
+})
+
+export const LIGHT = spell({
+  id: 'srd:spell.light', name: 'Light', level: 0,
+  school: 'evocation', rangeKind: 'touch',
+  // "V, M" — no somatic component, which is unusual enough to be worth stating
+  // rather than defaulting.
+  components: { verbal: true, somatic: false, material: 'a firefly or phosphorescent moss' },
+  durationSeconds: 3600,
+  effects: effects({
+    id: 'srd:spell.light', name: 'Light',
+    narrative: [{
+      text: 'An object no larger than 10 feet in any dimension sheds bright light '
+        + 'in a 20-foot radius and dim light for 20 feet more, in a colour you '
+        + 'choose. Covering it with something opaque blocks the light. It ends if '
+        + 'you cast it again or dismiss it as an action. An object held or worn by '
+        + 'a hostile creature gets a Dexterity save to avoid it.',
+      dmPromptable: true
+    }]
+  })
+})
+
 export const MENDING = spell({
   id: 'srd:spell.mending', name: 'Mending', level: 0,
   school: 'transmutation', castingTime: { minutes: 1 }, rangeKind: 'touch',
@@ -372,7 +451,12 @@ export const ALL_SPELLS: SpellDefinition[] = [
   // fixed pool rather than `lists` (see bard.ts), so this tag is accurate
   // bookkeeping today rather than something anything currently reads — but a
   // future fromList-based bard grant should find it already correct.
-  { ...MENDING, lists: [DRUID, 'srd:list.bard'] }
+  // Genuinely on the cleric, druid and bard cantrip lists.
+  { ...MENDING, lists: [DRUID, CLERIC, 'srd:list.bard'] },
+  { ...GUIDANCE, lists: [CLERIC, DRUID] },
+  { ...RESISTANCE, lists: [CLERIC, DRUID] },
+  { ...SPARE_THE_DYING, lists: [CLERIC] },
+  { ...LIGHT, lists: [CLERIC, WIZARD, SORCERER, 'srd:list.bard'] }
 ]
 
 export const SPELL_LISTS = { WIZARD, CLERIC, SORCERER, DRUID }

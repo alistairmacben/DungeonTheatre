@@ -70,7 +70,16 @@ const ROGUE = base({
 const CLERIC = base({
   id: 'c:cleric', name: 'Brother Aldwin',
   speciesId: 'srd:species.human',
-  classLevels: [{ classId: 'srd:class.cleric', level: 5 }],
+  classLevels: [{
+    classId: 'srd:class.cleric', level: 5, subclassId: 'srd:subclass.life-domain'
+  }],
+  // Life Domain is a subclass now, not something every cleric is handed, and
+  // cantrips are chosen from the Cantrips Known column.
+  selections: {
+    'srd:class.cleric.spellcasting': {
+      cantrips: ['srd:spell.sacred-flame', 'srd:spell.guidance', 'srd:spell.light']
+    }
+  },
   abilityScoreBase: { str: 14, dex: 10, con: 14, int: 10, wis: 16, cha: 12 },
   hitPointsCurrent: 38, toggles: { 'wearing-armor': true },
   inventory: {
