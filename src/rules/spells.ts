@@ -88,6 +88,13 @@ function spellIdsOf(
     for (const [id, spell] of content.spells) {
       if (!spell.lists?.includes(grant.fromList.listId)) continue
       if (spell.level > maxLevel) continue
+      // A cantrip is never prepared — that is what makes it a cantrip. A
+      // whole-list grant with `availability: 'prepared'` stands in for a
+      // spellbook or a prepared list, and neither holds cantrips; those come
+      // from the class's own Cantrips Known column. Without this the wizard's
+      // prepared grant swept up every cantrip on the list regardless of how
+      // many the table says they know.
+      if (grant.availability === 'prepared' && spell.level === 0) continue
       ids.add(id)
     }
   }

@@ -29,6 +29,16 @@ function wizard(overrides = {}) {
     exhaustionLevel: 0,
     inventory: { instances: [item('i-dagger', 'srd:weapon.dagger')], equipped: { mainHand: 'i-dagger' }, attunedInstanceIds: [] },
     deathSaves: { successes: 0, failures: 0 }, toggles: {},
+    // A wizard's three cantrips are chosen now, not three the class named for
+    // every wizard that would ever exist. This fixture picks the three the old
+    // hardcoded grant handed out, so the numbers below stay comparable.
+    selections: {
+      'srd:class.wizard.spellcasting': {
+        cantrips: [
+          'srd:spell.fire-bolt', 'srd:spell.ray-of-frost', 'srd:spell.prestidigitation'
+        ]
+      }
+    },
     spellsPrepared: [],
     ...overrides
   }

@@ -17,6 +17,7 @@ import { PARTY_CLASSES, PARTY_ITEMS, PARTY_SPECIES } from './party.js'
 import { BARBARIAN_CLASSES, BARBARIAN_ITEMS, BARBARIAN_SPECIES } from './barbarian.js'
 import { MONK_CLASS, MONK_SUBCLASSES } from './monk.js'
 import { FIGHTER_CLASSES, FIGHTER_SUBCLASSES } from './fighter.js'
+import { WIZARD_SUBCLASSES } from './wizard.js'
 import { BARD_CLASSES, BARD_ITEMS, BARD_SPECIES } from './bard.js'
 import { WARLOCK_CLASSES, WARLOCK_ITEMS, WARLOCK_SPECIES, WARLOCK_SPELLS } from './warlock.js'
 import { DRUID_CLASSES, DRUID_ITEMS, DRUID_SPECIES } from './druid.js'
@@ -52,7 +53,9 @@ const ITEMS: ItemDefinition[] = [
   ...BARBARIAN_ITEMS, ...BARD_ITEMS, ...WARLOCK_ITEMS, ...DRUID_ITEMS
 ]
 const SPELLS: SpellDefinition[] = [...ALL_SPELLS, ...WARLOCK_SPELLS]
-const SUBCLASSES: SubclassDefinition[] = [...MONK_SUBCLASSES, ...FIGHTER_SUBCLASSES]
+const SUBCLASSES: SubclassDefinition[] = [
+  ...MONK_SUBCLASSES, ...FIGHTER_SUBCLASSES, ...WIZARD_SUBCLASSES
+]
 
 export function loadContent(): ContentIndex {
   const content = createContentIndex()

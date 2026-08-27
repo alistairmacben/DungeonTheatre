@@ -79,6 +79,15 @@ export const ILYANA_VESS: Character = {
   },
   deathSaves: { successes: 0, failures: 0 },
   toggles: {},
+  // Cantrips are chosen from the Cantrips Known column now, not named by the
+  // class for every wizard alike. Three at 5th level.
+  selections: {
+    'srd:class.wizard.spellcasting': {
+      cantrips: [
+        'srd:spell.fire-bolt', 'srd:spell.ray-of-frost', 'srd:spell.prestidigitation'
+      ]
+    }
+  },
   spellsPrepared: [
     'srd:spell.magic-missile',
     'srd:spell.mage-armor',

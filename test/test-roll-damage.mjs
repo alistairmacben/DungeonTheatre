@@ -29,6 +29,15 @@ function wizard(level, prepared = []) {
     exhaustionLevel: 0,
     inventory: { instances: [item('d', 'srd:weapon.dagger')], equipped: { mainHand: 'd' }, attunedInstanceIds: [] },
     deathSaves: { successes: 0, failures: 0 }, toggles: {},
+    // Cantrips are chosen now rather than named by the class, so a fixture
+    // that casts Fire Bolt has to have picked it.
+    selections: {
+      'srd:class.wizard.spellcasting': {
+        cantrips: [
+          'srd:spell.fire-bolt', 'srd:spell.ray-of-frost', 'srd:spell.prestidigitation'
+        ]
+      }
+    },
     spellsPrepared: prepared
   }
 }
