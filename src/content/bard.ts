@@ -11,14 +11,15 @@
 //
 // The other three pressure points landed differently. Expertise and the
 // Half-Elf's two free skills fell straight out of the selection machinery.
-// Jack of All Trades is one missing ProficiencyCategory away from working.
-// Font of Inspiration — a refresh rule that changes at 5th level — turned out
-// to be expressible with an activation predicate, at the price of one extra
-// source; see the comment there.
+// Jack of All Trades needed one missing ProficiencyCategory, which arrived
+// with the Champion's Remarkable Athlete and now makes it work. Font of
+// Inspiration — a refresh rule that changes at 5th level — turned out to be
+// expressible with an activation predicate, at the price of one extra source;
+// see the comment there.
 
 import type {
   ClassDefinition, ClassFeatureDefinition, EffectSource, ItemDefinition,
-  Modifier, ProficiencyGrant, SelectionDefinition, SpeciesDefinition
+  Modifier, ProficiencyGrant, SelectionDefinition, SpeciesDefinition, SubclassDefinition
 } from '../rules/types.js'
 import {
   abilityModifierPath, abilityScorePath, declareResourceMax, HP_MAX,
@@ -198,6 +199,28 @@ export const HALF_ELF: SpeciesDefinition = {
  * right, and the selection pool below still draws bard spells only. Said once
  * here rather than approximated into a grant that looks complete and isn't.
  */
+/**
+ * The Bardic Inspiration die: d6, rising at 5th, 10th and 15th. And Song of
+ * Rest's die: d6, rising at 9th, 13th and 17th — a different track, which is
+ * exactly why both are transcribed rather than one derived from the other.
+ *
+ * Neither is consumed yet: a die size is not a number, and nothing in the
+ * vocabulary replaces one. Kept so whoever adds that mechanism does not go
+ * back to the PDF.
+ */
+const BARD_INSPIRATION_DIE = [
+  6, 6, 6, 6, 8, 8, 8, 8, 8, 10, 10, 10, 10, 10, 12, 12, 12, 12, 12, 12
+]
+const BARD_SONG_OF_REST_DIE = [
+  0, 6, 6, 6, 6, 6, 6, 6, 8, 8, 8, 8, 10, 10, 10, 10, 12, 12, 12, 12
+]
+
+/** The bard takes the standard five Ability Score Improvements. */
+const BARD_ASI_LEVELS = [4, 8, 12, 16, 19]
+
+/** Magical Secrets lands three times, and is why Spells Known jumps by two. */
+const MAGICAL_SECRETS_LEVELS = [10, 14, 18]
+
 const BARD_CANTRIPS_KNOWN = [2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4]
 const BARD_SPELLS_KNOWN = [
   4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 15, 16, 18, 19, 19, 20, 22, 22, 22
@@ -439,28 +462,31 @@ export const BARD_CLASS: ClassDefinition = {
       provenance: 'srd', contentVersion: 1, grantedAtLevel: 2,
       effects: source({
         id: `${BARD}.jack-of-all-trades`, name: 'Jack of All Trades',
-        // Half proficiency on every ability check that does not already include
-        // the bonus. Every piece of this exists except the one that says which
-        // rolls it covers: `level: 'half'`, `rounding: 'floor'` and the
-        // highest-multiplier-wins rule between grants would give exactly the
-        // SRD answer — half a bonus when unproficient, no change when
-        // proficient, no change under Expertise. But ProficiencyCategory can
-        // only name a specific skill, tool or save, and "any ability check" is
-        // none of those.
+        // This was the gap this file recorded in its own header: "one missing
+        // ProficiencyCategory away from working". The category — `abilityCheck`
+        // — was added for the Champion's Remarkable Athlete, which needs the
+        // same thing for three abilities instead of all six.
         //
-        // Enumerating all eighteen skills was rejected twice over: it would
-        // miss raw ability checks and initiative, and `grantsProficiency: true`
-        // on eighteen skills would make the bard read as *proficient* in all of
-        // them to every prerequisite and to Expertise. An approximation that
-        // corrupts a neighbouring rule is worse than an honest gap.
+        // Everything else was already here. `level: 'half'` with
+        // `rounding: 'floor'`, and the highest-multiplier-wins rule between
+        // grants, gives exactly the SRD answer: half a bonus on an unproficient
+        // check, no change when proficient, no change under Expertise. "That
+        // doesn't already include your proficiency bonus" needs no rule of its
+        // own.
+        //
+        // Note what this is NOT: eighteen skill grants. That was rejected twice
+        // over when this file was first written — it would miss raw ability
+        // checks and initiative, and `grantsProficiency: true` on eighteen
+        // skills would make the bard read as *proficient* in all of them to
+        // every prerequisite and to Expertise. Six ability-check grants have
+        // neither problem.
+        proficiencies: (['str', 'dex', 'con', 'int', 'wis', 'cha'] as const)
+          .map((a) => prof({ kind: 'abilityCheck', ability: a }, 'half')),
         narrative: [{
-          text: 'Add half your proficiency bonus, rounded down, to any ability '
-            + 'check you make that does not already include your proficiency '
-            + 'bonus — +1 at levels 2-4, +1 at 5th-8th. This is not in the '
-            + 'listed skill numbers; add it at the table for unproficient checks.',
-          dmPromptable: true
-        }],
-        completeness: 'partial'
+          text: 'Half your proficiency bonus, rounded down, applies to any ability '
+            + 'check you are not already proficient in.',
+          dmPromptable: false
+        }]
       })
     },
     {
@@ -504,11 +530,96 @@ export const BARD_CLASS: ClassDefinition = {
         }]
       })
     },
+
+    // --- 6th ---------------------------------------------------------------
     {
-      id: `${BARD}.lore.bonus-proficiencies`, name: 'College of Lore: Bonus Proficiencies',
+      id: `${BARD}.countercharm`, name: 'Countercharm',
+      provenance: 'srd', contentVersion: 1, grantedAtLevel: 6,
+      effects: source({
+        id: `${BARD}.countercharm`, name: 'Countercharm',
+        completeness: 'partial',
+        actions: [{
+          id: 'bard.countercharm', name: 'Countercharm',
+          kind: 'ability', cost: 'action',
+          description: 'Start a performance granting advantage against being charmed or frightened.',
+          requirements: { always: true }
+        }],
+        // The bard's own half would be an ordinary roll modifier; the allies'
+        // half is the same wall Bardic Inspiration hit — a modifier belongs to
+        // the character carrying it and cannot travel to another sheet. Half a
+        // feature applied is worse than a note, so it stays a note.
+        narrative: [{
+          text: 'Until the end of your next turn, you and friendly creatures within '
+            + '30 feet have advantage on saving throws against being frightened or '
+            + 'charmed. A creature must be able to hear you. Apply the advantage '
+            + 'at the table — a modifier cannot reach another character\'s sheet.',
+          dmPromptable: true
+        }]
+      })
+    },
+
+    // --- 10th, 14th, 18th --------------------------------------------------
+    ...MAGICAL_SECRETS_LEVELS.map((level) => ({
+      id: `${BARD}.magical-secrets-${level}`, name: `Magical Secrets (level ${level})`,
+      provenance: 'srd' as const, contentVersion: 1, grantedAtLevel: level,
+      effects: source({
+        id: `${BARD}.magical-secrets-${level}`, name: `Magical Secrets (level ${level})`,
+        completeness: 'partial',
+        // "Two spells from any class" — a pool that is every spell in the game
+        // at or below the bard's slot ceiling. A `spellList` selection needs a
+        // stated pool, and the honest pool here is the whole content set, which
+        // would be a menu of everything rather than a considered choice. The
+        // count is already right: the Spells Known column jumps by two at each
+        // of these levels rather than one.
+        narrative: [{
+          text: 'Choose two spells from any class, of a level you can cast or a '
+            + 'cantrip. They count as bard spells and are already included in your '
+            + 'Spells Known total. Pick them with your DM — the app offers the bard '
+            + 'list only.',
+          dmPromptable: true
+        }]
+      })
+    })),
+
+    // --- 20th --------------------------------------------------------------
+    {
+      id: `${BARD}.superior-inspiration`, name: 'Superior Inspiration',
+      provenance: 'srd', contentVersion: 1, grantedAtLevel: 20,
+      effects: source({
+        id: `${BARD}.superior-inspiration`, name: 'Superior Inspiration',
+        completeness: 'partial',
+        // Nothing fires on rolling initiative — there are no triggers on roll
+        // events. The monk's Perfect Self is the same shape at the same level.
+        narrative: [{
+          text: 'When you roll initiative with no uses of Bardic Inspiration left, '
+            + 'you regain one. Restore it yourself at the top of a fight.',
+          dmPromptable: true
+        }]
+      })
+    }
+  ]
+}
+
+// ===========================================================================
+// Subclass — College of Lore (SRD p13-14)
+// ===========================================================================
+
+/**
+ * Lore was two class features on the bard itself — granted to every bard at
+ * 3rd level whether they had joined the college or not — while the class also
+ * declared a subclass slot pointing at a `srd:subclass.lore` nobody had
+ * defined. The same shape the cleric's Life Domain was in.
+ */
+export const COLLEGE_OF_LORE: SubclassDefinition = {
+  id: 'srd:subclass.lore', name: 'College of Lore',
+  provenance: 'srd', contentVersion: 1,
+  classId: BARD,
+  features: [
+    {
+      id: 'srd:subclass.lore.bonus-proficiencies', name: 'Bonus Proficiencies',
       provenance: 'srd', contentVersion: 1, grantedAtLevel: 3,
       effects: source({
-        id: `${BARD}.lore.bonus-proficiencies`, name: 'College of Lore: Bonus Proficiencies',
+        id: 'srd:subclass.lore.bonus-proficiencies', name: 'Bonus Proficiencies',
         proficiencies: [chosenProf('skill', 'lore-skills')],
         selections: [{
           id: 'lore-skills', prompt: 'Choose three skills of your choice',
@@ -517,10 +628,11 @@ export const BARD_CLASS: ClassDefinition = {
       })
     },
     {
-      id: `${BARD}.lore.cutting-words`, name: 'College of Lore: Cutting Words',
+      id: 'srd:subclass.lore.cutting-words', name: 'Cutting Words',
       provenance: 'srd', contentVersion: 1, grantedAtLevel: 3,
       effects: source({
-        id: `${BARD}.lore.cutting-words`, name: 'College of Lore: Cutting Words',
+        id: 'srd:subclass.lore.cutting-words', name: 'Cutting Words',
+        completeness: 'partial',
         // The reaction and its cost are ordinary; the subtraction is Bardic
         // Inspiration's problem in the opposite direction — a die applied to a
         // roll made by a creature that is not this character.
@@ -539,11 +651,61 @@ export const BARD_CLASS: ClassDefinition = {
             + 'A creature that cannot hear you, or that is immune to being '
             + 'charmed, is unaffected. Roll and apply the subtraction at the table.',
           dmPromptable: true
+        }]
+      })
+    },
+    {
+      id: 'srd:subclass.lore.additional-magical-secrets',
+      name: 'Additional Magical Secrets',
+      provenance: 'srd', contentVersion: 1, grantedAtLevel: 6,
+      effects: source({
+        id: 'srd:subclass.lore.additional-magical-secrets',
+        name: 'Additional Magical Secrets',
+        completeness: 'partial',
+        narrative: [{
+          text: 'Learn two spells from any class, of a level you can cast or a '
+            + 'cantrip. Unlike Magical Secrets these do NOT count against your '
+            + 'Spells Known. Pick them with your DM.',
+          dmPromptable: true
+        }]
+      })
+    },
+    {
+      id: 'srd:subclass.lore.peerless-skill', name: 'Peerless Skill',
+      provenance: 'srd', contentVersion: 1, grantedAtLevel: 14,
+      effects: source({
+        id: 'srd:subclass.lore.peerless-skill', name: 'Peerless Skill',
+        completeness: 'partial',
+        actions: [{
+          id: 'bard.lore.peerless-skill', name: 'Peerless Skill',
+          kind: 'ability', cost: 'free',
+          description: 'Expend a Bardic Inspiration die and add it to your ability check.',
+          requirements: { resourceAtLeast: ['bard.bardicInspiration', 1] },
+          costs: { 'bard.bardicInspiration': 1 }
         }],
-        completeness: 'partial'
+        // This one IS on the bard's own roll, unlike Cutting Words — but it is
+        // decided after the die is read, and the roll pipeline has no window
+        // that reopens a resolved roll. Guidance has the same problem.
+        narrative: [{
+          text: 'Add a Bardic Inspiration die to an ability check you have already '
+            + 'rolled, before the DM says whether you succeeded. Roll and add it '
+            + 'yourself — the app cannot reopen a roll you have seen.',
+          dmPromptable: true
+        }]
       })
     }
   ]
+}
+
+export const BARD_SUBCLASSES: SubclassDefinition[] = [COLLEGE_OF_LORE]
+
+/** Columns nothing reads yet. */
+export const BARD_TABLE = {
+  asiLevels: BARD_ASI_LEVELS,
+  inspirationDie: BARD_INSPIRATION_DIE,
+  songOfRestDie: BARD_SONG_OF_REST_DIE,
+  cantripsKnown: BARD_CANTRIPS_KNOWN,
+  spellsKnown: BARD_SPELLS_KNOWN
 }
 
 // ===========================================================================
