@@ -70,7 +70,9 @@ export interface VitalsView {
   hitPoints: { current: number; max: Readout; temporary: number }
   armorClass: Readout
   speed: Readout
-  initiative: Readout
+  /** Initiative is a roll: Feral Instinct and Alert grant advantage on it. */
+  initiative: Readout & { rollState?: 'advantage' | 'disadvantage' | 'normal'
+    rollStateReasons?: string[] }
   /** 0-3 each. Only meaningful at 0 hit points; the UI decides whether to show it. */
   deathSaves: { successes: number; failures: number }
   exhaustion: number
@@ -110,6 +112,11 @@ export interface AbilityView {
   roll: RollSpec
   /** Rolling the saving throw. */
   saveRoll: RollSpec
+  /** Advantage on the raw ability check, if anything grants it. */
+  rollState?: 'advantage' | 'disadvantage' | 'normal'
+  /** Advantage on the saving throw, which is a different roll. */
+  saveRollState?: 'advantage' | 'disadvantage' | 'normal'
+  rollStateReasons?: string[]
 }
 
 export type ProficiencyState = 'none' | 'half' | 'proficient' | 'expertise'

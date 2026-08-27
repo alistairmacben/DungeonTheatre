@@ -142,7 +142,9 @@ export function GameMenu({
         </nav>
 
         <div className="flex-1 overflow-y-auto px-6 py-5">
-          {tab === 'character' && <CharacterTab view={view} onRoll={onRoll} />}
+          {tab === 'character' && (
+            <CharacterTab view={view} onRoll={onRoll} dispatch={dispatch} />
+          )}
           {tab === 'inventory' && <InventoryTab view={view} dispatch={dispatch} />}
           {tab === 'actions' && (
             <ActionsTab view={view} dispatch={dispatch} bar={bar} prefs={prefs} />
@@ -168,9 +170,10 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
-function CharacterTab({ view, onRoll }: {
+function CharacterTab({ view, onRoll, dispatch }: {
   view: PlayerView
   onRoll(spec: RollSpec): void
+  dispatch(c: PlayerCommand): Promise<string[] | undefined> | string[] | undefined
 }): React.JSX.Element {
   return (
     <div>
@@ -184,7 +187,15 @@ function CharacterTab({ view, onRoll }: {
           </Stat>
           <Stat label="Armour Class"><Value readout={view.vitals.armorClass} size="lg" /></Stat>
           <Stat label="Speed"><Value readout={view.vitals.speed} size="lg" /></Stat>
-          <Stat label="Initiative"><Value readout={view.vitals.initiative} size="lg" /></Stat>
+          <Stat label="Initiative">
+            <span className="inline-flex items-center gap-1">
+              <Value readout={view.vitals.initiative} size="lg" />
+              <Edge
+                state={view.vitals.initiative.rollState}
+                why={view.vitals.initiative.rollStateReasons}
+              />
+            </span>
+          </Stat>
           <Stat label="Proficiency"><Value readout={view.progression.proficiencyBonus} size="lg" /></Stat>
         </div>
       </Section>
@@ -225,9 +236,10 @@ function CharacterTab({ view, onRoll }: {
               <button
                 type="button"
                 onClick={() => onRoll(a.roll)}
-                className="mt-2 w-full rounded border border-white/10 py-1 text-[10px] uppercase tracking-wide text-parchment/45 transition hover:border-arcane/50 hover:text-parchment"
+                className="mt-2 flex w-full items-center justify-center gap-1 rounded border border-white/10 py-1 text-[10px] uppercase tracking-wide text-parchment/45 transition hover:border-arcane/50 hover:text-parchment"
               >
                 check
+                <Edge state={a.rollState} why={a.rollStateReasons} />
               </button>
               <button
                 type="button"
@@ -236,6 +248,7 @@ function CharacterTab({ view, onRoll }: {
               >
                 save {a.save.display}
                 {a.save.proficient && <span className="text-[9px] text-arcane">◆</span>}
+                <Edge state={a.saveRollState} why={a.rollStateReasons} />
               </button>
             </div>
           ))}
@@ -252,13 +265,16 @@ function CharacterTab({ view, onRoll }: {
               spec={s.roll}
               sublabel={s.ability}
               onRoll={onRoll}
-              marker={s.proficiency !== 'none'
-                ? (
-                  <span className="text-[9px] text-arcane" title={s.proficiency}>
-                    {s.proficiency === 'expertise' ? '◆◆' : '◆'}
-                  </span>
-                )
-                : undefined}
+              marker={(
+                <>
+                  {s.proficiency !== 'none' && (
+                    <span className="text-[9px] text-arcane" title={s.proficiency}>
+                      {s.proficiency === 'expertise' ? '◆◆' : '◆'}
+                    </span>
+                  )}
+                  <Edge state={s.rollState} why={s.rollStateReasons} />
+                </>
+              )}
             />
           ))}
         </div>
@@ -269,7 +285,33 @@ function CharacterTab({ view, onRoll }: {
           <ul className="space-y-2">
             {view.notices.map((n) => (
               <li key={n.id} className="rounded-lg border border-white/10 bg-white/[0.03] p-3 text-sm">
-                <p className="text-parchment/80">{n.label}</p>
+                <div className="flex items-start justify-between gap-3">
+                  <p className="text-parchment/80">{n.label}</p>
+                  {/* A notice that names a toggle is a switch the player owns.
+                      The view has carried `toggleId` since notices existed and
+                      nothing offered it — so Rage, Reckless Attack, Supreme
+                      Sneak and every fighting style resolved correctly against
+                      a toggle no one could reach. */}
+                  {n.toggleId !== undefined && (
+                    <button
+                      type="button"
+                      onClick={() => { void dispatch({
+                        type: 'setToggle',
+                        characterId: view.meta.characterId,
+                        toggleId: n.toggleId!,
+                        value: !n.toggleValue
+                      }) }}
+                      aria-pressed={n.toggleValue === true}
+                      className={`shrink-0 rounded-full border px-2.5 py-0.5 text-[10px] uppercase tracking-wide transition ${
+                        n.toggleValue
+                          ? 'border-arcane/60 bg-arcane/20 text-parchment'
+                          : 'border-white/15 text-parchment/40 hover:border-arcane/40 hover:text-parchment/70'
+                      }`}
+                    >
+                      {n.toggleValue ? 'on' : 'off'}
+                    </button>
+                  )}
+                </div>
                 <p className="mt-1 text-[13px] text-parchment/50">{n.text}</p>
               </li>
             ))}
@@ -277,6 +319,33 @@ function CharacterTab({ view, onRoll }: {
         </Section>
       )}
     </div>
+  )
+}
+
+/**
+ * Advantage or disadvantage, wherever a roll is shown.
+ *
+ * The engine has resolved this since the roll pipeline existed and the player
+ * UI showed it nowhere — a raging barbarian's advantage on Strength checks, a
+ * halfling's on frightened saves, Feral Instinct's on initiative, chain mail's
+ * disadvantage on Stealth. All real, all invisible. The `why` list becomes the
+ * tooltip so the marker never has to be taken on faith.
+ */
+function Edge({
+  state, why
+}: {
+  state?: 'advantage' | 'disadvantage' | 'normal'
+  why?: string[]
+}): React.JSX.Element | null {
+  if (!state || state === 'normal') return null
+  const up = state === 'advantage'
+  return (
+    <span
+      title={(why ?? []).join('\n') || state}
+      className={`text-[9px] font-semibold ${up ? 'text-emerald-400' : 'text-rose-400'}`}
+    >
+      {up ? '\u25b2' : '\u25bc'}
+    </span>
   )
 }
 

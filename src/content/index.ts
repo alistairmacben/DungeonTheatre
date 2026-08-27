@@ -14,7 +14,9 @@ import { EXTRA_CLASSES, EXTRA_ITEMS } from './classes-extra.js'
 import { ALL_SPELLS } from './spells.js'
 import { WIZARD_CLASSES, WIZARD_ITEMS, WIZARD_SPECIES } from './wizard.js'
 import { PARTY_CLASSES, PARTY_ITEMS, PARTY_SPECIES } from './party.js'
-import { BARBARIAN_CLASSES, BARBARIAN_ITEMS, BARBARIAN_SPECIES } from './barbarian.js'
+import {
+  BARBARIAN_CLASSES, BARBARIAN_ITEMS, BARBARIAN_SPECIES, BARBARIAN_SUBCLASSES
+} from './barbarian.js'
 import { MONK_CLASS, MONK_SUBCLASSES } from './monk.js'
 import { FIGHTER_CLASSES, FIGHTER_SUBCLASSES } from './fighter.js'
 import { WIZARD_SUBCLASSES } from './wizard.js'
@@ -57,7 +59,7 @@ const ITEMS: ItemDefinition[] = [
 const SPELLS: SpellDefinition[] = [...ALL_SPELLS, ...WARLOCK_SPELLS]
 const SUBCLASSES: SubclassDefinition[] = [
   ...MONK_SUBCLASSES, ...FIGHTER_SUBCLASSES, ...WIZARD_SUBCLASSES, ...PARTY_SUBCLASSES,
-  ...BARD_SUBCLASSES
+  ...BARD_SUBCLASSES, ...BARBARIAN_SUBCLASSES
 ]
 
 export function loadContent(): ContentIndex {

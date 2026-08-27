@@ -21,7 +21,8 @@ import { resolveResources, type ResourceValue } from '../rules/resources.js'
 import { resolveSpellcasting, type CastableSpell, type SlotOption } from '../rules/spells.js'
 import { resolveSpellAttackRoll, resolveSpellEffect } from '../rules/spellEffect.js'
 import {
-  abilityModifierPath, abilityScorePath, ARMOR_CLASS, damageReductionPath, DAMAGE_TYPE_PATHS,
+  abilityModifierPath, abilityScorePath, ARMOR_CLASS, ATTACK_ROLL, CHECK_ROLL,
+  damageReductionPath, DAMAGE_TYPE_PATHS, DAMAGE_WEAPON, SAVE_ROLL,
   HP_MAX, INITIATIVE, JUMP_HIGH, JUMP_LONG, PROFICIENCY_BONUS, speedPath,
   SPELL_ATTACK, SPELL_SAVE_DC, SPELLS_PREPARED_MAX
 } from '../rules/statPaths.js'
@@ -145,6 +146,18 @@ function describeSource(
       // six of them evaluate to 0 — "+0 max 9th-level Slots" six times over is
       // the table's shape leaking onto the sheet, not a fact about the
       // character. `base 0` and `set 0` are left alone: those are assertions.
+      // A feature save DC is a computed stat, and a source declares interest in
+      // it with an `add` of nothing. The player wants the DC, not the delta —
+      // and without this the zero rule below would drop the line entirely,
+      // which is why the monk's ki DC has never appeared on a sheet.
+      if (m.target.startsWith('feature.') && m.target.endsWith('.saveDc')) {
+        // "save DC 16", not "intimidating presence save DC 16" — the line
+        // already sits under the feature's own name.
+        mech.push(`save DC ${resolution.stat(m.target).total}`)
+        if (m.note) mech[mech.length - 1] = `${mech[mech.length - 1]} (${m.note})`
+        out.push(...mech)
+        continue
+      }
       if (m.op === 'add' && n === 0) continue
       if (m.op === 'add') mech.push(`${signed(n)} ${stat}`)
       else if (m.op === 'base') mech.push(`${stat} ${n}`)
@@ -283,6 +296,10 @@ function prettyPath(path: string, nameOf?: (resourceId: string) => string | unde
   }
   if (path.startsWith('resistance.')) return `${path.slice(11)} resistance`
   if (path.startsWith('damageReduction.')) return `${path.slice(16)} damage taken`
+  if (path === ATTACK_ROLL) return 'attack rolls'
+  if (path === CHECK_ROLL) return 'ability checks'
+  if (path === SAVE_ROLL) return 'saving throws'
+  if (path === DAMAGE_WEAPON) return 'weapon damage'
   if (path === JUMP_LONG) return 'long jump distance'
   if (path === JUMP_HIGH) return 'high jump distance'
   // movementCost.<kind> is a multiplier on difficult ground, climbing, swimming
@@ -338,6 +355,7 @@ function describeScope(m: { scope?: { kinds?: string[]; skills?: string[]; abili
 function buildVitals(r: Resolution, detail: DetailLevel): VitalsView {
   const c = r.character
   const max = r.stat(HP_MAX)
+  const initiative = resolveCheck(r, { checkType: 'initiative' })
   return {
     hitPoints: {
       // Current hit points are stored and the maximum is derived, so the two
@@ -351,7 +369,19 @@ function buildVitals(r: Resolution, detail: DetailLevel): VitalsView {
     },
     armorClass: readout(r.stat(ARMOR_CLASS), 'Armour Class', detail),
     speed: readout(r.stat(speedPath('walk')), 'Speed', detail, feet),
-    initiative: readout(r.stat(INITIATIVE), 'Initiative', detail, signed),
+    // Initiative is a roll, not only a number. Feral Instinct and Alert both
+    // grant advantage on it and neither had anywhere to show — the modifier
+    // resolved correctly and the player could not see it.
+    initiative: {
+      ...readout(r.stat(INITIATIVE), 'Initiative', detail, signed),
+      ...(initiative.advantage !== 'normal'
+        ? {
+          rollState: initiative.advantage,
+          rollStateReasons: [...initiative.advantageSources, ...initiative.disadvantageSources]
+            .filter((t) => t.applied).map((t) => `${t.op} — ${t.sourceName}`)
+        }
+        : {})
+    },
     deathSaves: c.deathSaves,
     exhaustion: c.exhaustionLevel
   }
@@ -436,7 +466,19 @@ function buildAbilities(
       }),
       saveRoll: rollSpecOf(save, {
         type: 'makeSave', characterId, ability: a, faces: []
-      })
+      }),
+      // Advantage on a raw ability check or save had nowhere to appear. Skills
+      // have carried `rollState` from the start, so a halfling's advantage on
+      // frightened saves and a raging barbarian's advantage on Strength checks
+      // both resolved correctly and were invisible on the ability panel.
+      ...(check.advantage !== 'normal' ? { rollState: check.advantage } : {}),
+      ...(save.advantage !== 'normal' ? { saveRollState: save.advantage } : {}),
+      rollStateReasons: [
+        ...[...check.advantageSources, ...check.disadvantageSources]
+          .filter((t) => t.applied).map((t) => `check: ${t.op} — ${t.sourceName}`),
+        ...[...save.advantageSources, ...save.disadvantageSources]
+          .filter((t) => t.applied).map((t) => `save: ${t.op} — ${t.sourceName}`)
+      ]
     }
   })
 }
@@ -708,10 +750,23 @@ function buildActions(
     const blocked = capabilityBlocked('action')
     if (blocked) reasons.push(blocked)
 
+    // An option's label is authored text and cannot carry a number that moves:
+    // the barbarian's rage damage is +2 at 1st and +4 at 16th, and the label
+    // used to say "+2" at every level. Describing the option's own modifiers
+    // resolves the value the same way a feature's effects are resolved.
     const options = r.sources.active.flatMap((s) =>
       (s.options ?? [])
         .filter((o) => !o.scope?.kinds || o.scope.kinds.includes('attack'))
-        .map((o) => ({ id: o.id, label: o.label })))
+        .map((o) => {
+          // Only the modifiers: spreading the whole source would describe the
+          // feature's actions and proficiencies as if they were the option's.
+          const lines = describeSource(
+            { ...s, modifiers: o.modifiers, actions: [], proficiencies: [] }, r, content)
+          return {
+            id: o.id, label: o.label,
+            ...(lines.length ? { description: lines.join('; ') } : {})
+          }
+        }))
 
     out.push({
       id: `attack:${instanceId}`,

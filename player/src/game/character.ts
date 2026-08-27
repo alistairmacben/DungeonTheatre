@@ -239,7 +239,58 @@ export const WEN_SHAO: Character = {
   toggles: {}
 }
 
+/**
+ * Grog Ironjaw, Half-Orc Barbarian 12 (Path of the Berserker) — the
+ * activated-state seat, which the roster did not have.
+ *
+ * Rage is one switch driving five unrelated mechanics, and none of them could
+ * be looked at until a barbarian sat here: the advantage it grants on Strength
+ * checks and saves had nowhere to appear on the ability panel at all, which is
+ * the sort of thing only a rendered sheet finds.
+ *
+ * Twelfth rather than fifth so the Rage Damage column has moved off its first
+ * row (+3 from 9th) and Mindless Rage and Relentless Rage are both in play.
+ */
+export const GROG_IRONJAW: Character = {
+  id: 'char:grog',
+  campaignId: 'camp-1',
+  name: 'Grog Ironjaw',
+  playerId: 'player-6',
+  speciesId: 'srd:species.half-orc',
+  classLevels: [{
+    classId: 'srd:class.barbarian', level: 12, subclassId: 'srd:subclass.berserker'
+  }],
+  abilityScoreBase: { str: 16, dex: 14, con: 16, int: 8, wis: 12, cha: 10 },
+  buildChoices: [],
+  // 12 + CON at 1st (15), then 7 + CON per level after (10 x 11 = 110): 125.
+  hitPointsCurrent: 125,
+  hitPointsTemp: 0,
+  hitDiceSpent: {},
+  resourcesSpent: {},
+  conditions: [],
+  effectInstances: [],
+  exhaustionLevel: 0,
+  // Two of six skills, chosen — this used to be Athletics and Intimidation for
+  // every barbarian the content could produce.
+  selections: {
+    'srd:class.barbarian.proficiencies': { skills: ['athletics', 'survival'] }
+  },
+  inventory: {
+    instances: [
+      { instanceId: 'b-greataxe', definitionId: 'srd:weapon.greataxe', contentVersion: 1, identified: true },
+      { instanceId: 'b-javelins', definitionId: 'srd:weapon.javelin', contentVersion: 1, quantity: 4, identified: true },
+      { instanceId: 'b-potion', definitionId: 'srd:item.potion-of-healing', contentVersion: 1, quantity: 2, identified: true }
+    ],
+    // No armour: Unarmored Defense is 10 + DEX + CON, which at CON 16 and
+    // DEX 14 beats the hide armour a barbarian would otherwise wear.
+    equipped: { mainHand: 'b-greataxe' },
+    attunedInstanceIds: []
+  },
+  deathSaves: { successes: 0, failures: 0 },
+  toggles: {}
+}
+
 /** The party. One entry per archetype the content can express today. */
 export const PARTY: Character[] = [
-  SIR_ALDREN, ILYANA_VESS, PIP_UNDERBOUGH, BROTHER_ALDWIN, WEN_SHAO
+  SIR_ALDREN, ILYANA_VESS, PIP_UNDERBOUGH, BROTHER_ALDWIN, WEN_SHAO, GROG_IRONJAW
 ]
