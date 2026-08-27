@@ -58,7 +58,17 @@ const WIZARD = base({
 const ROGUE = base({
   id: 'c:rogue', name: 'Pip Underbough',
   speciesId: 'srd:species.halfling', subspeciesId: 'srd:species.halfling.lightfoot',
-  classLevels: [{ classId: 'srd:class.rogue', level: 5 }],
+  classLevels: [{
+    classId: 'srd:class.rogue', level: 5, subclassId: 'srd:subclass.thief'
+  }],
+  // Skills and Expertise are choices now, not something every rogue in the
+  // world was handed. Pip picks the four and doubles the two she always had.
+  selections: {
+    'srd:class.rogue.proficiencies': {
+      skills: ['acrobatics', 'perception', 'sleight-of-hand', 'stealth']
+    },
+    'srd:class.rogue.expertise': { expertise: ['perception', 'stealth'] }
+  },
   abilityScoreBase: { str: 10, dex: 16, con: 14, int: 13, wis: 12, cha: 14 },
   hitPointsCurrent: 33,
   inventory: {

@@ -13,8 +13,9 @@ import type {
   ProficiencyGrant, SpeciesDefinition, SubclassDefinition
 } from '../rules/types.js'
 import {
-  abilityModifierPath, abilityScorePath, declareResourceMax, HP_MAX, PROFICIENCY_BONUS,
-  SPELL_ATTACK, SPELL_SAVE_DC, SPELLS_PREPARED_MAX, speedPath
+  abilityModifierPath, abilityScorePath, declareResourceMax, HP_MAX, JUMP_LONG,
+  movementCostPath, PROFICIENCY_BONUS, SPELL_ATTACK, SPELL_SAVE_DC,
+  SPELLS_PREPARED_MAX, speedPath
 } from '../rules/statPaths.js'
 import { SPELL_LISTS } from './spells.js'
 import { fullCasterSlots } from './progression.js'
@@ -55,6 +56,27 @@ const CLERIC_CANTRIP_POOL = [
   'srd:spell.sacred-flame', 'srd:spell.guidance', 'srd:spell.light',
   'srd:spell.resistance', 'srd:spell.spare-the-dying', 'srd:spell.mending'
 ]
+
+// ---------------------------------------------------------------------------
+// The Rogue table (SRD p39), transcribed
+// ---------------------------------------------------------------------------
+
+/** Sneak Attack dice: 1d6 at 1st, rising by one at every odd level to 10d6. */
+const ROGUE_SNEAK_ATTACK_DICE = [
+  1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10
+]
+
+/** The rogue takes six Ability Score Improvements — one more than most. */
+const ROGUE_ASI_LEVELS = [4, 8, 10, 12, 16, 19]
+
+/** The eleven the rogue chooses four of, and doubles two of. */
+const ROGUE_SKILLS = [
+  'acrobatics', 'athletics', 'deception', 'insight', 'intimidation',
+  'investigation', 'perception', 'performance', 'persuasion',
+  'sleight-of-hand', 'stealth'
+]
+
+const STROKE_OF_LUCK_MAX = declareResourceMax('rogue.stroke-of-luck')
 
 const CHANNEL_DIVINITY_MAX = declareResourceMax('cleric.channel-divinity')
 const DIVINE_INTERVENTION_MAX = declareResourceMax('cleric.divine-intervention')
@@ -107,6 +129,28 @@ const prof = (
   level: ProficiencyGrant['level'] = 'proficient'
 ): ProficiencyGrant =>
   ({ id: id(), category, level, rounding: 'floor', grantsProficiency: true })
+
+/**
+ * A proficiency the player picks. `expandSelections` turns one authored grant
+ * into as many held proficiencies as the answer names; the `as never` matches
+ * how bard.ts and the Resilient feat already author it.
+ */
+const chosenProf = (
+  kind: 'skill' | 'tool',
+  selectionId: string,
+  level: ProficiencyGrant['level'] = 'proficient'
+): ProficiencyGrant => ({
+  id: id(),
+  category: { kind, selection: selectionId } as never,
+  level,
+  rounding: 'floor',
+  // Expertise multiplies a proficiency; it does not confer one. Saying
+  // otherwise makes doubling a skill you lack grant it outright, which is
+  // exactly what "choose two of your proficiencies" forbids. The resolver
+  // already multiplies a term that is 0 when not proficient — this is the half
+  // of that rule the content has to hold up.
+  grantsProficiency: level === 'proficient'
+})
 
 // ===========================================================================
 // Species — Lightfoot Halfling, and Human
@@ -198,11 +242,20 @@ export const ROGUE: ClassDefinition = {
           // naming here too. A category grant does not reach them.
           prof({ kind: 'weapon', itemId: 'srd:weapon.shortsword' }),
           prof({ kind: 'weapon', itemId: 'srd:weapon.longsword' }),
-          prof({ kind: 'skill', id: 'stealth' }),
-          prof({ kind: 'skill', id: 'acrobatics' }),
-          prof({ kind: 'skill', id: 'investigation' }),
-          prof({ kind: 'skill', id: 'perception' })
-        ]
+          prof({ kind: 'tool', id: 'thieves-tools' }),
+          // "Choose four from…" — four, not the four this file happened to
+          // name. The rogue picks more skills than any other class, which is
+          // most of what makes it a rogue.
+          chosenProf('skill', 'skills')
+        ],
+        selections: [{
+          id: 'skills', prompt: 'Choose four rogue skills', kind: 'skill', count: 4,
+          from: [
+            'acrobatics', 'athletics', 'deception', 'insight', 'intimidation',
+            'investigation', 'perception', 'performance', 'persuasion',
+            'sleight-of-hand', 'stealth'
+          ]
+        }]
       })
     },
     {
@@ -213,10 +266,47 @@ export const ROGUE: ClassDefinition = {
         // The only place in the SRD where the proficiency bonus is multiplied.
         // "You add it only once and multiply it only once" is enforced by the
         // stat's `single-highest` multiply composition, not by anything here.
-        proficiencies: [
-          prof({ kind: 'skill', id: 'stealth' }, 'expertise'),
-          prof({ kind: 'skill', id: 'perception' }, 'expertise')
-        ]
+        //
+        // Chosen rather than named: Stealth and Perception were hardcoded for
+        // every rogue that would ever exist.
+        proficiencies: [chosenProf('skill', 'expertise', 'expertise')],
+        selections: [{
+          id: 'expertise', prompt: 'Choose two proficiencies to double',
+          kind: 'skill', count: 2, from: ROGUE_SKILLS
+        }],
+        narrative: [{
+          text: 'Both must be proficiencies you already have — a skill, or your '
+            + 'proficiency with thieves\' tools. Doubling one you lack doubles '
+            + 'nothing, which is what the engine will show.',
+          dmPromptable: false
+        }]
+      })
+    },
+    {
+      id: 'srd:class.rogue.expertise-6', name: 'Expertise (6th level)',
+      provenance: 'srd', contentVersion: 1, grantedAtLevel: 6,
+      effects: source({
+        id: 'srd:class.rogue.expertise-6', name: 'Expertise (6th level)',
+        proficiencies: [chosenProf('skill', 'expertise-6', 'expertise')],
+        selections: [{
+          id: 'expertise-6', prompt: 'Choose two more proficiencies to double',
+          kind: 'skill', count: 2, from: ROGUE_SKILLS
+        }]
+      })
+    },
+    {
+      id: 'srd:class.rogue.thieves-cant', name: 'Thieves\' Cant',
+      provenance: 'srd', contentVersion: 1, grantedAtLevel: 1,
+      effects: source({
+        id: 'srd:class.rogue.thieves-cant', name: 'Thieves\' Cant',
+        // Purely a language. Not partial: nothing mechanical is missing, there
+        // is simply nothing mechanical to express.
+        narrative: [{
+          text: 'You know thieves\' cant, a secret mix of dialect, jargon and code. '
+            + 'It takes four times longer to convey a message this way, and you can '
+            + 'hide messages in apparently normal conversation.',
+          dmPromptable: false
+        }]
       })
     },
     {
@@ -224,14 +314,19 @@ export const ROGUE: ClassDefinition = {
       provenance: 'srd', contentVersion: 1, grantedAtLevel: 1,
       effects: source({
         id: 'srd:class.rogue.sneak-attack', name: 'Sneak Attack',
+        completeness: 'partial',
+        // The dice were written as a flat "3d6" — the level-5 row. Whether the
+        // condition is met is still a judgement no engine can make, but the
+        // number of dice is a table and now reads as one.
         narrative: [{
-          text: 'Once per turn you deal an extra 3d6 damage to a target you hit '
-            + 'with a finesse or ranged weapon, if you had advantage or if an '
-            + 'ally is within 5 feet of it. Whether the condition is met is a '
-            + 'judgement the engine cannot make — declare it at the table.',
+          text: 'Once per turn you deal extra damage to a target you hit with a '
+            + 'finesse or ranged weapon, if you had advantage on the attack or if '
+            + 'an ally is within 5 feet of it and you did not have disadvantage. '
+            + 'The extra damage is 1d6 at 1st level, rising by 1d6 at every odd '
+            + 'level to 10d6 at 19th. Whether the condition is met is a judgement '
+            + 'the engine cannot make — declare it at the table.',
           toggleId: 'rogue.sneak-attack', dmPromptable: true
-        }],
-        completeness: 'partial'
+        }]
       })
     },
     {
@@ -265,10 +360,246 @@ export const ROGUE: ClassDefinition = {
       provenance: 'srd', contentVersion: 1, grantedAtLevel: 5,
       effects: source({
         id: 'srd:class.rogue.uncanny-dodge', name: 'Uncanny Dodge',
+        completeness: 'partial',
         actions: [{
           id: 'rogue.uncanny-dodge.use', name: 'Uncanny Dodge', cost: 'reaction',
           description: 'Halve the damage from one attack you can see.',
           requirements: { always: true }
+        }],
+        // The reaction is offerable; the halving is not applicable. Incoming
+        // damage arrives through dmDamage, which the DM issues.
+        narrative: [{
+          text: 'Halve the damage of one attack you can see hitting you. Tell the '
+            + 'DM before they apply it — the app does not halve incoming damage.',
+          dmPromptable: true
+        }]
+      })
+    },
+
+    // --- 7th ---------------------------------------------------------------
+    {
+      id: 'srd:class.rogue.evasion', name: 'Evasion',
+      provenance: 'srd', contentVersion: 1, grantedAtLevel: 7,
+      effects: source({
+        id: 'srd:class.rogue.evasion', name: 'Evasion',
+        completeness: 'partial',
+        // Identical to the monk's Evasion at the same level, and partial for
+        // the same reason: it is a rule about how an incoming effect resolves.
+        narrative: [{
+          text: 'When an effect lets you make a Dexterity save for half damage, you '
+            + 'take none on a success and half on a failure. Tell the DM — the app '
+            + 'does not halve incoming damage for you.',
+          dmPromptable: true
+        }]
+      })
+    },
+
+    // --- 11th --------------------------------------------------------------
+    {
+      id: 'srd:class.rogue.reliable-talent', name: 'Reliable Talent',
+      provenance: 'srd', contentVersion: 1, grantedAtLevel: 11,
+      effects: source({
+        id: 'srd:class.rogue.reliable-talent', name: 'Reliable Talent',
+        completeness: 'partial',
+        // A floor on the d20 itself, not on the total — the roll pipeline has
+        // `rerollOn` for named faces but nothing that raises a die to a
+        // minimum. Adding to the total would give the wrong answer whenever
+        // the natural roll was already 10 or more.
+        narrative: [{
+          text: 'On any ability check that adds your proficiency bonus, treat a d20 '
+            + 'of 9 or lower as a 10. The die itself is floored, not the total — '
+            + 'read the roll and raise it yourself.',
+          dmPromptable: true
+        }]
+      })
+    },
+
+    // --- 14th --------------------------------------------------------------
+    {
+      id: 'srd:class.rogue.blindsense', name: 'Blindsense',
+      provenance: 'srd', contentVersion: 1, grantedAtLevel: 14,
+      effects: source({
+        id: 'srd:class.rogue.blindsense', name: 'Blindsense',
+        narrative: [{
+          text: 'While you can hear, you are aware of the location of any hidden or '
+            + 'invisible creature within 10 feet of you.',
+          dmPromptable: true
+        }]
+      })
+    },
+
+    // --- 15th --------------------------------------------------------------
+    {
+      id: 'srd:class.rogue.slippery-mind', name: 'Slippery Mind',
+      provenance: 'srd', contentVersion: 1, grantedAtLevel: 15,
+      effects: source({
+        id: 'srd:class.rogue.slippery-mind', name: 'Slippery Mind',
+        // Wholly expressible: one more saving throw proficiency, and the
+        // proficiency machinery does the rest.
+        proficiencies: [prof({ kind: 'save', ability: 'wis' })]
+      })
+    },
+
+    // --- 18th --------------------------------------------------------------
+    {
+      id: 'srd:class.rogue.elusive', name: 'Elusive',
+      provenance: 'srd', contentVersion: 1, grantedAtLevel: 18,
+      effects: source({
+        id: 'srd:class.rogue.elusive', name: 'Elusive',
+        completeness: 'partial',
+        // "No attack roll has advantage against you" would be a roll modifier
+        // with `appliesTo: 'attackersAgainstSelf'` — which exists — except that
+        // there is no rollOp that *cancels* advantage. Granting disadvantage
+        // is a different rule and would be wrong.
+        narrative: [{
+          text: 'No attack roll has advantage against you while you are not '
+            + 'incapacitated. Cancelling advantage is not the same as imposing '
+            + 'disadvantage, and only the latter is expressible — so this one is '
+            + 'the DM\'s to honour.',
+          dmPromptable: true
+        }]
+      })
+    },
+
+    // --- 20th --------------------------------------------------------------
+    {
+      id: 'srd:class.rogue.stroke-of-luck', name: 'Stroke of Luck',
+      provenance: 'srd', contentVersion: 1, grantedAtLevel: 20,
+      effects: source({
+        id: 'srd:class.rogue.stroke-of-luck', name: 'Stroke of Luck',
+        completeness: 'partial',
+        modifiers: [add(STROKE_OF_LUCK_MAX, 1, { note: 'once per short or long rest' })],
+        resources: [{
+          id: 'rogue.stroke-of-luck', name: 'Stroke of Luck',
+          max: STROKE_OF_LUCK_MAX,
+          refresh: { kind: 'shortRest' }, display: 'uses', order: 10
+        }],
+        actions: [{
+          id: 'rogue.stroke-of-luck.use', name: 'Stroke of Luck',
+          kind: 'ability', cost: 'free',
+          description: 'Turn a miss into a hit, or treat a failed ability check as a 20.',
+          requirements: { resourceAtLeast: ['rogue.stroke-of-luck', 1] },
+          costs: { 'rogue.stroke-of-luck': 1 }
+        }],
+        narrative: [{
+          text: 'Turn one missed attack into a hit, or treat one failed ability '
+            + 'check as though you rolled a 20. Both rewrite a roll that has '
+            + 'already resolved — the use is tracked, the outcome is yours.',
+          dmPromptable: true
+        }]
+      })
+    }
+  ]
+}
+
+// ===========================================================================
+// Subclass — Thief (SRD p40-41)
+// ===========================================================================
+
+export const THIEF: SubclassDefinition = {
+  id: 'srd:subclass.thief', name: 'Thief',
+  provenance: 'srd', contentVersion: 1,
+  classId: 'srd:class.rogue',
+  features: [
+    {
+      id: 'srd:subclass.thief.fast-hands', name: 'Fast Hands',
+      provenance: 'srd', contentVersion: 1, grantedAtLevel: 3,
+      effects: source({
+        id: 'srd:subclass.thief.fast-hands', name: 'Fast Hands',
+        // Three more things to spend Cunning Action's bonus action on. The
+        // bonus action itself is already a Cunning Action offering; these are
+        // extra options for it rather than a new resource.
+        actions: [
+          {
+            id: 'rogue.thief.fast-hands.sleight', name: 'Fast Hands: Sleight of Hand',
+            kind: 'ability', cost: 'bonusAction',
+            description: 'Make a Dexterity (Sleight of Hand) check with your Cunning Action.',
+            requirements: { always: true }
+          },
+          {
+            id: 'rogue.thief.fast-hands.tools', name: 'Fast Hands: Use Thieves\' Tools',
+            kind: 'ability', cost: 'bonusAction',
+            description: 'Disarm a trap or open a lock with your Cunning Action.',
+            requirements: { always: true }
+          },
+          {
+            id: 'rogue.thief.fast-hands.use-object', name: 'Fast Hands: Use an Object',
+            kind: 'ability', cost: 'bonusAction',
+            description: 'Take the Use an Object action with your Cunning Action.',
+            requirements: { always: true }
+          }
+        ]
+      })
+    },
+    {
+      id: 'srd:subclass.thief.second-story-work', name: 'Second-Story Work',
+      provenance: 'srd', contentVersion: 1, grantedAtLevel: 3,
+      effects: source({
+        id: 'srd:subclass.thief.second-story-work', name: 'Second-Story Work',
+        // Both halves are real. Climbing cost is a declared stat path, and the
+        // jump bonus is an ordinary add — the same two the Athlete feat and
+        // Remarkable Athlete already use.
+        modifiers: [
+          {
+            id: id(), channel: 'value', target: movementCostPath('climb'), op: 'set', value: 1,
+            permanence: 'persistent', note: 'climbing costs no extra movement'
+          },
+          add(JUMP_LONG, { stat: abilityModifierPath('dex') },
+            { note: 'Second-Story Work: running jump' })
+        ]
+      })
+    },
+    {
+      id: 'srd:subclass.thief.supreme-sneak', name: 'Supreme Sneak',
+      provenance: 'srd', contentVersion: 1, grantedAtLevel: 9,
+      effects: source({
+        id: 'srd:subclass.thief.supreme-sneak', name: 'Supreme Sneak',
+        // Advantage on Stealth, conditional on how far you moved this turn.
+        // Movement is not tracked, so the toggle is the player's honesty —
+        // the same shape the fighter's Archery style uses.
+        modifiers: [{
+          id: id(), channel: 'roll', rollOp: 'advantage',
+          scope: { kinds: ['check'], skills: ['stealth'] },
+          condition: { playerToggle: 'rogue.supreme-sneak' },
+          permanence: 'persistent',
+          note: 'Supreme Sneak: moved no more than half your speed'
+        }],
+        narrative: [{
+          text: 'Turn this on for a turn in which you moved no more than half your '
+            + 'speed. The app does not track movement.',
+          toggleId: 'rogue.supreme-sneak', dmPromptable: true
+        }]
+      })
+    },
+    {
+      id: 'srd:subclass.thief.use-magic-device', name: 'Use Magic Device',
+      provenance: 'srd', contentVersion: 1, grantedAtLevel: 13,
+      effects: source({
+        id: 'srd:subclass.thief.use-magic-device', name: 'Use Magic Device',
+        // Ignoring item requirements would be a capability the attunement and
+        // equip gates read. Items in the content set carry no class, race or
+        // level requirements yet, so there is nothing here to ignore.
+        narrative: [{
+          text: 'You ignore all class, race and level requirements on the use of '
+            + 'magic items. No item in the content set carries such a requirement '
+            + 'yet, so this currently changes nothing.',
+          dmPromptable: false
+        }]
+      })
+    },
+    {
+      id: 'srd:subclass.thief.thiefs-reflexes', name: 'Thief\'s Reflexes',
+      provenance: 'srd', contentVersion: 1, grantedAtLevel: 17,
+      effects: source({
+        id: 'srd:subclass.thief.thiefs-reflexes', name: 'Thief\'s Reflexes',
+        completeness: 'partial',
+        // Two turns in a round. There is no initiative order and no round
+        // structure to take a second turn in.
+        narrative: [{
+          text: 'You take two turns during the first round of any combat: one at '
+            + 'your initiative, one at your initiative minus 10. Not available if '
+            + 'you are surprised. The app has no turn order to insert this into.',
+          dmPromptable: true
         }]
       })
     }
@@ -614,7 +945,13 @@ export const MACE: ItemDefinition = {
 
 export const PARTY_SPECIES: SpeciesDefinition[] = [HALFLING, HUMAN]
 export const PARTY_CLASSES: ClassDefinition[] = [ROGUE, CLERIC]
-export const PARTY_SUBCLASSES: SubclassDefinition[] = [LIFE_DOMAIN]
+export const PARTY_SUBCLASSES: SubclassDefinition[] = [LIFE_DOMAIN, THIEF]
+
+/** Columns nothing reads yet. */
+export const ROGUE_TABLE = {
+  asiLevels: ROGUE_ASI_LEVELS,
+  sneakAttackDice: ROGUE_SNEAK_ATTACK_DICE
+}
 
 /** Columns nothing reads yet. */
 export const CLERIC_TABLE = {

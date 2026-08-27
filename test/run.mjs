@@ -66,6 +66,7 @@ for (const suite of [
   'test-wizard.mjs',
   'test-cleric.mjs',
   'test-bard.mjs',
+  'test-rogue.mjs',
   'test-sorcerer.mjs',
   'test-bard-known-spells.mjs',
   'test-roll-damage.mjs'

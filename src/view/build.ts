@@ -8,7 +8,8 @@
 
 import type {
   Ability, ActionDefinition, ClassDefinition, ContentIndex, DamageType, EffectSource,
-  ItemDefinition, ResourceDefinition, RollResolution, SpellDefinition, StatValue, Term
+  ItemDefinition, ProficiencyCategory, ResourceDefinition, RollResolution, SpellDefinition,
+  StatValue, Term
 } from '../rules/types.js'
 import { ABILITIES } from '../rules/types.js'
 import type { Resolution } from '../rules/resolve.js'
@@ -21,7 +22,7 @@ import { resolveSpellcasting, type CastableSpell, type SlotOption } from '../rul
 import { resolveSpellAttackRoll, resolveSpellEffect } from '../rules/spellEffect.js'
 import {
   abilityModifierPath, abilityScorePath, ARMOR_CLASS, damageReductionPath, DAMAGE_TYPE_PATHS,
-  HP_MAX, INITIATIVE, PROFICIENCY_BONUS, speedPath,
+  HP_MAX, INITIATIVE, JUMP_HIGH, JUMP_LONG, PROFICIENCY_BONUS, speedPath,
   SPELL_ATTACK, SPELL_SAVE_DC, SPELLS_PREPARED_MAX
 } from '../rules/statPaths.js'
 import { SRD_SKILLS } from '../rules/index.js'
@@ -160,7 +161,10 @@ function describeSource(
     } else if (m.channel === 'roll' && m.rollOp) {
       mech.push(`${m.rollOp} on ${describeScope(m)}`)
     } else if (m.channel === 'capability' && m.capability) {
-      mech.push(m.capOp === 'revoke' ? `cannot ${m.capability}` : `can ${m.capability}`)
+      // Capability names are camelCase keys — "cannot beSurprised" is the app
+      // talking to itself, the same way a raw stat path is.
+      const cap = humanise(m.capability)
+      mech.push(m.capOp === 'revoke' ? `cannot ${cap}` : `can ${cap}`)
     }
 
     if (mech.length === 0) {
@@ -193,14 +197,65 @@ function describeSource(
     // Content may grant proficiency in an item this deployment has not loaded.
     // The id's last segment is still a readable word, and a readable word beats
     // showing the player a database key.
-    const label = describeProficiency(
-      p.category, (id) => content?.items.get(id)?.name ?? id.split('.').pop() ?? id)
-    out.push(p.level === 'expertise' ? `expertise in ${label}`
-      : p.level === 'half' ? `half proficiency in ${label}`
-        : `proficient in ${label}`)
+    const nameOf = (id: string) => content?.items.get(id)?.name ?? id.split('.').pop() ?? id
+    const word = (level: string, label: string) =>
+      level === 'expertise' ? `expertise in ${label}`
+        : level === 'half' ? `half proficiency in ${label}`
+          : `proficient in ${label}`
+
+    // A grant may name a *selection* rather than a category — the rogue's four
+    // skills, the fighter's two, Resilient's ability. Describing the grant as
+    // authored reads "proficient in the undefined skill", because the concrete
+    // id lives in the player's answer and not in the content. So describe the
+    // answer, exactly as `expandSelections` resolves it.
+    const chosen = (p.category as { selection?: string } | undefined)?.selection
+    if (chosen) {
+      const answers = resolution.character.selections?.[source.id]?.[chosen] ?? []
+      if (answers.length === 0) {
+        const prompt = source.selections?.find((sel) => sel.id === chosen)?.prompt
+        out.push(prompt ?? 'a proficiency you have not chosen yet')
+        continue
+      }
+      for (const answer of answers) {
+        out.push(word(p.level, readableProficiency(
+          { ...p.category, id: answer, itemId: answer, ability: answer } as never, nameOf)))
+      }
+      continue
+    }
+
+    out.push(word(p.level, readableProficiency(p.category, nameOf)))
+  }
+
+  // An action is an effect: a feature whose whole contribution is something new
+  // to do had no lines at all, so buildEffects dropped it from the sheet
+  // entirely. Cunning Action and Fast Hands are two of the rogue's three
+  // signature features and neither appeared under Features.
+  for (const a of source.actions ?? []) {
+    const cost = a.cost === 'bonusAction' ? 'a bonus action'
+      : a.cost === 'reaction' ? 'a reaction'
+        : a.cost === 'free' ? 'no action'
+          : 'an action'
+    out.push(`${a.name} — ${cost}`)
   }
 
   return out
+}
+
+const SKILL_NAME = new Map(SRD_SKILLS.map((s) => [s.id, s.name]))
+
+/**
+ * `describeProficiency` in the words a player uses.
+ *
+ * It returns ids — "the sleight-of-hand skill", "thieves-tools" — because it is
+ * the rules layer's, shared with validation messages where an id is the point.
+ * On a character sheet the id is the app talking to itself.
+ */
+function readableProficiency(
+  c: ProficiencyCategory, nameOf: (id: string) => string
+): string {
+  if (c.kind === 'skill') return SKILL_NAME.get(c.id) ?? humanise(c.id)
+  if (c.kind === 'tool') return humanise(c.id)
+  return describeProficiency(c, nameOf)
 }
 
 /**
@@ -228,6 +283,11 @@ function prettyPath(path: string, nameOf?: (resourceId: string) => string | unde
   }
   if (path.startsWith('resistance.')) return `${path.slice(11)} resistance`
   if (path.startsWith('damageReduction.')) return `${path.slice(16)} damage taken`
+  if (path === JUMP_LONG) return 'long jump distance'
+  if (path === JUMP_HIGH) return 'high jump distance'
+  // movementCost.<kind> is a multiplier on difficult ground, climbing, swimming
+  // and standing up. "climbing costs" reads; "movementCost.climb" does not.
+  if (path.startsWith('movementCost.')) return `${humanise(path.slice(13))} cost`
 
   // resource.<id>.max — the id is a key, the name is on the definition.
   if (path.startsWith('resource.') && path.endsWith('.max')) {

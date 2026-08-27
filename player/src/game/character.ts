@@ -112,7 +112,15 @@ export const PIP_UNDERBOUGH: Character = {
   playerId: 'player-3',
   speciesId: 'srd:species.halfling',
   subspeciesId: 'srd:species.halfling.lightfoot',
-  classLevels: [{ classId: 'srd:class.rogue', level: 5 }],
+  classLevels: [{
+    classId: 'srd:class.rogue', level: 5, subclassId: 'srd:subclass.thief'
+  }],
+  selections: {
+    'srd:class.rogue.proficiencies': {
+      skills: ['acrobatics', 'perception', 'sleight-of-hand', 'stealth']
+    },
+    'srd:class.rogue.expertise': { expertise: ['perception', 'stealth'] }
+  },
   abilityScoreBase: { str: 10, dex: 16, con: 14, int: 13, wis: 12, cha: 14 },
   buildChoices: [{ atLevel: 4, kind: 'feat', value: 'srd:feat.alert' }],
   hitPointsCurrent: 33,
