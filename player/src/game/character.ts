@@ -290,7 +290,61 @@ export const GROG_IRONJAW: Character = {
   toggles: {}
 }
 
+/**
+ * Nyx Vaelthorne, Tiefling Warlock 11 (the Fiend) — the odd caster.
+ *
+ * Every other spellcaster on this roster has a ladder of slots. The warlock
+ * has one pool whose *level* climbs, which the engine could not express at all
+ * until this character needed it: `spellSlot.level` was a literal number, so
+ * the class was three pools with two of them permanently empty.
+ *
+ * Eleventh so the pool has reached its ceiling of 5th-level slots, the count
+ * has just risen to three, and the first Mystic Arcanum is in play.
+ */
+export const NYX_VAELTHORNE: Character = {
+  id: 'char:nyx',
+  campaignId: 'camp-1',
+  name: 'Nyx Vaelthorne',
+  playerId: 'player-7',
+  speciesId: 'srd:species.tiefling',
+  classLevels: [{
+    classId: 'srd:class.warlock', level: 11, subclassId: 'srd:subclass.fiend'
+  }],
+  abilityScoreBase: { str: 8, dex: 14, con: 14, int: 12, wis: 10, cha: 16 },
+  buildChoices: [],
+  // 8 + CON at 1st (10), then 5 + CON per level after (7 x 10 = 70): 80.
+  hitPointsCurrent: 80,
+  hitPointsTemp: 0,
+  hitDiceSpent: {},
+  resourcesSpent: {},
+  conditions: [],
+  effectInstances: [],
+  exhaustionLevel: 0,
+  // Two of seven skills, chosen — this used to be Arcana and Deception for
+  // every warlock the content could produce.
+  selections: {
+    'srd:class.warlock.proficiencies': { skills: ['arcana', 'deception'] },
+    'srd:class.warlock.pact-magic': {
+      cantrips: ['srd:spell.eldritch-blast', 'srd:spell.chill-touch'],
+      'spells-known': ['srd:spell.hellish-rebuke', 'srd:spell.charm-person']
+    },
+    'srd:class.warlock.pact-boon': { boon: ['pact-of-the-tome'] }
+  },
+  inventory: {
+    instances: [
+      { instanceId: 'w-dagger', definitionId: 'srd:weapon.dagger', contentVersion: 1, quantity: 2, identified: true },
+      { instanceId: 'w-leather', definitionId: 'srd:armor.leather', contentVersion: 1, identified: true },
+      { instanceId: 'w-potion', definitionId: 'srd:item.potion-of-healing', contentVersion: 1, quantity: 2, identified: true }
+    ],
+    equipped: { mainHand: 'w-dagger', armor: 'w-leather' },
+    attunedInstanceIds: []
+  },
+  deathSaves: { successes: 0, failures: 0 },
+  toggles: { 'wearing-armor': true }
+}
+
 /** The party. One entry per archetype the content can express today. */
 export const PARTY: Character[] = [
-  SIR_ALDREN, ILYANA_VESS, PIP_UNDERBOUGH, BROTHER_ALDWIN, WEN_SHAO, GROG_IRONJAW
+  SIR_ALDREN, ILYANA_VESS, PIP_UNDERBOUGH, BROTHER_ALDWIN, WEN_SHAO,
+  GROG_IRONJAW, NYX_VAELTHORNE
 ]

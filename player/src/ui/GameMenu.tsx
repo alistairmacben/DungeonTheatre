@@ -653,12 +653,16 @@ function SpellsTab({ view, dispatch, bar, prefs }: {
       <div className="flex flex-wrap items-end gap-6">
         <Stat label="Spell save DC"><Value readout={casting.saveDc} size="lg" /></Stat>
         <Stat label="Spell attack"><Value readout={casting.attackBonus} size="lg" /></Stat>
-        <Stat label="Prepared">
-          <span className="text-xl tabular-nums text-parchment">
-            {casting.preparedCount}
-            <span className="text-sm text-parchment/40"> / {casting.preparedMax}</span>
-          </span>
-        </Stat>
+        {/* A known caster prepares nothing, so "0 / 0" is a true statement
+            about a question the warlock, bard and sorcerer are never asked. */}
+        {casting.preparedMax > 0 && (
+          <Stat label="Prepared">
+            <span className="text-xl tabular-nums text-parchment">
+              {casting.preparedCount}
+              <span className="text-sm text-parchment/40"> / {casting.preparedMax}</span>
+            </span>
+          </Stat>
+        )}
         {casting.concentratingOn && (
           <Stat label="Concentrating">
             <button

@@ -17,7 +17,8 @@
 
 import type {
   ClassDefinition, ClassFeatureDefinition, EffectSource, FeatDefinition,
-  ItemDefinition, Modifier, ProficiencyGrant, SpellDefinition, SpeciesDefinition
+  ItemDefinition, Modifier, ProficiencyGrant, SpellDefinition, SpeciesDefinition,
+  SubclassDefinition
 } from '../rules/types.js'
 import {
   abilityModifierPath, abilityScorePath, DAMAGE_WEAPON, declareResourceMax,
@@ -50,6 +51,16 @@ const prof = (
   level: ProficiencyGrant['level'] = 'proficient'
 ): ProficiencyGrant =>
   ({ id: id(), category, level, rounding: 'floor', grantsProficiency: true })
+
+/**
+ * A proficiency the player picks. `expandSelections` turns one authored grant
+ * into as many held proficiencies as the answer names.
+ */
+const chosenProf = (kind: 'skill' | 'tool', selectionId: string): ProficiencyGrant => ({
+  id: id(),
+  category: { kind, selection: selectionId } as never,
+  level: 'proficient', rounding: 'floor', grantsProficiency: true
+})
 
 // ===========================================================================
 // Spells
@@ -316,26 +327,55 @@ export const TIEFLING: SpeciesDefinition = {
 // Class — Warlock, levels 1-5
 // ===========================================================================
 
-// PACT SLOTS.
-//
-// The SRD warlock has ONE pool of slots whose *level* rises with them: 1st at
-// warlock 1-2, 2nd at 3-4, 3rd at 5-6. `ResourceDefinition.spellSlot.level` is
-// a literal number, so one definition cannot say that. What it can say is that
-// three pools exist and that two of them are always empty, because the
-// *maximum* is a stat path and a stat path takes a formula and a predicate.
-//
-// So the counts below are the warlock table read sideways: at any level exactly
-// one band's condition holds, and the other two pools resolve to a maximum of
-// zero. The numbers a player sees are right at every level from 1 to 5, and the
-// short-rest cadence, the slot group and the ability all come out of the
-// existing vocabulary untouched.
-//
-// It is still three rows where the SRD has one, and the honest fix is one line
-// in types.ts: `spellSlot?: { group: string; level: number | ValueExpr }`.
-// Reported rather than made, because the file that would change is not mine.
-const PACT_SLOTS_1_MAX = declareResourceMax('warlock.pact-slots.1')
-const PACT_SLOTS_2_MAX = declareResourceMax('warlock.pact-slots.2')
-const PACT_SLOTS_3_MAX = declareResourceMax('warlock.pact-slots.3')
+// ---------------------------------------------------------------------------
+// The Warlock table (SRD p46), transcribed
+// ---------------------------------------------------------------------------
+
+/** Spell Slots: 1, then 2 from 2nd, 3 from 11th, 4 from 17th. */
+const PACT_SLOT_COUNT = [
+  1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4
+]
+
+/**
+ * Slot Level: 1st, rising every two levels to 5th at warlock 9 and staying.
+ *
+ * This is the column that makes the warlock the warlock — one pool whose level
+ * climbs — and until now it could not be said at all. `spellSlot.level` was a
+ * literal number, so the class was modelled as three pools with two of them
+ * always empty, and a previous author left a note naming the one-line fix in
+ * types.ts. Extending the class past 5th would have made it five pools with
+ * four empty, so the fix was made: the level is a ValueExpr now, a number is
+ * still a valid ValueExpr, and every other caster is untouched.
+ */
+const PACT_SLOT_LEVEL = [
+  1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5
+]
+
+/** Cantrips Known: two, three from 4th, four from 10th. */
+const WARLOCK_CANTRIPS_KNOWN = [
+  2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4
+]
+
+/** Spells Known: 2 at 1st, rising to 15 — and flat on every even level from 10th. */
+const WARLOCK_SPELLS_KNOWN = [
+  2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 11, 11, 12, 12, 13, 13, 14, 14, 15, 15
+]
+
+/** Invocations Known: none at 1st, two at 2nd, rising to eight. */
+const WARLOCK_INVOCATIONS_KNOWN = [
+  0, 2, 2, 2, 3, 3, 4, 4, 5, 5, 5, 6, 6, 6, 7, 7, 7, 8, 8, 8
+]
+
+/** The warlock takes the standard five Ability Score Improvements. */
+const WARLOCK_ASI_LEVELS = [4, 8, 12, 16, 19]
+
+/** "Choose two skills from" — seven, and the player picks which two. */
+const WARLOCK_SKILLS = [
+  'arcana', 'deception', 'history', 'intimidation', 'investigation',
+  'nature', 'religion'
+]
+
+const PACT_SLOTS_MAX = declareResourceMax('warlock.pact-slots')
 
 /**
  * The warlock's candidate spells, level by level.
@@ -362,7 +402,12 @@ const WARLOCK_SPELL_IDS = [
  * `grantedAtLevel` already gates it, and the selections accumulate. Selection
  * answers are keyed by source id, so every one of these is a separate question.
  */
-const ORDINAL: Record<number, string> = { 1: '1st', 2: '2nd', 3: '3rd', 4: '4th', 5: '5th' }
+const ORDINAL: Record<number, string> = {
+  1: '1st', 2: '2nd', 3: '3rd', 4: '4th', 5: '5th', 6: '6th', 7: '7th',
+  8: '8th', 9: '9th', 10: '10th', 11: '11th', 12: '12th', 13: '13th',
+  14: '14th', 15: '15th', 16: '16th', 17: '17th', 18: '18th', 19: '19th',
+  20: '20th'
+}
 
 function spellsKnownAt(level: number, count: number): ClassFeatureDefinition {
   const fid = `srd:class.warlock.spells-known.${level}`
@@ -383,6 +428,82 @@ function spellsKnownAt(level: number, count: number): ClassFeatureDefinition {
     })
   }
 }
+
+/** One level-up's worth of new cantrips, from the Cantrips Known column. */
+function cantripsKnownAt(level: number, count: number): ClassFeatureDefinition {
+  const fid = `srd:class.warlock.cantrips-known.${level}`
+  const name = `Warlock Cantrips Known (${ORDINAL[level]} level)`
+  return {
+    id: fid, name, provenance: 'srd', contentVersion: 1, grantedAtLevel: level,
+    effects: source({
+      id: fid, name,
+      selections: [{
+        id: 'cantrips',
+        prompt: `Choose ${count} more warlock cantrip${count === 1 ? '' : 's'}`,
+        kind: 'spellList', count, from: WARLOCK_CANTRIP_IDS
+      }],
+      spells: [{ selectionId: 'cantrips', availability: 'always', ability: 'cha' }]
+    })
+  }
+}
+
+const CANTRIP_FEATURES = WARLOCK_CANTRIPS_KNOWN
+  .map((known, i) => {
+    const level = i + 1
+    if (level === 1) return undefined // Granted by Pact Magic itself.
+    const delta = known - WARLOCK_CANTRIPS_KNOWN[i - 1]!
+    return delta > 0 ? cantripsKnownAt(level, delta) : undefined
+  })
+  .filter((f): f is ClassFeatureDefinition => f !== undefined)
+
+const SPELLS_KNOWN_FEATURES = WARLOCK_SPELLS_KNOWN
+  .map((known, i) => {
+    const level = i + 1
+    if (level === 1) return undefined // Granted by Pact Magic itself.
+    const delta = known - WARLOCK_SPELLS_KNOWN[i - 1]!
+    return delta > 0 ? spellsKnownAt(level, delta) : undefined
+  })
+  .filter((f): f is ClassFeatureDefinition => f !== undefined)
+
+/**
+ * Mystic Arcanum: one 6th-level spell at 11th, and one more a tier higher at
+ * 13th, 15th and 17th, each castable once per long rest without a slot.
+ *
+ * The use is a resource and reads correctly. The *spell* is not offered as a
+ * selection, because the content set holds no spell above 3rd level and a
+ * selection whose pool cannot answer it is an integrity error — correctly so.
+ * Naming the tier in the narrative is the honest version of "choose one 6th-
+ * level warlock spell" when there are none to choose from yet.
+ */
+const MYSTIC_ARCANA = ([[11, 6], [13, 7], [15, 8], [17, 9]] as const)
+  .map(([level, spellLevel]): ClassFeatureDefinition => {
+    const fid = `srd:class.warlock.mystic-arcanum.${spellLevel}`
+    const name = `Mystic Arcanum (${ORDINAL[spellLevel]} level)`
+    const rid = `warlock.mystic-arcanum.${spellLevel}`
+    return {
+      id: fid, name, provenance: 'srd', contentVersion: 1, grantedAtLevel: level,
+      effects: source({
+        id: fid, name,
+        completeness: 'partial',
+        modifiers: [add(declareResourceMax(rid), 1, { note: 'once per long rest' })],
+        resources: [{
+          id: rid, name, max: declareResourceMax(rid),
+          refresh: { kind: 'longRest' }, display: 'uses',
+          group: 'Pact Magic', order: 10 + spellLevel
+        }],
+        narrative: [{
+          text: `Choose one ${ORDINAL[spellLevel]}-level spell from the warlock `
+            + 'spell list. You can cast it once without expending a spell slot, '
+            + 'and regain the use on a long rest. The spell is not offered as a '
+            + 'choice here because no spell of that level is in the content set '
+            + 'yet — write it down and cast it against the use below.',
+          dmPromptable: true
+        }]
+      })
+    }
+  })
+
+const ELDRITCH_MASTER_MAX = declareResourceMax('warlock.eldritch-master')
 
 export const WARLOCK_CLASS: ClassDefinition = {
   id: WARLOCK, name: 'Warlock', provenance: 'srd', contentVersion: 1,
@@ -407,9 +528,15 @@ export const WARLOCK_CLASS: ClassDefinition = {
           prof({ kind: 'save', ability: 'cha' }),
           prof({ kind: 'armor', category: 'light' }),
           prof({ kind: 'weaponCategory', category: 'simple' }),
-          prof({ kind: 'skill', id: 'arcana' }),
-          prof({ kind: 'skill', id: 'deception' })
-        ]
+          // "Choose two skills from" — seven of them, and which two is the
+          // player's. This used to be Arcana and Deception for every warlock
+          // the content could produce.
+          chosenProf('skill', 'skills')
+        ],
+        selections: [{
+          id: 'skills', prompt: 'Choose two warlock skills', kind: 'skill', count: 2,
+          from: WARLOCK_SKILLS
+        }]
       })
     },
     {
@@ -432,49 +559,23 @@ export const WARLOCK_CLASS: ClassDefinition = {
             id: id(), channel: 'capability', capability: 'castSpells',
             capOp: 'grant', permanence: 'persistent'
           },
-          // One slot at 1st level, two from 2nd — and the band ends at warlock
-          // 3, where the pool's level rises and this pool ceases to exist.
-          add(PACT_SLOTS_1_MAX, { min: [2, { classLevel: WARLOCK }] }, {
-            condition: { not: { classLevelAtLeast: [WARLOCK, 3] } },
-            note: '1 pact slot at 1st level, 2 from 2nd'
-          }),
-          add(PACT_SLOTS_2_MAX, 2, {
-            condition: {
-              all: [
-                { classLevelAtLeast: [WARLOCK, 3] },
-                { not: { classLevelAtLeast: [WARLOCK, 5] } }
-              ]
-            },
-            note: 'pact slots become 2nd level at warlock 3'
-          }),
-          add(PACT_SLOTS_3_MAX, 2, {
-            condition: { classLevelAtLeast: [WARLOCK, 5] },
-            note: 'pact slots become 3rd level at warlock 5'
-          })
+          // One pool, one column. No conditions and no empty rows.
+          add(PACT_SLOTS_MAX,
+            { classLevelTable: { classId: WARLOCK, values: PACT_SLOT_COUNT } },
+            { note: 'Spell Slots column of the Warlock table' })
         ],
         // `refresh: shortRest` already means "a short *or* a long rest" —
         // applyRest restores a short-rest resource on either. The cadence that
         // makes the warlock the warlock needed no new refresh rule.
-        resources: [
-          {
-            id: 'warlock.pact-slots.1', name: 'Pact Slots (1st level)',
-            max: PACT_SLOTS_1_MAX, refresh: { kind: 'shortRest' },
-            display: 'slots', group: 'Pact Magic', order: 1,
-            spellSlot: { group: 'pact', level: 1 }
-          },
-          {
-            id: 'warlock.pact-slots.2', name: 'Pact Slots (2nd level)',
-            max: PACT_SLOTS_2_MAX, refresh: { kind: 'shortRest' },
-            display: 'slots', group: 'Pact Magic', order: 2,
-            spellSlot: { group: 'pact', level: 2 }
-          },
-          {
-            id: 'warlock.pact-slots.3', name: 'Pact Slots (3rd level)',
-            max: PACT_SLOTS_3_MAX, refresh: { kind: 'shortRest' },
-            display: 'slots', group: 'Pact Magic', order: 3,
-            spellSlot: { group: 'pact', level: 3 }
+        resources: [{
+          id: 'warlock.pact-slots', name: 'Pact Slots',
+          max: PACT_SLOTS_MAX, refresh: { kind: 'shortRest' },
+          display: 'slots', group: 'Pact Magic', order: 1,
+          spellSlot: {
+            group: 'pact',
+            level: { classLevelTable: { classId: WARLOCK, values: PACT_SLOT_LEVEL } }
           }
-        ],
+        }],
         // A known caster prepares nothing: everything chosen is `always`
         // available. The difference from the wizard is one field, exactly as
         // the difference between the wizard and the cleric was one field.
@@ -497,10 +598,9 @@ export const WARLOCK_CLASS: ClassDefinition = {
         ],
         narrative: [{
           text: 'Every pact slot is the same level and a spell is always cast '
-            + 'at that level — there is no casting a warlock spell down. The '
-            + 'slot list offers the higher pools as choices because that is '
-            + 'what upcasting means everywhere else; for you there is only '
-            + 'ever one pool with anything in it.',
+            + 'at that level — there is no casting a warlock spell down. Your '
+            + 'slots are 1st level, and rise to 2nd at 3rd level, 3rd at 5th, '
+            + '4th at 7th and 5th at 9th, where they stay.',
           dmPromptable: false
         }, {
           text: 'On each level-up you may replace one warlock spell you know '
@@ -510,7 +610,6 @@ export const WARLOCK_CLASS: ClassDefinition = {
         }]
       })
     },
-    spellsKnownAt(2, 1),
     {
       id: 'srd:class.warlock.eldritch-invocations', name: 'Eldritch Invocations',
       provenance: 'srd', contentVersion: 1, grantedAtLevel: 2,
@@ -527,8 +626,9 @@ export const WARLOCK_CLASS: ClassDefinition = {
         // choices have no per-source budget, so the count is a table rule for
         // the table to keep.
         narrative: [{
-          text: 'You know two eldritch invocations at 2nd level and three at '
-            + '5th, and may swap one whenever you gain a warlock level. '
+          text: 'You know two eldritch invocations at 2nd level, three at 5th, '
+            + 'four at 7th, five at 9th, six at 12th, seven at 15th and eight '
+            + 'at 18th, and may swap one whenever you gain a warlock level. '
             + 'Invocations are taken as feats; nothing counts them for you, so '
             + 'check the number against your level when you take one.',
           dmPromptable: true
@@ -536,7 +636,6 @@ export const WARLOCK_CLASS: ClassDefinition = {
         completeness: 'partial'
       })
     },
-    spellsKnownAt(3, 1),
     {
       id: 'srd:class.warlock.pact-boon', name: 'Pact Boon',
       provenance: 'srd', contentVersion: 1, grantedAtLevel: 3,
@@ -567,35 +666,83 @@ export const WARLOCK_CLASS: ClassDefinition = {
         completeness: 'partial'
       })
     },
+    // The Cantrips Known and Spells Known columns, one level-up per row that
+    // rises. `SelectionDefinition.count` is a number and both columns move, so
+    // each increase is the feature the table says it is — and a level where a
+    // column is flat produces nothing, which is why 10th, 12th, 14th, 16th,
+    // 18th and 20th learn no new spell.
+    ...CANTRIP_FEATURES,
+    ...SPELLS_KNOWN_FEATURES,
+
+    // --- 11th, 13th, 15th, 17th --------------------------------------------
+    ...MYSTIC_ARCANA,
+
+    // --- 20th --------------------------------------------------------------
     {
-      id: 'srd:class.warlock.cantrip-3', name: 'Warlock Cantrips Known (4th level)',
-      provenance: 'srd', contentVersion: 1, grantedAtLevel: 4,
+      id: 'srd:class.warlock.eldritch-master', name: 'Eldritch Master',
+      provenance: 'srd', contentVersion: 1, grantedAtLevel: 20,
       effects: source({
-        id: 'srd:class.warlock.cantrip-3', name: 'Warlock Cantrips Known (4th level)',
-        selections: [{
-          id: 'cantrips', prompt: 'Choose 1 more warlock cantrip',
-          kind: 'spellList', count: 1, from: WARLOCK_CANTRIP_IDS
+        id: 'srd:class.warlock.eldritch-master', name: 'Eldritch Master',
+        // The use is a resource and the action is an action; what neither can
+        // say is "and now refill that other pool". No ActionDefinition field
+        // restores a resource — costs go one way — so the refill is the
+        // player's to apply.
+        completeness: 'partial',
+        modifiers: [add(ELDRITCH_MASTER_MAX, 1, { note: 'once per long rest' })],
+        resources: [{
+          id: 'warlock.eldritch-master', name: 'Eldritch Master',
+          max: ELDRITCH_MASTER_MAX, refresh: { kind: 'longRest' },
+          display: 'uses', group: 'Pact Magic', order: 20
         }],
-        spells: [{ selectionId: 'cantrips', availability: 'always', ability: 'cha' }]
+        actions: [{
+          id: 'warlock.eldritch-master.entreat', name: 'Entreat Your Patron',
+          kind: 'ability', cost: 'action',
+          description: 'Spend 1 minute entreating your patron to regain all expended '
+            + 'pact slots.',
+          requirements: { resourceAtLeast: ['warlock.eldritch-master', 1] },
+          costs: { 'warlock.eldritch-master': 1 }
+        }],
+        narrative: [{
+          text: 'Spending this use does not refill your pact slots for you — '
+            + 'nothing can yet restore one resource by spending another. Reset '
+            + 'the slot track by hand.',
+          dmPromptable: false
+        }]
       })
-    },
-    spellsKnownAt(4, 1),
-    spellsKnownAt(5, 1),
-    // -----------------------------------------------------------------------
-    // The Fiend — a subclass authored as ordinary class features, the way the
-    // Life Domain and the School of Evocation already are.
-    // -----------------------------------------------------------------------
+    }
+  ]
+}
+
+// ===========================================================================
+// Subclass — The Fiend (SRD p50-51)
+// ===========================================================================
+//
+// It was authored as five class features every warlock received whether or not
+// they had made that pact, while the class *also* declared a subclass slot
+// pointing at a `srd:subclass.fiend` nobody had defined. The cleric's Life
+// Domain, the bard's College of Lore, the rogue's Thief and the barbarian's
+// Berserker were all in the same shape.
+
+const DARK_ONES_LUCK_MAX = declareResourceMax('warlock.dark-ones-own-luck')
+const HURL_THROUGH_HELL_MAX = declareResourceMax('warlock.hurl-through-hell')
+
+export const FIEND: SubclassDefinition = {
+  id: 'srd:subclass.fiend', name: 'The Fiend',
+  provenance: 'srd', contentVersion: 1,
+  classId: WARLOCK,
+  features: [
     {
-      id: 'srd:class.warlock.fiend.expanded-spells', name: 'The Fiend: Expanded Spell List',
+      id: 'srd:subclass.fiend.expanded-spells', name: 'Expanded Spell List',
       provenance: 'srd', contentVersion: 1, grantedAtLevel: 1,
       effects: source({
-        id: 'srd:class.warlock.fiend.expanded-spells', name: 'The Fiend: Expanded Spell List',
+        id: 'srd:subclass.fiend.expanded-spells', name: 'Expanded Spell List',
         // "These spells are added to the warlock spell list for you" — it
         // widens the candidate set of a selection someone else declared, and
-        // does not grant anything. `SelectionDefinition.from` is a fixed array
-        // on the declaring source, so there is no vocabulary for widening it
-        // from outside. A grant would be the wrong shape: an expanded-list
-        // spell still has to be learned, and still costs a spell known.
+        // grants nothing. `SelectionDefinition.from` is a fixed array on the
+        // declaring source, so there is no vocabulary for widening it from
+        // outside. A grant would be the wrong shape: an expanded-list spell
+        // still has to be learned, and still costs a spell known.
+        completeness: 'partial',
         narrative: [{
           text: 'Burning hands and command (1st), blindness/deafness and '
             + 'scorching ray (2nd), fireball and stinking cloud (3rd), fire '
@@ -603,21 +750,21 @@ export const WARLOCK_CLASS: ClassDefinition = {
             + 'count as warlock spells for you. They are not granted — you '
             + 'still learn them as spells known.',
           dmPromptable: true
-        }],
-        completeness: 'partial'
+        }]
       })
     },
     {
-      id: 'srd:class.warlock.fiend.dark-ones-blessing', name: "Dark One's Blessing",
+      id: 'srd:subclass.fiend.dark-ones-blessing', name: "Dark One's Blessing",
       provenance: 'srd', contentVersion: 1, grantedAtLevel: 1,
       effects: source({
-        id: 'srd:class.warlock.fiend.dark-ones-blessing', name: "Dark One's Blessing",
+        id: 'srd:subclass.fiend.dark-ones-blessing', name: "Dark One's Blessing",
         // The trigger declares the window; nothing can declare what happens in
         // it. Temporary hit points are character state with no stat path and
         // no modifier op, so the amount — a perfectly ordinary ValueExpr — has
         // nowhere to be written down. It is stated in the narrative instead of
         // being approximated onto hitPoints.max, which would be a different
         // rule wearing this one's name.
+        completeness: 'partial',
         triggers: [{
           id: 'warlock.dark-ones-blessing',
           event: { types: ['creature.reducedToZeroHitPoints'], subject: 'other' },
@@ -629,8 +776,99 @@ export const WARLOCK_CLASS: ClassDefinition = {
             + 'warlock level, minimum 1. Add them by hand — temporary hit '
             + 'points are not yet something a feature can grant.',
           dmPromptable: false
+        }]
+      })
+    },
+    {
+      id: 'srd:subclass.fiend.dark-ones-own-luck', name: "Dark One's Own Luck",
+      provenance: 'srd', contentVersion: 1, grantedAtLevel: 6,
+      effects: source({
+        id: 'srd:subclass.fiend.dark-ones-own-luck', name: "Dark One's Own Luck",
+        // The use is a resource and reads correctly. Adding a d10 to a roll
+        // already made is not a `rollOp` — the pipeline can reroll a face and
+        // can take the higher of two d20s, but it cannot introduce a second
+        // die of a different size after the fact.
+        completeness: 'partial',
+        modifiers: [add(DARK_ONES_LUCK_MAX, 1, { note: 'once per short or long rest' })],
+        resources: [{
+          id: 'warlock.dark-ones-own-luck', name: "Dark One's Own Luck",
+          max: DARK_ONES_LUCK_MAX, refresh: { kind: 'shortRest' },
+          display: 'uses', group: 'The Fiend', order: 6
         }],
-        completeness: 'partial'
+        actions: [{
+          id: 'warlock.dark-ones-own-luck.use', name: "Dark One's Own Luck",
+          kind: 'ability', cost: 'free',
+          description: 'Add a d10 to an ability check or saving throw, after seeing '
+            + 'the roll but before its effects.',
+          requirements: { resourceAtLeast: ['warlock.dark-ones-own-luck', 1] },
+          costs: { 'warlock.dark-ones-own-luck': 1 }
+        }],
+        narrative: [{
+          text: 'Spend the use, roll a d10 yourself and add it to the check or '
+            + 'save you just made. You may decide after seeing the d20 and '
+            + 'before the roll takes effect.',
+          dmPromptable: true
+        }]
+      })
+    },
+    {
+      id: 'srd:subclass.fiend.fiendish-resilience', name: 'Fiendish Resilience',
+      provenance: 'srd', contentVersion: 1, grantedAtLevel: 10,
+      effects: source({
+        id: 'srd:subclass.fiend.fiendish-resilience', name: 'Fiendish Resilience',
+        // The choice is recorded; the resistance it grants is not. A resistance
+        // modifier needs a concrete `resistance.<type>` path, and the type here
+        // lives in the player's answer — no Predicate reads a selection, which
+        // is the same wall Pact Boon and Resilient are already behind. The
+        // alternative, thirteen toggled modifiers the player must keep mutually
+        // exclusive, would be worse than saying so.
+        completeness: 'partial',
+        selections: [{
+          id: 'resistance', prompt: 'Choose a damage type to resist', kind: 'other',
+          count: 1,
+          from: [
+            'acid', 'bludgeoning', 'cold', 'fire', 'force', 'lightning',
+            'necrotic', 'piercing', 'poison', 'psychic', 'radiant',
+            'slashing', 'thunder'
+          ]
+        }],
+        narrative: [{
+          text: 'You gain resistance to the damage type you choose here until '
+            + 'you choose a different one on a later rest. Damage from magical '
+            + 'or silver weapons ignores it. The choice is recorded but the '
+            + 'resistance is not applied — tell the DM.',
+          dmPromptable: true
+        }]
+      })
+    },
+    {
+      id: 'srd:subclass.fiend.hurl-through-hell', name: 'Hurl Through Hell',
+      provenance: 'srd', contentVersion: 1, grantedAtLevel: 14,
+      effects: source({
+        id: 'srd:subclass.fiend.hurl-through-hell', name: 'Hurl Through Hell',
+        // Everything this does happens to another creature, which is the wall
+        // the whole theatre-of-the-mind design sits behind. The use is real.
+        completeness: 'partial',
+        modifiers: [add(HURL_THROUGH_HELL_MAX, 1, { note: 'once per long rest' })],
+        resources: [{
+          id: 'warlock.hurl-through-hell', name: 'Hurl Through Hell',
+          max: HURL_THROUGH_HELL_MAX, refresh: { kind: 'longRest' },
+          display: 'uses', group: 'The Fiend', order: 14
+        }],
+        actions: [{
+          id: 'warlock.hurl-through-hell.use', name: 'Hurl Through Hell',
+          kind: 'ability', cost: 'free',
+          description: 'When you hit a creature, transport it through the lower planes.',
+          requirements: { resourceAtLeast: ['warlock.hurl-through-hell', 1] },
+          costs: { 'warlock.hurl-through-hell': 1 },
+          targets: { selector: 'creature', count: 1 }
+        }],
+        narrative: [{
+          text: 'The target vanishes and returns at the end of your next turn, '
+            + 'taking 10d10 psychic damage unless it is a fiend. The DM rolls '
+            + 'and applies that.',
+          dmPromptable: true
+        }]
       })
     }
   ]
@@ -755,6 +993,25 @@ export const DEVILS_SIGHT = invocation(
 // names it as the reason the save DC is a stat — but it is not in the SRD, and
 // authoring it here would put non-SRD content behind an `srd:` id.
 
+/**
+ * The columns nothing reads yet: the levels at which the warlock takes an
+ * Ability Score Improvement, and the Invocations Known column.
+ *
+ * Exported for the same reason MONK_TABLE and BARBARIAN_TABLE are — there is
+ * no advancement flow to consume the ASI levels, and nothing counts how many
+ * invocations a warlock is holding, because an invocation is a feat and feats
+ * have no per-source budget.
+ */
+export const WARLOCK_TABLE = {
+  asiLevels: WARLOCK_ASI_LEVELS,
+  pactSlots: PACT_SLOT_COUNT,
+  pactSlotLevel: PACT_SLOT_LEVEL,
+  cantripsKnown: WARLOCK_CANTRIPS_KNOWN,
+  spellsKnown: WARLOCK_SPELLS_KNOWN,
+  invocationsKnown: WARLOCK_INVOCATIONS_KNOWN
+}
+
+export const WARLOCK_SUBCLASSES: SubclassDefinition[] = [FIEND]
 export const WARLOCK_SPECIES: SpeciesDefinition[] = [TIEFLING]
 export const WARLOCK_CLASSES: ClassDefinition[] = [WARLOCK_CLASS]
 export const WARLOCK_ITEMS: ItemDefinition[] = []

@@ -128,7 +128,10 @@ export function resolveSpellcasting(
       if (value.maximum <= 0) continue
       const option: SlotOption = {
         resourceId: def.id, label: def.name,
-        level: def.spellSlot.level, remaining: value.remaining
+        // Evaluated against the source that declared it, so a warlock's
+        // `{ classLevelTable }` resolves the same way a resource maximum does.
+        level: r.evaluateValue(def.spellSlot.level, source.id),
+        remaining: value.remaining
       }
       slots.push(option)
       const list = slotsByGroup.get(def.spellSlot.group) ?? []

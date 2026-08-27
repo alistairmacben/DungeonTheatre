@@ -411,8 +411,15 @@ export interface ResourceDefinition {
    * Explicit rather than inferred from the id, so a warlock's single pool of
    * high-level slots, a wizard's ladder and a DM-invented "blood magic" slot
    * are all discoverable without parsing names.
+   *
+   * The level is a ValueExpr because the warlock's is not a constant: it has
+   * one pool whose *level* climbs 1st→5th across levels 1-9, which a literal
+   * number cannot say. Modelling that as five pools with four of them empty
+   * was the workaround, and it put four rows of "0 slots" behind every
+   * warlock. A number is still a valid ValueExpr, so every other caster is
+   * unchanged.
    */
-  spellSlot?: { group: string; level: number }
+  spellSlot?: { group: string; level: ValueExpr }
 }
 
 // ---------------------------------------------------------------------------

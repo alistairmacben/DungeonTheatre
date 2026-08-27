@@ -291,9 +291,27 @@ function checkResources(ctx: Ctx): void {
         err(ctx, where, `resource "${def.id}" reads undeclared stat path "${def.max}"`)
       }
       if (def.spellSlot) {
+        // A slot level may be a formula now — the warlock's climbs 1st to 5th
+        // on one pool. A formula cannot be range-checked here without a
+        // character to evaluate it against, so only the literal case is, and a
+        // formula is checked for being a level table of plausible values.
         const level = def.spellSlot.level
-        if (!Number.isInteger(level) || level < 1 || level > MAX_SLOT_LEVEL) {
-          err(ctx, where, `resource "${def.id}" is a slot of level ${level}`)
+        if (typeof level === 'number') {
+          if (!Number.isInteger(level) || level < 1 || level > MAX_SLOT_LEVEL) {
+            err(ctx, where, `resource "${def.id}" is a slot of level ${level}`)
+          }
+        } else if (typeof level === 'object' && 'classLevelTable' in level) {
+          const bad = level.classLevelTable.values.filter(
+            (v) => !Number.isInteger(v) || v < 0 || v > MAX_SLOT_LEVEL)
+          if (bad.length > 0) {
+            err(ctx, where,
+              `resource "${def.id}" has slot levels outside 0-${MAX_SLOT_LEVEL}: ${bad.join(', ')}`)
+          }
+          if (level.classLevelTable.values.length !== 20) {
+            err(ctx, where,
+              `resource "${def.id}" slot-level table has `
+              + `${level.classLevelTable.values.length} rows, not 20`)
+          }
         }
       }
     }
