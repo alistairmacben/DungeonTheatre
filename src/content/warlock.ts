@@ -421,7 +421,9 @@ const WARLOCK_SPELL_IDS = [
   'srd:spell.eyebite', 'srd:spell.flesh-to-stone', 'srd:spell.mass-suggestion',
   'srd:spell.true-seeing',
   'srd:spell.etherealness', 'srd:spell.finger-of-death', 'srd:spell.forcecage',
-  'srd:spell.plane-shift'
+  'srd:spell.plane-shift',
+  'srd:spell.demiplane', 'srd:spell.dominate-monster', 'srd:spell.feeblemind',
+  'srd:spell.glibness', 'srd:spell.power-word-stun'
 ]
 
 /**
