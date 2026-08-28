@@ -22,7 +22,8 @@ import { resolveSpellcasting, type CastableSpell, type SlotOption } from '../rul
 import { resolveSpellAttackRoll, resolveSpellEffect } from '../rules/spellEffect.js'
 import {
   abilityModifierPath, abilityScorePath, ARMOR_CLASS, ATTACK_ROLL, CHECK_ROLL,
-  damageReductionPath, DAMAGE_TYPE_PATHS, DAMAGE_WEAPON, SAVE_ROLL,
+  damageReductionPath, DAMAGE_TYPE_PATHS, DAMAGE_WEAPON,
+  RESISTANCE_IMMUNE, RESISTANCE_RESISTANT, RESISTANCE_VULNERABLE, SAVE_ROLL,
   HP_MAX, INITIATIVE, JUMP_HIGH, JUMP_LONG, PROFICIENCY_BONUS, speedPath,
   SPELL_ATTACK, SPELL_SAVE_DC, SPELLS_PREPARED_MAX
 } from '../rules/statPaths.js'
@@ -163,10 +164,18 @@ function describeSource(
       else if (m.op === 'base') mech.push(`${stat} ${n}`)
       else if (m.op === 'set') {
         // `resistance.poison` is a flag wearing a number's clothes; "becomes 1"
-        // is arithmetically true and useless to read.
-        mech.push(m.target.startsWith('resistance.')
-          ? (n > 0 ? `resistance to ${m.target.slice(11)}` : `no resistance to ${m.target.slice(11)}`)
-          : `${stat} becomes ${n}`)
+        // is arithmetically true and useless to read. It is not a two-state
+        // flag either — 2 is immunity and -1 is vulnerability — and reading
+        // immunity out as "resistance to poison" understated the monk's Purity
+        // of Body and the Circle of the Land's Nature's Ward by half.
+        if (m.target.startsWith('resistance.')) {
+          const type = m.target.slice(11)
+          mech.push(
+            n >= RESISTANCE_IMMUNE ? `immune to ${type}`
+              : n >= RESISTANCE_RESISTANT ? `resistance to ${type}`
+                : n <= RESISTANCE_VULNERABLE ? `vulnerable to ${type}`
+                  : `no resistance to ${type}`)
+        } else mech.push(`${stat} becomes ${n}`)
       }
       else if (m.op === 'min') mech.push(`${stat} at least ${n}`)
       else if (m.op === 'max') mech.push(`${stat} at most ${n}`)
@@ -239,6 +248,46 @@ function describeSource(
     out.push(word(p.level, readableProficiency(p.category, nameOf)))
   }
 
+  // So is a spell you learn. A feature whose whole contribution is a spell
+  // grant produced no lines either, so the Circle of the Land's Bonus Cantrip,
+  // every "Cantrips Known (level N)" and every "Spells Known" feature in six
+  // classes was dropped from the sheet — the spell arrived in the spell list
+  // and the feature that granted it did not exist.
+  for (const g of source.spells ?? []) {
+    if (g.spellIds) {
+      const names = g.spellIds.map((sid) => content?.spells.get(sid)?.name ?? humanise(sid))
+      out.push(`${names.join(', ')}${g.availability === 'always' ? ' — always available' : ''}`)
+    } else if (g.selectionId) {
+      const answers = resolution.character.selections?.[source.id]?.[g.selectionId] ?? []
+      const prompt = source.selections?.find((sel) => sel.id === g.selectionId)?.prompt
+      if (answers.length === 0) out.push(prompt ?? 'a spell you have not chosen yet')
+      else {
+        const names = answers.map((sid) => content?.spells.get(sid)?.name ?? humanise(sid))
+        out.push(`${names.join(', ')}${g.availability === 'always' ? ' — always available' : ''}`)
+      }
+    } else if (g.fromList) {
+      const max = resolution.evaluateValue(g.fromList.maxLevel, source.id)
+      out.push(`prepare spells up to ${ordinal(max)} level from the `
+        + `${humanise(g.fromList.listId)} list`)
+    }
+  }
+
+  // A choice that grants nothing but records an answer is still the whole
+  // point of some features — the warlock's Pact Boon, the Fiend's damage type.
+  const spellSelections = new Set(
+    (source.spells ?? []).map((g) => g.selectionId).filter(Boolean))
+  for (const sel of source.selections ?? []) {
+    if (spellSelections.has(sel.id)) continue // Already described above.
+    if ((source.proficiencies ?? []).some(
+      (pr) => (pr.category as { selection?: string } | undefined)?.selection === sel.id)) {
+      continue // Already described by the proficiency loop.
+    }
+    const answers = resolution.character.selections?.[source.id]?.[sel.id] ?? []
+    out.push(answers.length > 0
+      ? `${sel.prompt}: ${answers.map(humanise).join(', ')}`
+      : sel.prompt)
+  }
+
   // An action is an effect: a feature whose whole contribution is something new
   // to do had no lines at all, so buildEffects dropped it from the sheet
   // entirely. Cunning Action and Fast Hands are two of the rogue's three
@@ -247,7 +296,12 @@ function describeSource(
     const cost = a.cost === 'bonusAction' ? 'a bonus action'
       : a.cost === 'reaction' ? 'a reaction'
         : a.cost === 'free' ? 'no action'
-          : 'an action'
+          : a.cost === 'action' ? 'an action'
+            // Some costs are durations rather than turn economy: Natural
+            // Recovery takes a minute, and calling that "an action" is wrong.
+            : typeof a.cost === 'object' && 'minutes' in a.cost
+              ? `${a.cost.minutes} minute${a.cost.minutes === 1 ? '' : 's'}`
+              : 'an action'
     out.push(`${a.name} — ${cost}`)
   }
 
@@ -330,6 +384,14 @@ function prettyPath(path: string, nameOf?: (resourceId: string) => string | unde
  * whose id is `barbarian.rages` — so the lookup misses and this is what the
  * player would otherwise read.
  */
+/** "6th", "3rd" — for a spell level a grant resolves to. */
+function ordinal(n: number): string {
+  const suffix = n % 100 >= 11 && n % 100 <= 13
+    ? 'th'
+    : ['th', 'st', 'nd', 'rd'][n % 10] ?? 'th'
+  return `${n}${suffix}`
+}
+
 function humanise(id: string): string {
   return (id.split('.').pop() ?? id)
     .replace(/[-_]/g, ' ')

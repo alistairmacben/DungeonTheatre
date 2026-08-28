@@ -343,8 +343,69 @@ export const NYX_VAELTHORNE: Character = {
   toggles: { 'wearing-armor': true }
 }
 
+/**
+ * Maeve Thornwood, Human Druid 10 (Circle of the Land, forest) — the seat for
+ * a feature the app deliberately does not run.
+ *
+ * Wild Shape is the one class feature in the SRD whose whole point is that the
+ * character stops being this character: the druid's statistics are stood down
+ * and a beast's are stood up. There is no bestiary in SRD 5.1 and no engine
+ * here for running a sheet from a second statblock, so the app tracks the uses
+ * and names which row of the Beast Shapes table applies, and the DM keeps the
+ * form. That is the design, not a gap waiting to close.
+ *
+ * Tenth so both Wild Shape improvements have landed, the Cantrips Known column
+ * has reached four, and Nature's Ward's poison immunity is in play.
+ */
+export const MAEVE_THORNWOOD: Character = {
+  id: 'char:maeve',
+  campaignId: 'camp-1',
+  name: 'Maeve Thornwood',
+  playerId: 'player-8',
+  speciesId: 'srd:species.human',
+  classLevels: [{
+    classId: 'srd:class.druid', level: 10, subclassId: 'srd:subclass.circle-of-the-land'
+  }],
+  abilityScoreBase: { str: 10, dex: 14, con: 14, int: 12, wis: 16, cha: 10 },
+  buildChoices: [],
+  // Human raises CON to 15 (+2): 8 + 2 at 1st, then 5 + 2 per level after
+  // (7 x 9 = 63): 73.
+  hitPointsCurrent: 73,
+  hitPointsTemp: 0,
+  hitDiceSpent: {},
+  resourcesSpent: {},
+  conditions: [],
+  effectInstances: [],
+  exhaustionLevel: 0,
+  selections: {
+    'srd:class.druid.proficiencies': { skills: ['nature', 'perception'] },
+    'srd:class.druid.cantrips': {
+      'cantrips-known': ['srd:spell.druidcraft', 'srd:spell.guidance']
+    },
+    'srd:class.druid.cantrips-known.4': { 'cantrips-known': ['srd:spell.resistance'] },
+    'srd:class.druid.cantrips-known.10': { 'cantrips-known': ['srd:spell.poison-spray'] },
+    'srd:subclass.circle-of-the-land.bonus-cantrip': {
+      'bonus-cantrip': ['srd:spell.mending']
+    },
+    'srd:subclass.circle-of-the-land.circle-spells.3': { land: ['forest'] }
+  },
+  inventory: {
+    instances: [
+      { instanceId: 'd-scimitar', definitionId: 'srd:weapon.scimitar', contentVersion: 1, identified: true },
+      { instanceId: 'd-leather', definitionId: 'srd:armor.leather', contentVersion: 1, identified: true },
+      { instanceId: 'd-focus', definitionId: 'srd:item.druidic-focus', contentVersion: 1, identified: true },
+      { instanceId: 'd-potion', definitionId: 'srd:item.potion-of-healing', contentVersion: 1, quantity: 2, identified: true }
+    ],
+    equipped: { mainHand: 'd-scimitar', armor: 'd-leather' },
+    attunedInstanceIds: []
+  },
+  deathSaves: { successes: 0, failures: 0 },
+  toggles: { 'wearing-armor': true },
+  spellsPrepared: ['srd:spell.cure-wounds', 'srd:spell.longstrider']
+}
+
 /** The party. One entry per archetype the content can express today. */
 export const PARTY: Character[] = [
   SIR_ALDREN, ILYANA_VESS, PIP_UNDERBOUGH, BROTHER_ALDWIN, WEN_SHAO,
-  GROG_IRONJAW, NYX_VAELTHORNE
+  GROG_IRONJAW, NYX_VAELTHORNE, MAEVE_THORNWOOD
 ]

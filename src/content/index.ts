@@ -26,7 +26,9 @@ import { BARD_CLASSES, BARD_ITEMS, BARD_SPECIES } from './bard.js'
 import {
   WARLOCK_CLASSES, WARLOCK_ITEMS, WARLOCK_SPECIES, WARLOCK_SPELLS, WARLOCK_SUBCLASSES
 } from './warlock.js'
-import { DRUID_CLASSES, DRUID_ITEMS, DRUID_SPECIES } from './druid.js'
+import {
+  DRUID_CLASSES, DRUID_ITEMS, DRUID_SPECIES, DRUID_SUBCLASSES
+} from './druid.js'
 
 export * from './srd.js'
 export * from './classes-extra.js'
@@ -61,7 +63,8 @@ const ITEMS: ItemDefinition[] = [
 const SPELLS: SpellDefinition[] = [...ALL_SPELLS, ...WARLOCK_SPELLS]
 const SUBCLASSES: SubclassDefinition[] = [
   ...MONK_SUBCLASSES, ...FIGHTER_SUBCLASSES, ...WIZARD_SUBCLASSES, ...PARTY_SUBCLASSES,
-  ...BARD_SUBCLASSES, ...BARBARIAN_SUBCLASSES, ...WARLOCK_SUBCLASSES
+  ...BARD_SUBCLASSES, ...BARBARIAN_SUBCLASSES, ...WARLOCK_SUBCLASSES,
+  ...DRUID_SUBCLASSES
 ]
 
 export function loadContent(): ContentIndex {

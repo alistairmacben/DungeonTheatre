@@ -73,6 +73,7 @@ const chosenProf = (kind: 'skill' | 'tool', selectionId: string): ProficiencyGra
 // magic and as warlock spells known, and the two grants have to agree.
 
 const WARLOCK_LIST = 'srd:list.warlock'
+const DRUID_LIST = 'srd:list.druid'
 const CLERIC_LIST = 'srd:list.cleric'
 const SORCERER_LIST = 'srd:list.sorcerer'
 
@@ -1027,7 +1028,9 @@ export const WARLOCK_SPELLS: SpellDefinition[] = [
   // known-spells grant in classes-extra.ts — the sorcerer's cantrip pool would
   // otherwise be one spell short of what 1st level requires.
   { ...CHILL_TOUCH, lists: [WARLOCK_LIST, SORCERER_LIST] },
-  { ...POISON_SPRAY, lists: [WARLOCK_LIST, SORCERER_LIST] },
+  // And on the druid list, which was missed — the druid cantrip pool held two
+  // spells and the Cantrips Known column asks for four.
+  { ...POISON_SPRAY, lists: [WARLOCK_LIST, SORCERER_LIST, DRUID_LIST] },
   { ...THAUMATURGY, lists: [CLERIC_LIST] },
   { ...CHARM_PERSON, lists: [WARLOCK_LIST, SORCERER_LIST] },
   { ...HELLISH_REBUKE, lists: [WARLOCK_LIST] },
