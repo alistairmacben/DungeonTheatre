@@ -109,7 +109,12 @@ const BARD_CANTRIP_POOL = [
 ]
 const BARD_SPELL_POOL = [
   'srd:spell.cure-wounds', 'srd:spell.detect-magic', 'srd:spell.identify',
-  'srd:spell.longstrider'
+  'srd:spell.longstrider', 'srd:spell.charm-person', 'srd:spell.animal-friendship',
+  'srd:spell.bane', 'srd:spell.comprehend-languages', 'srd:spell.disguise-self',
+  'srd:spell.faerie-fire', 'srd:spell.feather-fall', 'srd:spell.healing-word',
+  'srd:spell.heroism', 'srd:spell.hideous-laughter', 'srd:spell.illusory-script',
+  'srd:spell.silent-image', 'srd:spell.sleep', 'srd:spell.speak-with-animals',
+  'srd:spell.thunderwave', 'srd:spell.unseen-servant'
 ]
 
 // ===========================================================================

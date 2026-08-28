@@ -402,7 +402,10 @@ const WARLOCK_CANTRIP_IDS = [
 ]
 
 const WARLOCK_SPELL_IDS = [
-  'srd:spell.charm-person', 'srd:spell.hellish-rebuke', 'srd:spell.darkness'
+  'srd:spell.charm-person', 'srd:spell.hellish-rebuke', 'srd:spell.darkness',
+  'srd:spell.comprehend-languages', 'srd:spell.expeditious-retreat',
+  'srd:spell.illusory-script', 'srd:spell.protection-from-evil-and-good',
+  'srd:spell.unseen-servant'
 ]
 
 /**
@@ -1043,7 +1046,7 @@ export const WARLOCK_SPELLS: SpellDefinition[] = [
   // spells and the Cantrips Known column asks for four.
   { ...POISON_SPRAY, lists: [WARLOCK_LIST, SORCERER_LIST, DRUID_LIST, 'srd:list.wizard'] },
   { ...THAUMATURGY, lists: [CLERIC_LIST] },
-  { ...CHARM_PERSON, lists: [WARLOCK_LIST, SORCERER_LIST] },
+  { ...CHARM_PERSON, lists: [WARLOCK_LIST, SORCERER_LIST, 'srd:list.bard', DRUID_LIST] },
   { ...HELLISH_REBUKE, lists: [WARLOCK_LIST] },
   { ...DARKNESS, lists: [WARLOCK_LIST] }
 ]

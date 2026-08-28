@@ -129,7 +129,11 @@ const SORCERER_CANTRIP_POOL = [
 ]
 const SORCERER_SPELL_POOL = [
   'srd:spell.magic-missile', 'srd:spell.mage-armor', 'srd:spell.shield',
-  'srd:spell.detect-magic', 'srd:spell.charm-person'
+  'srd:spell.detect-magic', 'srd:spell.charm-person', 'srd:spell.burning-hands',
+  'srd:spell.color-spray', 'srd:spell.comprehend-languages', 'srd:spell.disguise-self',
+  'srd:spell.expeditious-retreat', 'srd:spell.false-life', 'srd:spell.feather-fall',
+  'srd:spell.fog-cloud', 'srd:spell.jump', 'srd:spell.silent-image',
+  'srd:spell.sleep', 'srd:spell.thunderwave'
 ]
 
 const SORCERY_POINTS_MAX = declareResourceMax('sorceryPoints')

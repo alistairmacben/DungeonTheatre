@@ -146,7 +146,10 @@ function spellsKnownAt(level: number, count: number): ClassFeatureDefinition {
  * mechanism imposes — it grows the moment more spells carry `srd:list.ranger`.
  */
 const RANGER_SPELL_POOL = [
-  'srd:spell.cure-wounds', 'srd:spell.detect-magic', 'srd:spell.longstrider'
+  'srd:spell.cure-wounds', 'srd:spell.detect-magic', 'srd:spell.longstrider',
+  'srd:spell.alarm', 'srd:spell.animal-friendship', 'srd:spell.detect-poison-and-disease',
+  'srd:spell.fog-cloud', 'srd:spell.goodberry', 'srd:spell.hunters-mark',
+  'srd:spell.jump', 'srd:spell.speak-with-animals'
 ]
 
 const SPELLS_KNOWN_FEATURES = RANGER_SPELLS_KNOWN
