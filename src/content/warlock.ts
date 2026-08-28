@@ -414,7 +414,9 @@ const WARLOCK_SPELL_IDS = [
   'srd:spell.major-image', 'srd:spell.remove-curse', 'srd:spell.tongues',
   'srd:spell.vampiric-touch',
   'srd:spell.banishment', 'srd:spell.blight', 'srd:spell.dimension-door',
-  'srd:spell.hallucinatory-terrain'
+  'srd:spell.hallucinatory-terrain',
+  'srd:spell.contact-other-plane', 'srd:spell.dream', 'srd:spell.hold-monster',
+  'srd:spell.scrying'
 ]
 
 /**

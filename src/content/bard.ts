@@ -128,7 +128,13 @@ const BARD_SPELL_POOL = [
   'srd:spell.tiny-hut', 'srd:spell.tongues',
   'srd:spell.compulsion', 'srd:spell.confusion', 'srd:spell.dimension-door',
   'srd:spell.freedom-of-movement', 'srd:spell.greater-invisibility',
-  'srd:spell.hallucinatory-terrain', 'srd:spell.locate-creature', 'srd:spell.polymorph'
+  'srd:spell.hallucinatory-terrain', 'srd:spell.locate-creature', 'srd:spell.polymorph',
+  'srd:spell.animate-objects', 'srd:spell.awaken', 'srd:spell.dominate-person',
+  'srd:spell.dream', 'srd:spell.geas', 'srd:spell.greater-restoration',
+  'srd:spell.hold-monster', 'srd:spell.legend-lore', 'srd:spell.mass-cure-wounds',
+  'srd:spell.mislead', 'srd:spell.modify-memory', 'srd:spell.planar-binding',
+  'srd:spell.raise-dead', 'srd:spell.scrying', 'srd:spell.seeming',
+  'srd:spell.teleportation-circle'
 ]
 
 // ===========================================================================
