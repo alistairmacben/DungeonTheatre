@@ -148,8 +148,12 @@ const view = (c, detail = 'inspect') => playerViewOf(c, content, { detail })
   check('resources: the sorcerer exposes sorcery points as pips',
     points?.display === 'pips')
   check.eq('resources: sorcery points equal the sorcerer level', points?.maximum, 5)
+  // The note used to read "sorcery points equal your sorcerer level", which is
+  // false at 1st level — the column is 0 there and only tracks the level from
+  // 2nd. It names the column now.
   check('resources: the maximum explains where it came from',
-    points?.breakdown?.lines.some((l) => l.note?.includes('sorcerer level')))
+    points?.breakdown?.lines.some((l) => l.note?.includes('Sorcery Points column')),
+    JSON.stringify(points?.breakdown?.lines.map((l) => l.note)))
 
   const pool = byId(p, 'paladin.layOnHands')
   check('resources: the paladin exposes Lay on Hands as a pool', pool?.display === 'pool')

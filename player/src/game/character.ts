@@ -456,8 +456,70 @@ export const SER_BRYN: Character = {
   spellsPrepared: ['srd:spell.bless', 'srd:spell.cure-wounds']
 }
 
+/**
+ * Vessa Emberline, Human Sorcerer 14 (Draconic Bloodline, red) — the last
+ * class in the SRD, and the one whose numbers were most wrong.
+ *
+ * Until the paladin arrived, this character had a spell save DC of 0: the
+ * sorcerer never declared one, and nothing noticed because the spell panel was
+ * withheld whenever the Spells Known selections were unanswered.
+ *
+ * Fourteenth so Draconic Resilience's unarmoured AC and hit points are both
+ * carrying, three Metamagic options are in hand, and Dragon Wings are
+ * available to toggle.
+ */
+export const VESSA_EMBERLINE: Character = {
+  id: 'char:vessa',
+  campaignId: 'camp-1',
+  name: 'Vessa Emberline',
+  playerId: 'player-10',
+  speciesId: 'srd:species.human',
+  classLevels: [{
+    classId: 'srd:class.sorcerer', level: 14, subclassId: 'srd:subclass.draconic-bloodline'
+  }],
+  abilityScoreBase: { str: 8, dex: 14, con: 12, int: 12, wis: 10, cha: 15 },
+  buildChoices: [],
+  // Human raises CON to 13 (+1): 6 + 1 at 1st, then 4 + 1 per level after
+  // (5 x 13 = 65): 72. Draconic Resilience adds one per sorcerer level: 86.
+  hitPointsCurrent: 86,
+  hitPointsTemp: 0,
+  hitDiceSpent: {},
+  resourcesSpent: {},
+  conditions: [],
+  effectInstances: [],
+  exhaustionLevel: 0,
+  selections: {
+    'srd:class.sorcerer.spellcasting': { skills: ['arcana', 'persuasion'] },
+    'srd:class.sorcerer.known-1': {
+      cantrips: [
+        'srd:spell.fire-bolt', 'srd:spell.ray-of-frost',
+        'srd:spell.prestidigitation', 'srd:spell.chill-touch'
+      ],
+      spells: ['srd:spell.magic-missile', 'srd:spell.shield']
+    },
+    'srd:class.sorcerer.known-4': { cantrips: ['srd:spell.poison-spray'] },
+    'srd:class.sorcerer.metamagic.3': { metamagic: ['quickened', 'twinned'] },
+    'srd:class.sorcerer.metamagic.10': { metamagic: ['empowered'] },
+    'srd:subclass.draconic-bloodline.dragon-ancestor': { ancestry: ['red'] }
+  },
+  inventory: {
+    instances: [
+      { instanceId: 's-dagger', definitionId: 'srd:weapon.dagger', contentVersion: 1, quantity: 2, identified: true },
+      { instanceId: 's-crossbow', definitionId: 'srd:weapon.light-crossbow', contentVersion: 1, identified: true },
+      { instanceId: 's-potion', definitionId: 'srd:item.potion-of-healing', contentVersion: 1, quantity: 2, identified: true }
+    ],
+    // No armour at all — the sorcerer is the only SRD class with no armour
+    // proficiency, which is what makes Draconic Resilience's 13 + Dex worth
+    // having.
+    equipped: { mainHand: 's-dagger' },
+    attunedInstanceIds: []
+  },
+  deathSaves: { successes: 0, failures: 0 },
+  toggles: {}
+}
+
 /** The party. One entry per archetype the content can express today. */
 export const PARTY: Character[] = [
   SIR_ALDREN, ILYANA_VESS, PIP_UNDERBOUGH, BROTHER_ALDWIN, WEN_SHAO,
-  GROG_IRONJAW, NYX_VAELTHORNE, MAEVE_THORNWOOD, SER_BRYN
+  GROG_IRONJAW, NYX_VAELTHORNE, MAEVE_THORNWOOD, SER_BRYN, VESSA_EMBERLINE
 ]

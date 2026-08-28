@@ -8,7 +8,8 @@
 
 import type {
   Ability, ActionDefinition, ClassDefinition, ContentIndex, DamageType, EffectSource,
-  ItemDefinition, ProficiencyCategory, ResourceDefinition, RollResolution, SpellDefinition,
+  ItemDefinition, ProficiencyCategory, ProficiencyGrant, ResourceDefinition,
+  RollResolution, SpellDefinition,
   StatValue, Term
 } from '../rules/types.js'
 import { ABILITIES } from '../rules/types.js'
@@ -117,6 +118,32 @@ function readout(
  * modifiers themselves, so a DM-authored item explains itself without the DM
  * writing marketing copy — and cannot lie about what it does.
  */
+/**
+ * The environment a Predicate is evaluated against.
+ *
+ * Extracted so `describeSource` and `buildActions` agree on what "the gate
+ * passed" means. Targeting and attunement are false here because neither
+ * caller is asking about a specific item.
+ */
+function predicateEnv(r: Resolution, content?: ContentIndex): Parameters<typeof evaluate>[1] {
+  return {
+    getStat: (path) => r.stat(path).total,
+    hasCondition: (id) => r.hasCondition(id),
+    hasCapability: (k) => r.capability(k).allowed,
+    hasProficiency: (c) => r.hasProficiency(c),
+    canCastSpells: () => true,
+    characterLevel: () => characterLevel(r.character),
+    classLevel: (id) => r.character.classLevels.find((c) => c.classId === id)?.level ?? 0,
+    speciesId: () => r.character.speciesId,
+    isEquipped: () => false,
+    isAttunedTo: () => false,
+    resourceRemaining: () => 0,
+    toggle: (id) => r.character.toggles[id] === true,
+    dmFlag: (id) => r.character.dmFlags?.[id] === true,
+    nameOf: (id) => content?.items.get(id)?.name ?? id
+  }
+}
+
 function describeSource(
   source: EffectSource, resolution: Resolution, content?: ContentIndex
 ): string[] {
@@ -225,6 +252,16 @@ function describeSource(
         : level === 'half' ? `half proficiency in ${label}`
           : `proficient in ${label}`
 
+    // A proficiency may be conditional — the Draconic Bloodline doubles your
+    // proficiency on Charisma checks *with dragons*. The modifier loop above
+    // has said "not applying: …" since it was written; this loop said nothing,
+    // so a gated grant read as though it always applied.
+    const gated = (grant: ProficiencyGrant, line: string): string => {
+      if (!grant.condition) return line
+      const gate = evaluate(grant.condition, predicateEnv(resolution, content))
+      return gate.value ? line : `${line} — not applying: ${gate.reason}`
+    }
+
     // A grant may name a *selection* rather than a category — the rogue's four
     // skills, the fighter's two, Resilient's ability. Describing the grant as
     // authored reads "proficient in the undefined skill", because the concrete
@@ -239,13 +276,13 @@ function describeSource(
         continue
       }
       for (const answer of answers) {
-        out.push(word(p.level, readableProficiency(
-          { ...p.category, id: answer, itemId: answer, ability: answer } as never, nameOf)))
+        out.push(gated(p, word(p.level, readableProficiency(
+          { ...p.category, id: answer, itemId: answer, ability: answer } as never, nameOf))))
       }
       continue
     }
 
-    out.push(word(p.level, readableProficiency(p.category, nameOf)))
+    out.push(gated(p, word(p.level, readableProficiency(p.category, nameOf))))
   }
 
   // So is a spell you learn. A feature whose whole contribution is a spell
