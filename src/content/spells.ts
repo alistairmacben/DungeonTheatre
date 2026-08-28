@@ -1,10 +1,19 @@
 // Spells.
 //
-// Twelve of them, chosen the way the weapons and feats were: for coverage, not
-// volume. Between them they exercise every axis the spell model has —
+// Started as twelve, chosen the way the weapons and feats were: for coverage,
+// not volume. Between them they exercise every axis the spell model has —
 // cantrip/slotted, instantaneous/duration, concentration/not, ritual, attack
 // roll/save/no roll, self/touch/ranged, and a buff that has to reach the same
 // stat pipeline armour uses.
+//
+// Now growing toward the full SRD list, class by class rather than
+// alphabetically: every class file has a cantrip or spell pool that stops
+// short of what the SRD actually grants, because the spell did not exist yet.
+// This pass closes the cantrip column for all six casters that have one —
+// Cleric, Druid, Sorcerer, Wizard, Warlock, Bard — at once, since the six
+// cantrip lists overlap enormously and ten new spells plus two pool
+// corrections (Thaumaturgy was authored but never added to the cleric's own
+// pool; Poison Spray never got a mechanical effect at all) complete all six.
 //
 // The load-bearing property, as everywhere else: none of these contains
 // calculation logic. `mage armor` competes with chain mail through the ordinary
@@ -246,6 +255,214 @@ export const SACRED_FLAME = spell({
   })
 })
 
+export const ACID_SPLASH = spell({
+  id: 'srd:spell.acid-splash', name: 'Acid Splash', level: 0, school: 'conjuration',
+  rangeFeet: 60,
+  effect: {
+    delivery: 'save',
+    save: { ability: 'dex', onSuccess: 'none' },
+    damage: [{ dice: { count: 1, sides: 6 }, type: 'acid' }],
+    cantripScaling: true
+  },
+  effects: effects({
+    id: 'srd:spell.acid-splash', name: 'Acid Splash',
+    narrative: [{
+      text: 'A bubble of acid at one creature, or two within 5 feet of each other. '
+        + 'Each target makes a Dexterity save or takes 1d6 acid damage. Targeting a '
+        + 'second creature is not modelled — resolve one target here and the other '
+        + 'at the table.',
+      dmPromptable: true
+    }],
+    completeness: 'partial'
+  })
+})
+
+export const DANCING_LIGHTS = spell({
+  id: 'srd:spell.dancing-lights', name: 'Dancing Lights', level: 0, school: 'evocation',
+  rangeFeet: 120, concentration: true, durationSeconds: 60,
+  components: { verbal: true, somatic: true, material: 'a bit of phosphorus or wychwood, or a glowworm' },
+  effects: effects({
+    id: 'srd:spell.dancing-lights', name: 'Dancing Lights',
+    narrative: [{
+      text: 'Up to four torch-sized lights, or one Medium humanoid shape, each '
+        + 'shedding dim light in a 10-foot radius. Move them up to 60 feet as a '
+        + 'bonus action; each must stay within 20 feet of another or it winks out.',
+      dmPromptable: false
+    }]
+  })
+})
+
+export const MAGE_HAND = spell({
+  id: 'srd:spell.mage-hand', name: 'Mage Hand', level: 0, school: 'conjuration',
+  rangeFeet: 30, durationSeconds: 60,
+  effects: effects({
+    id: 'srd:spell.mage-hand', name: 'Mage Hand',
+    narrative: [{
+      text: 'A spectral hand that vanishes beyond 30 feet or on a recast. Use your '
+        + 'action to move it up to 30 feet and manipulate an object, open an '
+        + 'unlocked door or container, or pour out a vial. It cannot attack, '
+        + 'activate a magic item, or carry more than 10 pounds.',
+      dmPromptable: false
+    }]
+  })
+})
+
+export const MESSAGE = spell({
+  id: 'srd:spell.message', name: 'Message', level: 0, school: 'transmutation',
+  rangeFeet: 120, durationSeconds: 6,
+  components: { verbal: true, somatic: true, material: 'a short piece of copper wire' },
+  effects: effects({
+    id: 'srd:spell.message', name: 'Message',
+    narrative: [{
+      text: 'A whispered message to one creature you point at, who can reply in a '
+        + 'whisper only you hear. Travels around corners and through solid '
+        + 'objects, but is blocked by magical silence, a foot of stone, an inch of '
+        + 'common metal, a thin sheet of lead, or three feet of wood.',
+      dmPromptable: false
+    }]
+  })
+})
+
+export const MINOR_ILLUSION = spell({
+  id: 'srd:spell.minor-illusion', name: 'Minor Illusion', level: 0, school: 'illusion',
+  rangeFeet: 30, durationSeconds: 60,
+  // "S, M (no verbal)" — the inverse of Light's "V, M (no somatic)", and worth
+  // stating explicitly for the same reason.
+  components: { verbal: false, somatic: true, material: 'a bit of fleece' },
+  effects: effects({
+    id: 'srd:spell.minor-illusion', name: 'Minor Illusion',
+    narrative: [{
+      text: 'Either a sound or an image of an object, not both — a sound as loud '
+        + 'as a scream, or a silent, motionless image no larger than a 5-foot '
+        + 'cube. Physical interaction reveals the image; a creature can use its '
+        + 'action and an Intelligence (Investigation) check against your spell '
+        + 'save DC to discern either.',
+      dmPromptable: true
+    }]
+  })
+})
+
+export const PRODUCE_FLAME = spell({
+  id: 'srd:spell.produce-flame', name: 'Produce Flame', level: 0, school: 'conjuration',
+  rangeKind: 'self', rangeFeet: 30, durationSeconds: 600,
+  // A cantrip that is a light source until the moment it becomes a weapon:
+  // hurling it — on casting, or as an action any time before the spell ends —
+  // is the attack, and attacking ends the light. Modelled as an attack cantrip
+  // like Fire Bolt; the light-only mode has nothing to resolve.
+  effect: {
+    delivery: 'attack',
+    damage: [{ dice: { count: 1, sides: 8 }, type: 'fire' }],
+    cantripScaling: true
+  },
+  effects: effects({
+    id: 'srd:spell.produce-flame', name: 'Produce Flame',
+    narrative: [{
+      text: 'A flame flickers in your hand, shedding bright light 10 feet and '
+        + 'dim light 10 feet more, for up to 10 minutes. Attacking with it — on '
+        + 'casting, or as an action later — hurls it at a creature within 30 feet '
+        + 'as a ranged spell attack, and ends the light.',
+      dmPromptable: false
+    }]
+  })
+})
+
+export const SHILLELAGH = spell({
+  id: 'srd:spell.shillelagh', name: 'Shillelagh', level: 0, school: 'transmutation',
+  castingTime: 'bonusAction', rangeKind: 'touch', durationSeconds: 60,
+  components: { verbal: true, somatic: true, material: 'a club or quarterstaff' },
+  effects: effects({
+    id: 'srd:spell.shillelagh', name: 'Shillelagh',
+    // Overrides which ability a weapon attack uses and replaces its damage die
+    // — a weapon's statistics are read straight off the item, not computed
+    // through an effect pipeline a spell could redirect. The same wall the
+    // paladin's Divine Smite and the ranger's Foe Slayer are behind.
+    completeness: 'partial',
+    narrative: [{
+      text: 'For one minute, the club or quarterstaff you touch uses your '
+        + 'spellcasting ability instead of Strength for its attack and damage '
+        + 'rolls, its damage die becomes a d8, and it counts as magical. Ends '
+        + 'early if you cast this again or let go of the weapon. The app reads a '
+        + 'weapon\'s ability and die from the item — change them on the weapon '
+        + 'itself, or apply the swap by hand when you attack.',
+      dmPromptable: true
+    }]
+  })
+})
+
+export const SHOCKING_GRASP = spell({
+  id: 'srd:spell.shocking-grasp', name: 'Shocking Grasp', level: 0, school: 'evocation',
+  rangeKind: 'touch',
+  effect: {
+    delivery: 'attack',
+    damage: [{ dice: { count: 1, sides: 8 }, type: 'lightning' }],
+    cantripScaling: true
+  },
+  effects: effects({
+    id: 'srd:spell.shocking-grasp', name: 'Shocking Grasp',
+    narrative: [{
+      text: 'A melee spell attack, with advantage if the target is wearing metal '
+        + 'armour — the app does not read a target\'s equipment, so elect '
+        + 'advantage yourself when it applies. On a hit the target takes 1d8 '
+        + 'lightning damage and cannot take reactions until the start of its '
+        + 'next turn.',
+      dmPromptable: true
+    }]
+  })
+})
+
+export const TRUE_STRIKE = spell({
+  id: 'srd:spell.true-strike', name: 'True Strike', level: 0, school: 'divination',
+  rangeFeet: 30, concentration: true, durationSeconds: 6,
+  components: { verbal: false, somatic: true },
+  effects: effects({
+    id: 'srd:spell.true-strike', name: 'True Strike',
+    // Advantage on a named future roll, the Sacred Weapon/Reckless Attack
+    // shape: a roll-channel modifier gated on a toggle the player switches on
+    // for the one attack it covers. What the scope cannot say is *which*
+    // target — advantage on an attack roll is as narrow as the vocabulary
+    // gets, so a second attack before the toggle is turned off would wrongly
+    // benefit too.
+    modifiers: [{
+      id: id(), channel: 'roll', rollOp: 'advantage',
+      scope: { kinds: ['attack'] },
+      condition: { playerToggle: 'spell.true-strike' },
+      permanence: 'temporary', note: 'True Strike'
+    }],
+    narrative: [{
+      text: 'Turn this on for your first attack roll against the target you '
+        + 'concentrated on, on your next turn, then turn it off — the engine '
+        + 'cannot narrow the advantage to that one target or that one attack.',
+      toggleId: 'spell.true-strike', dmPromptable: false
+    }]
+  })
+})
+
+export const VICIOUS_MOCKERY = spell({
+  id: 'srd:spell.vicious-mockery', name: 'Vicious Mockery', level: 0, school: 'enchantment',
+  rangeFeet: 60, components: { verbal: true, somatic: false },
+  effect: {
+    delivery: 'save',
+    save: { ability: 'wis', onSuccess: 'none' },
+    damage: [{ dice: { count: 1, sides: 4 }, type: 'psychic' }],
+    cantripScaling: true
+  },
+  effects: effects({
+    id: 'srd:spell.vicious-mockery', name: 'Vicious Mockery',
+    // The damage and the save are exact; the rider lands on the target's next
+    // roll, which is the same "reaches another creature's future action" wall
+    // Bless and Bane are behind.
+    completeness: 'partial',
+    narrative: [{
+      text: 'A string of insults at one creature that can hear you. It makes a '
+        + 'Wisdom save or takes 1d4 psychic damage and has disadvantage on its '
+        + 'next attack roll before the end of its next turn — the disadvantage is '
+        + 'not applied here, since it lands on the target\'s next roll rather than '
+        + 'yours.',
+      dmPromptable: true
+    }]
+  })
+})
+
 // ===========================================================================
 // Buffs — the interesting ones, because they meet armour in the AC pipeline
 // ===========================================================================
@@ -434,7 +651,7 @@ const RANGER = 'srd:list.ranger'
 export const ALL_SPELLS: SpellDefinition[] = [
   { ...FIRE_BOLT, lists: [WIZARD, SORCERER] },
   { ...RAY_OF_FROST, lists: [WIZARD, SORCERER] },
-  { ...PRESTIDIGITATION, lists: [WIZARD, SORCERER] },
+  { ...PRESTIDIGITATION, lists: [WIZARD, SORCERER, 'srd:list.bard', 'srd:list.warlock'] },
   { ...SACRED_FLAME, lists: [CLERIC] },
   { ...MAGE_ARMOR, lists: [WIZARD, SORCERER] },
   { ...SHIELD_SPELL, lists: [WIZARD, SORCERER] },
@@ -462,7 +679,21 @@ export const ALL_SPELLS: SpellDefinition[] = [
   { ...GUIDANCE, lists: [CLERIC, DRUID] },
   { ...RESISTANCE, lists: [CLERIC, DRUID] },
   { ...SPARE_THE_DYING, lists: [CLERIC] },
-  { ...LIGHT, lists: [CLERIC, WIZARD, SORCERER, 'srd:list.bard'] }
+  { ...LIGHT, lists: [CLERIC, WIZARD, SORCERER, 'srd:list.bard'] },
+  // Ten more cantrips, tagged against docs/srd/08-spell-lists.md. The wizard
+  // and sorcerer cantrip lists are identical in the SRD; the six lists below
+  // overlap enough that these ten close out all six casters' cantrip columns
+  // at once — see each class file's own pool for which of these it draws on.
+  { ...ACID_SPLASH, lists: [WIZARD, SORCERER] },
+  { ...DANCING_LIGHTS, lists: [WIZARD, SORCERER, 'srd:list.bard'] },
+  { ...MAGE_HAND, lists: [WIZARD, SORCERER, 'srd:list.bard', 'srd:list.warlock'] },
+  { ...MESSAGE, lists: [WIZARD, SORCERER, 'srd:list.bard'] },
+  { ...MINOR_ILLUSION, lists: [WIZARD, SORCERER, 'srd:list.bard', 'srd:list.warlock'] },
+  { ...PRODUCE_FLAME, lists: [DRUID] },
+  { ...SHILLELAGH, lists: [DRUID] },
+  { ...SHOCKING_GRASP, lists: [WIZARD, SORCERER] },
+  { ...TRUE_STRIKE, lists: [WIZARD, SORCERER, 'srd:list.bard', 'srd:list.warlock'] },
+  { ...VICIOUS_MOCKERY, lists: ['srd:list.bard'] }
 ]
 
 export const SPELL_LISTS = { WIZARD, CLERIC, SORCERER, DRUID }

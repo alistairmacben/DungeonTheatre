@@ -102,7 +102,11 @@ const INSTRUMENTS = [
 // the SRD bard cantrip list (docs/srd/08-spell-lists.md) and quote-checked in
 // spells.ts; it was authored for the druid's own thin pool and reused here
 // rather than duplicated.
-const BARD_CANTRIP_POOL = ['srd:spell.prestidigitation', 'srd:spell.mending']
+const BARD_CANTRIP_POOL = [
+  'srd:spell.prestidigitation', 'srd:spell.mending', 'srd:spell.dancing-lights',
+  'srd:spell.light', 'srd:spell.mage-hand', 'srd:spell.message',
+  'srd:spell.minor-illusion', 'srd:spell.true-strike', 'srd:spell.vicious-mockery'
+]
 const BARD_SPELL_POOL = [
   'srd:spell.cure-wounds', 'srd:spell.detect-magic', 'srd:spell.identify',
   'srd:spell.longstrider'

@@ -65,7 +65,8 @@ const CLERIC_ASI_LEVELS = [4, 8, 12, 16, 19]
  */
 const CLERIC_CANTRIP_POOL = [
   'srd:spell.sacred-flame', 'srd:spell.guidance', 'srd:spell.light',
-  'srd:spell.resistance', 'srd:spell.spare-the-dying', 'srd:spell.mending'
+  'srd:spell.resistance', 'srd:spell.spare-the-dying', 'srd:spell.mending',
+  'srd:spell.thaumaturgy'
 ]
 
 // ---------------------------------------------------------------------------

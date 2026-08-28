@@ -168,7 +168,8 @@ const LANDS = Object.keys(CIRCLE_SPELLS)
 // column asks for four by 10th level, and a Circle of the Land druid for five.
 const DRUID_CANTRIP_POOL = [
   'srd:spell.druidcraft', 'srd:spell.mending', 'srd:spell.guidance',
-  'srd:spell.resistance', 'srd:spell.poison-spray'
+  'srd:spell.resistance', 'srd:spell.poison-spray', 'srd:spell.produce-flame',
+  'srd:spell.shillelagh'
 ]
 
 // ===========================================================================

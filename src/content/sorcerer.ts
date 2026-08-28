@@ -122,7 +122,10 @@ const SLOT_CREATION_COST: Record<number, number> = { 1: 2, 2: 3, 3: 5, 4: 6, 5: 
  */
 const SORCERER_CANTRIP_POOL = [
   'srd:spell.fire-bolt', 'srd:spell.ray-of-frost', 'srd:spell.prestidigitation',
-  'srd:spell.chill-touch', 'srd:spell.poison-spray'
+  'srd:spell.chill-touch', 'srd:spell.poison-spray', 'srd:spell.acid-splash',
+  'srd:spell.dancing-lights', 'srd:spell.light', 'srd:spell.mage-hand',
+  'srd:spell.mending', 'srd:spell.message', 'srd:spell.minor-illusion',
+  'srd:spell.shocking-grasp', 'srd:spell.true-strike'
 ]
 const SORCERER_SPELL_POOL = [
   'srd:spell.magic-missile', 'srd:spell.mage-armor', 'srd:spell.shield',

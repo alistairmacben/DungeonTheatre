@@ -139,6 +139,15 @@ export const CHILL_TOUCH = spell({
 export const POISON_SPRAY = spell({
   id: 'srd:spell.poison-spray', name: 'Poison Spray', level: 0,
   school: 'conjuration', rangeFeet: 10,
+  // Never had a resolved effect at all — narrative only, the one cantrip in
+  // the set with a save and damage that never reached `effect`. A save spell
+  // in the Sacred Flame shape: the target rolls, the caster does not.
+  effect: {
+    delivery: 'save',
+    save: { ability: 'con', onSuccess: 'none' },
+    damage: [{ dice: { count: 1, sides: 12 }, type: 'poison' }],
+    cantripScaling: true
+  },
   effects: spellEffects({
     id: 'srd:spell.poison-spray', name: 'Poison Spray',
     narrative: [{
@@ -387,7 +396,9 @@ const PACT_SLOTS_MAX = declareResourceMax('warlock.pact-slots')
  * grant already lives under.
  */
 const WARLOCK_CANTRIP_IDS = [
-  'srd:spell.eldritch-blast', 'srd:spell.chill-touch', 'srd:spell.poison-spray'
+  'srd:spell.eldritch-blast', 'srd:spell.chill-touch', 'srd:spell.poison-spray',
+  'srd:spell.mage-hand', 'srd:spell.minor-illusion', 'srd:spell.prestidigitation',
+  'srd:spell.true-strike'
 ]
 
 const WARLOCK_SPELL_IDS = [
@@ -1027,10 +1038,10 @@ export const WARLOCK_SPELLS: SpellDefinition[] = [
   // sorcerer list (docs/srd/08-spell-lists.md), needed for the sorcerer's own
   // known-spells grant in classes-extra.ts — the sorcerer's cantrip pool would
   // otherwise be one spell short of what 1st level requires.
-  { ...CHILL_TOUCH, lists: [WARLOCK_LIST, SORCERER_LIST] },
+  { ...CHILL_TOUCH, lists: [WARLOCK_LIST, SORCERER_LIST, 'srd:list.wizard'] },
   // And on the druid list, which was missed — the druid cantrip pool held two
   // spells and the Cantrips Known column asks for four.
-  { ...POISON_SPRAY, lists: [WARLOCK_LIST, SORCERER_LIST, DRUID_LIST] },
+  { ...POISON_SPRAY, lists: [WARLOCK_LIST, SORCERER_LIST, DRUID_LIST, 'srd:list.wizard'] },
   { ...THAUMATURGY, lists: [CLERIC_LIST] },
   { ...CHARM_PERSON, lists: [WARLOCK_LIST, SORCERER_LIST] },
   { ...HELLISH_REBUKE, lists: [WARLOCK_LIST] },
