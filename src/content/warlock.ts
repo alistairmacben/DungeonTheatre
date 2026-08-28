@@ -419,7 +419,9 @@ const WARLOCK_SPELL_IDS = [
   'srd:spell.scrying',
   'srd:spell.circle-of-death', 'srd:spell.conjure-fey', 'srd:spell.create-undead',
   'srd:spell.eyebite', 'srd:spell.flesh-to-stone', 'srd:spell.mass-suggestion',
-  'srd:spell.true-seeing'
+  'srd:spell.true-seeing',
+  'srd:spell.etherealness', 'srd:spell.finger-of-death', 'srd:spell.forcecage',
+  'srd:spell.plane-shift'
 ]
 
 /**

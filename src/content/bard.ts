@@ -137,7 +137,10 @@ const BARD_SPELL_POOL = [
   'srd:spell.teleportation-circle',
   'srd:spell.eyebite', 'srd:spell.find-the-path', 'srd:spell.guards-and-wards',
   'srd:spell.irresistible-dance', 'srd:spell.mass-suggestion',
-  'srd:spell.programmed-illusion', 'srd:spell.true-seeing'
+  'srd:spell.programmed-illusion', 'srd:spell.true-seeing',
+  'srd:spell.arcane-sword', 'srd:spell.etherealness', 'srd:spell.forcecage',
+  'srd:spell.magnificent-mansion', 'srd:spell.mirage-arcane', 'srd:spell.project-image',
+  'srd:spell.regenerate', 'srd:spell.resurrection', 'srd:spell.symbol', 'srd:spell.teleport'
 ]
 
 // ===========================================================================
