@@ -101,9 +101,26 @@ const view = (c, detail = 'inspect') => playerViewOf(c, content, { detail })
 
 {
   const views = [view(FIGHTER), view(SORCERER), view(PALADIN)]
-  const shape = (v) => Object.keys(v).sort().join(',')
+
+  // The three used to share an identical top-level shape, and that was only
+  // true because two of them had no magic: the sorcerer's spell panel was
+  // withheld whenever its Spells Known selections were unanswered, and the
+  // paladin had no spellcasting authored at all. Both are casters now, so the
+  // honest contract is that everything *except* `spellcasting` is identical
+  // and `spellcasting` appears exactly for the characters holding slots.
+  const OPTIONAL = new Set(['spellcasting'])
+  const shape = (v) => Object.keys(v).filter((k) => !OPTIONAL.has(k)).sort().join(',')
   check('classes: all three produce the same top-level shape',
-    new Set(views.map(shape)).size === 1)
+    new Set(views.map(shape)).size === 1, views.map(shape).join(' || '))
+
+  const casts = (v) => v.spellcasting !== undefined
+  check('classes: the fighter has no spell panel', !casts(views[0]))
+  check('classes: the sorcerer and paladin do, slots and DC included',
+    casts(views[1]) && casts(views[2]),
+    `${casts(views[1])}, ${casts(views[2])}`)
+  check('classes: and a caster who knows no spells still sees a save DC',
+    views[1].spellcasting.saveDc.value > 8 && views[1].spellcasting.slots.length > 0,
+    JSON.stringify({ dc: views[1].spellcasting.saveDc.value, slots: views[1].spellcasting.slots.length }))
 
   for (const v of views) {
     check(`classes: ${v.meta.name} has vitals, abilities, skills and actions`,
@@ -505,8 +522,12 @@ const view = (c, detail = 'inspect') => playerViewOf(c, content, { detail })
     createResolution(c, content), content, { detail: 'inspect' }))
 
   const keysOf = (v) => JSON.stringify(Object.keys(v).sort())
+  // Same correction as above: `spellcasting` is optional by design, and two
+  // of these three were only matching because their magic was missing.
+  const withoutCasting = (v) =>
+    Object.keys(v).filter((k) => k !== 'spellcasting').sort().join(',')
   check('unification: identical top-level contract for all three classes',
-    new Set(views.map(keysOf)).size === 1)
+    new Set([FIGHTER, SORCERER, PALADIN].map((c) => withoutCasting(view(c)))).size === 1)
 
   // Optional presentation hints (group, order) vary; the required contract
   // does not. That is the field set the UI actually depends on.

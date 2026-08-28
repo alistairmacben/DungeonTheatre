@@ -221,7 +221,17 @@ export function resolveSpellcasting(
     a.spell.level - b.spell.level || a.spell.name.localeCompare(b.spell.name))
 
   return {
-    active: accessible.length > 0,
+    // A caster with no spells yet is still a caster. Keying this on the
+    // accessible list alone meant a 5th-level sorcerer who had not answered
+    // their Spells Known selections had four slot pools, a save DC and a spell
+    // attack bonus, and the view showed none of it — the whole panel was
+    // withheld because the list inside it was empty.
+    //
+    // Not the castSpells capability, which every creature has until something
+    // revokes it: a fighter would then have a spell panel and a raging
+    // barbarian would lose one they never had. Holding slots is the signal
+    // that means "something granted this character magic".
+    active: accessible.length > 0 || slots.length > 0,
     saveDc,
     attackBonus,
     preparedMax,

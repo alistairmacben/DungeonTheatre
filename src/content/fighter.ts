@@ -264,12 +264,23 @@ export const FIGHTER_CLASS: ClassDefinition = {
           id: 'fighting-style', prompt: 'Choose a Fighting Style',
           kind: 'other', count: 1, from: FIGHTING_STYLES.map((s) => s.id)
         }],
-        narrative: [{
-          text: 'Turn on the toggle for the style you chose. The engine cannot '
-            + 'check that it matches your answer above, or that only one is on — '
-            + 'a selection answer cannot yet steer which modifier applies.',
-          dmPromptable: true
-        }]
+        // One narrative entry per style, each carrying its own toggle. A
+        // notice carries one `toggleId`, so a single paragraph could name the
+        // switches but not offer them — and they were unreachable from the app
+        // entirely, which is why Archery had never once applied.
+        narrative: [
+          ...FIGHTING_STYLES.map((st) => ({
+            text: `${st.name}: turn this on if it is the style you chose.`,
+            toggleId: styleToggle(st.id),
+            dmPromptable: false
+          })),
+          {
+            text: 'The engine cannot check that the toggle you turn on matches '
+              + 'your answer above, or that only one is on — a selection answer '
+              + 'cannot yet steer which modifier applies.',
+            dmPromptable: true
+          }
+        ]
       })
     },
     {

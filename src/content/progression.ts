@@ -57,6 +57,41 @@ export function ordinal(n: number): string {
 }
 
 /**
+ * The Paladin and Ranger slot columns, 1st through 5th (SRD p30 and p37).
+ *
+ * A half caster gets no slots at 1st level at all, and never climbs past 5th.
+ * The two classes share the identical table, which is why this lives here
+ * rather than in either file.
+ */
+export const HALF_CASTER_SLOTS: readonly (readonly number[])[] = [
+  //   1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20
+  [0, 2, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4], // 1st
+  [0, 0, 0, 0, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3], // 2nd
+  [0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3], // 3rd
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 3, 3], // 4th
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2]  // 5th
+]
+
+/** The top of a half caster's ladder, which is as high as they can prepare. */
+export const HALF_CASTER_MAX_SPELL_LEVEL = [
+  0, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5
+]
+
+/**
+ * The five slot resources a half caster has.
+ *
+ * Identical in shape to `fullCasterSlots` and deliberately a separate function
+ * rather than a parameter: the two tables are different data, and a single
+ * function taking "how many columns" would invite passing the wrong one.
+ */
+export function halfCasterSlots(classId: string, group: string): {
+  resources: ResourceDefinition[]
+  modifiers: Modifier[]
+} {
+  return slotsFromTable(HALF_CASTER_SLOTS, classId, group)
+}
+
+/**
  * The nine slot resources a full caster has, and the modifiers that fill them
  * in from the table above.
  *
@@ -70,10 +105,16 @@ export function fullCasterSlots(classId: string, group: string): {
   resources: ResourceDefinition[]
   modifiers: Modifier[]
 } {
+  return slotsFromTable(FULL_CASTER_SLOTS, classId, group)
+}
+
+function slotsFromTable(
+  table: readonly (readonly number[])[], classId: string, group: string
+): { resources: ResourceDefinition[]; modifiers: Modifier[] } {
   const resources: ResourceDefinition[] = []
   const modifiers: Modifier[] = []
 
-  FULL_CASTER_SLOTS.forEach((column, index) => {
+  table.forEach((column, index) => {
     const level = index + 1
     const resourceId = `${group}.slots.${level}`
     const max = declareResourceMax(resourceId)

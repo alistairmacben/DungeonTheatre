@@ -428,6 +428,7 @@ export const MAGIC_MISSILE = spell({
 
 /** Every spell, with the class lists it appears on. */
 const DRUID = 'srd:list.druid'
+const PALADIN = 'srd:list.paladin'
 
 export const ALL_SPELLS: SpellDefinition[] = [
   { ...FIRE_BOLT, lists: [WIZARD, SORCERER] },
@@ -436,15 +437,19 @@ export const ALL_SPELLS: SpellDefinition[] = [
   { ...SACRED_FLAME, lists: [CLERIC] },
   { ...MAGE_ARMOR, lists: [WIZARD, SORCERER] },
   { ...SHIELD_SPELL, lists: [WIZARD, SORCERER] },
-  { ...BLESS, lists: [CLERIC] },
+  // Bless, Cure Wounds and Detect Magic are all on the SRD paladin list
+  // (docs/srd/08-spell-lists.md) and carried no paladin tag, so the paladin's
+  // prepared grant drew from a list nothing was on. The integrity checker said
+  // so the moment the class was authored.
+  { ...BLESS, lists: [CLERIC, PALADIN] },
   // Longstrider, Detect Magic and Cure Wounds are all genuinely on the SRD
   // druid list (docs/srd/08-spell-lists.md) — the druid's own content file
   // said adding this tag was "a one-word data edit, not an engine change."
   { ...LONGSTRIDER, lists: [WIZARD, DRUID] },
   { ...PROTECTION_FROM_ENERGY, lists: [WIZARD, SORCERER, CLERIC] },
-  { ...DETECT_MAGIC, lists: [WIZARD, SORCERER, CLERIC, DRUID] },
+  { ...DETECT_MAGIC, lists: [WIZARD, SORCERER, CLERIC, DRUID, PALADIN] },
   { ...IDENTIFY, lists: [WIZARD] },
-  { ...CURE_WOUNDS, lists: [CLERIC, DRUID] },
+  { ...CURE_WOUNDS, lists: [CLERIC, DRUID, PALADIN] },
   { ...MAGIC_MISSILE, lists: [WIZARD, SORCERER] },
   { ...DRUIDCRAFT, lists: [DRUID] },
   // Also genuinely on the bard cantrip list. Bard's own grant draws from a

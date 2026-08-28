@@ -1,4 +1,4 @@
-// Sorcerer and Paladin — proof that resources are data, not class knowledge.
+// Sorcerer — proof that resources are data, not class knowledge.
 //
 // Neither class needs a line of code anywhere in the engine or the view model.
 // Each declares resources carrying a `display` hint, and the player view
@@ -9,7 +9,8 @@ import type {
   ProficiencyGrant, SelectionDefinition
 } from '../rules/types.js'
 import {
-  abilityModifierPath, ARMOR_CLASS, declareResourceMax, HP_MAX, passivePath
+  abilityModifierPath, ARMOR_CLASS, declareResourceMax, HP_MAX, passivePath,
+  SPELL_SAVE_DC, SPELL_ATTACK, PROFICIENCY_BONUS
 } from '../rules/statPaths.js'
 import { fullCasterSlots } from './progression.js'
 
@@ -17,8 +18,6 @@ import { fullCasterSlots } from './progression.js'
 // modifiers like anything else — which is why the view can explain where a
 // sorcerer's point total came from.
 const SORCERY_POINTS_MAX = declareResourceMax('sorceryPoints')
-const LAY_ON_HANDS_MAX = declareResourceMax('layOnHands')
-const DIVINE_SENSE_MAX = declareResourceMax('divineSense')
 
 /** The Sorcerer table's slot columns, 1st through 9th — identical to the
  *  wizard's; the two classes share one progression, not a coincidence. */
@@ -149,6 +148,16 @@ export const SORCERER: ClassDefinition = {
               2
             ]
           }, { note: 'd6 hit die' }),
+          // The same three modifiers every other caster's DC is built from,
+          // with Charisma. They were missing entirely, so a 5th-level
+          // sorcerer's spell save DC was 0 and its attack bonus was +0 — which
+          // nothing noticed, because the spell panel was withheld whenever the
+          // Spells Known selections were unanswered.
+          { id: id(), channel: 'value', target: SPELL_SAVE_DC, op: 'base', value: 8, permanence: 'persistent' },
+          add(SPELL_SAVE_DC, { stat: PROFICIENCY_BONUS }),
+          add(SPELL_SAVE_DC, { stat: abilityModifierPath('cha') }, { note: 'Charisma' }),
+          add(SPELL_ATTACK, { stat: PROFICIENCY_BONUS }),
+          add(SPELL_ATTACK, { stat: abilityModifierPath('cha') }, { note: 'Charisma' }),
           // Granting this capability is what satisfies "the ability to cast at
           // least one spell" for Elemental Adept, Spell Sniper and War Caster —
           // the same predicate, no class check.
@@ -197,88 +206,6 @@ export const SORCERER: ClassDefinition = {
           cost: 'bonusAction',
           requirements: { resourceAtLeast: ['sorcerer.sorceryPoints', 2] },
           costs: { 'sorcerer.sorceryPoints': 2 }
-        }]
-      })
-    }
-  ]
-}
-
-export const PALADIN: ClassDefinition = {
-  id: 'srd:class.paladin', name: 'Paladin', provenance: 'srd', contentVersion: 1,
-  hitDie: 10, savingThrowProficiencies: ['wis', 'cha'],
-  features: [
-    {
-      id: 'srd:class.paladin.core', name: 'Paladin Training',
-      provenance: 'srd', contentVersion: 1, grantedAtLevel: 1,
-      effects: source({
-        id: 'srd:class.paladin.core', name: 'Paladin Training',
-        modifiers: [
-          add(HP_MAX, {
-            sum: [
-              { product: [{ characterLevel: true }, 6] },
-              { product: [{ characterLevel: true }, { stat: abilityModifierPath('con') }] },
-              4
-            ]
-          }, { note: 'd10 hit die' })
-        ],
-        proficiencies: [
-          prof({ kind: 'save', ability: 'wis' }),
-          prof({ kind: 'save', ability: 'cha' }),
-          prof({ kind: 'armor', category: 'light' }),
-          prof({ kind: 'armor', category: 'medium' }),
-          prof({ kind: 'armor', category: 'heavy' }),
-          prof({ kind: 'armor', category: 'shield' }),
-          prof({ kind: 'weaponCategory', category: 'simple' }),
-          prof({ kind: 'weaponCategory', category: 'martial' }),
-          prof({ kind: 'skill', id: 'religion' }),
-          prof({ kind: 'skill', id: 'athletics' })
-        ]
-      })
-    },
-    {
-      id: 'srd:class.paladin.lay-on-hands', name: 'Lay on Hands',
-      provenance: 'srd', contentVersion: 1, grantedAtLevel: 1,
-      effects: source({
-        id: 'srd:class.paladin.lay-on-hands', name: 'Lay on Hands',
-        modifiers: [
-          add(LAY_ON_HANDS_MAX, { product: [{ classLevel: 'srd:class.paladin' }, 5] },
-            { note: 'five hit points per paladin level' })
-        ],
-        resources: [{
-          id: 'paladin.layOnHands', name: 'Lay on Hands',
-          max: LAY_ON_HANDS_MAX,
-          refresh: { kind: 'longRest' }, display: 'pool', order: 5
-        }],
-        actions: [{
-          id: 'paladin.lay-on-hands.use', name: 'Lay on Hands', kind: 'ability',
-          description: 'Touch a creature and restore hit points from your pool.',
-          cost: 'action',
-          requirements: { resourceAtLeast: ['paladin.layOnHands', 1] },
-          costs: { 'paladin.layOnHands': 1 },
-          targets: { selector: 'creature', count: 1, rangeFeet: 5 }
-        }]
-      })
-    },
-    {
-      id: 'srd:class.paladin.divine-sense', name: 'Divine Sense',
-      provenance: 'srd', contentVersion: 1, grantedAtLevel: 1,
-      effects: source({
-        id: 'srd:class.paladin.divine-sense', name: 'Divine Sense',
-        modifiers: [
-          add(DIVINE_SENSE_MAX,
-            { sum: [1, { stat: abilityModifierPath('cha') }] },
-            { note: '1 + your Charisma modifier' })
-        ],
-        resources: [{
-          id: 'paladin.divineSense', name: 'Divine Sense',
-          max: DIVINE_SENSE_MAX,
-          refresh: { kind: 'longRest' }, display: 'uses', order: 6
-        }],
-        actions: [{
-          id: 'paladin.divine-sense.use', name: 'Divine Sense', kind: 'ability',
-          cost: 'action',
-          requirements: { resourceAtLeast: ['paladin.divineSense', 1] },
-          costs: { 'paladin.divineSense': 1 }
         }]
       })
     }
@@ -352,5 +279,5 @@ export const DM_HELM: ItemDefinition = {
   })
 }
 
-export const EXTRA_CLASSES = [SORCERER, PALADIN]
+export const EXTRA_CLASSES = [SORCERER]
 export const EXTRA_ITEMS = [POTION_OF_HEALING, POTION_OF_POISON, RING_OF_PROTECTION, DM_HELM]

@@ -404,8 +404,60 @@ export const MAEVE_THORNWOOD: Character = {
   spellsPrepared: ['srd:spell.cure-wounds', 'srd:spell.longstrider']
 }
 
+/**
+ * Ser Bryn Halloway, Human Paladin 11 (Oath of Devotion) — the half caster.
+ *
+ * Every other caster on this roster is a full caster or the warlock. The
+ * paladin is the first with the half-caster table: no slots at all at 1st
+ * level, and never a slot above 5th no matter how far they climb.
+ *
+ * Eleventh so the Aura of Protection is bolstering her own saves, Aura of
+ * Courage and Aura of Devotion are both suppressing conditions, and Improved
+ * Divine Smite has arrived.
+ */
+export const SER_BRYN: Character = {
+  id: 'char:bryn',
+  campaignId: 'camp-1',
+  name: 'Ser Bryn',
+  playerId: 'player-9',
+  speciesId: 'srd:species.human',
+  classLevels: [{
+    classId: 'srd:class.paladin', level: 11, subclassId: 'srd:subclass.devotion'
+  }],
+  abilityScoreBase: { str: 16, dex: 10, con: 14, int: 8, wis: 10, cha: 15 },
+  buildChoices: [],
+  // Human raises CON to 15 (+2): 10 + 2 at 1st, then 6 + 2 per level after
+  // (8 x 10 = 80): 92.
+  hitPointsCurrent: 92,
+  hitPointsTemp: 0,
+  hitDiceSpent: {},
+  resourcesSpent: {},
+  conditions: [],
+  effectInstances: [],
+  exhaustionLevel: 0,
+  selections: {
+    'srd:class.paladin.core': { skills: ['athletics', 'persuasion'] },
+    'srd:class.paladin.fighting-style': { 'fighting-style': ['defense'] }
+  },
+  inventory: {
+    instances: [
+      { instanceId: 'p-sword', definitionId: 'srd:weapon.longsword', contentVersion: 1, identified: true },
+      { instanceId: 'p-shield', definitionId: 'srd:armor.shield', contentVersion: 1, identified: true },
+      { instanceId: 'p-plate', definitionId: 'srd:armor.chain-mail', contentVersion: 1, identified: true },
+      { instanceId: 'p-potion', definitionId: 'srd:item.potion-of-healing', contentVersion: 1, quantity: 2, identified: true }
+    ],
+    equipped: { mainHand: 'p-sword', shield: 'p-shield', armor: 'p-plate' },
+    attunedInstanceIds: []
+  },
+  deathSaves: { successes: 0, failures: 0 },
+  // Defense is the style she chose, and the toggle is the fighter's own — one
+  // switch per decision, even for a paladin who never took a fighter level.
+  toggles: { 'wearing-armor': true, 'fighter.style.defense': true },
+  spellsPrepared: ['srd:spell.bless', 'srd:spell.cure-wounds']
+}
+
 /** The party. One entry per archetype the content can express today. */
 export const PARTY: Character[] = [
   SIR_ALDREN, ILYANA_VESS, PIP_UNDERBOUGH, BROTHER_ALDWIN, WEN_SHAO,
-  GROG_IRONJAW, NYX_VAELTHORNE, MAEVE_THORNWOOD
+  GROG_IRONJAW, NYX_VAELTHORNE, MAEVE_THORNWOOD, SER_BRYN
 ]

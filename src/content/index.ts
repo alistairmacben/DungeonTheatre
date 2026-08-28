@@ -11,6 +11,7 @@ import {
   ALL_CLASSES, ALL_FEATS, ALL_ITEMS, ALL_SPECIES, BASELINE
 } from './srd.js'
 import { EXTRA_CLASSES, EXTRA_ITEMS } from './classes-extra.js'
+import { PALADIN_CLASSES, PALADIN_SUBCLASSES } from './paladin.js'
 import { ALL_SPELLS } from './spells.js'
 import { WIZARD_CLASSES, WIZARD_ITEMS, WIZARD_SPECIES } from './wizard.js'
 import { PARTY_CLASSES, PARTY_ITEMS, PARTY_SPECIES } from './party.js'
@@ -54,7 +55,7 @@ const SPECIES: SpeciesDefinition[] = [
 const CLASSES: ClassDefinition[] = [
   ...ALL_CLASSES, ...EXTRA_CLASSES, ...WIZARD_CLASSES, ...PARTY_CLASSES,
   ...BARBARIAN_CLASSES, ...BARD_CLASSES, ...WARLOCK_CLASSES, ...DRUID_CLASSES,
-  MONK_CLASS, ...FIGHTER_CLASSES
+  MONK_CLASS, ...FIGHTER_CLASSES, ...PALADIN_CLASSES
 ]
 const ITEMS: ItemDefinition[] = [
   ...ALL_ITEMS, ...EXTRA_ITEMS, ...WIZARD_ITEMS, ...PARTY_ITEMS,
@@ -64,7 +65,7 @@ const SPELLS: SpellDefinition[] = [...ALL_SPELLS, ...WARLOCK_SPELLS]
 const SUBCLASSES: SubclassDefinition[] = [
   ...MONK_SUBCLASSES, ...FIGHTER_SUBCLASSES, ...WIZARD_SUBCLASSES, ...PARTY_SUBCLASSES,
   ...BARD_SUBCLASSES, ...BARBARIAN_SUBCLASSES, ...WARLOCK_SUBCLASSES,
-  ...DRUID_SUBCLASSES
+  ...DRUID_SUBCLASSES, ...PALADIN_SUBCLASSES
 ]
 
 export function loadContent(): ContentIndex {

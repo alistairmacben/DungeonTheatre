@@ -151,6 +151,15 @@ export function resolveRoll(resolution: Resolution, request: RollRequest): RollR
   // attack.roll and its +10 is on damage.weapon, so the attack roll takes one
   // and the damage calculation takes the other.
   const rollPath = rollTargetPath(request.kind)
+
+  // Both the elected options and the character's standing modifiers.
+  //
+  // Only `extra` was read here, which meant a persistent `add` aimed at a roll
+  // path did nothing at all: the fighter's Archery style, the paladin's Aura
+  // of Protection and Sacred Weapon all wrote to attack.roll or save.roll and
+  // none of them ever reached a roll. Options carry no gate — electing one is
+  // the decision — while standing entries carry theirs and can be suppressed,
+  // so the two are read with the same rule the roll channel below uses.
   for (const e of extra) {
     const m = e.modifier
     if (m.channel !== 'value' || m.op !== 'add') continue
@@ -162,6 +171,43 @@ export function resolveRoll(resolution: Resolution, request: RollRequest): RollR
       op: 'add', value, applied: true, stage: 'add',
       ...(m.note ? { note: m.note } : {})
     })
+  }
+
+  for (const entry of resolution.entries) {
+    const m = entry.modifier
+    if (m.channel !== 'value' || m.op !== 'add') continue
+    if (m.target !== rollPath) continue
+    if (entry.incomplete) incomplete = true
+
+    const term: Term = {
+      sourceId: entry.sourceId, sourceName: entry.sourceName,
+      provenance: entry.provenance, op: 'add', stage: 'add', applied: false,
+      ...(m.note ? { note: m.note } : {})
+    }
+
+    const suppressedBy = resolution.isSuppressed(entry as never)
+    if (suppressedBy) {
+      modifierTerms.push({
+        ...term, stage: 'suppressed',
+        reason: `suppressed by ${suppressedBy.sourceName}`
+      })
+      continue
+    }
+    if (!entry.gatePassed) {
+      modifierTerms.push({ ...term, reason: entry.gateReason })
+      continue
+    }
+    // Scoped roll-path modifiers narrow to the rolls they name — Sacred
+    // Weapon is every attack, but a future "+2 on saves against poison" is
+    // not every save.
+    if (m.scope && !scopeMatches(m.scope, scope)) {
+      modifierTerms.push({ ...term, reason: 'does not apply to this roll' })
+      continue
+    }
+
+    const value = resolution.evaluateValue(m.value, entry.sourceId)
+    modifierTotal += value
+    modifierTerms.push({ ...term, value, applied: true })
   }
 
   for (const entry of [...resolution.entries, ...extra]) {
