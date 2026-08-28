@@ -37,6 +37,17 @@ const CLERIC_CHANNEL_DIVINITY_USES = [
   0, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3
 ]
 
+/**
+ * The Destroy Undead thresholds above the 5th-level row.
+ *
+ * A challenge rating is a string because 1/2 is not a number the way the
+ * others are, and nothing computes with it — there are no creatures in the
+ * content set for it to be compared against.
+ */
+const DESTROY_UNDEAD_THRESHOLDS: [number, string][] = [
+  [8, '1'], [11, '2'], [14, '3'], [17, '4']
+]
+
 /** The top of the slot ladder, which is as high as a cleric can prepare. */
 const CLERIC_MAX_SPELL_LEVEL = [
   1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 9, 9
@@ -741,8 +752,47 @@ export const CLERIC: ClassDefinition = {
         // creatures in the content set, let alone their CRs.
         narrative: [{
           text: 'An undead that fails its save against your Turn Undead is instantly '
-            + 'destroyed if its challenge rating is at or below your threshold: '
-            + 'CR 1/2 at 5th level, 1 at 8th, 2 at 11th, 3 at 14th, 4 at 17th.',
+            + 'destroyed if its challenge rating is 1/2 or lower.',
+          dmPromptable: true
+        }]
+      })
+    },
+    // The Features column names Destroy Undead again at 8th, 11th, 14th and
+    // 17th, each time with a higher threshold. One row per improvement, so a
+    // cleric levelling into one sees something happen — the same shape the
+    // barbarian's Brutal Critical rows use.
+    ...DESTROY_UNDEAD_THRESHOLDS.map(([level, cr]): ClassFeatureDefinition => {
+      const fid = `srd:class.cleric.destroy-undead-${level}`
+      const name = `Destroy Undead (CR ${cr})`
+      return {
+        id: fid, name, provenance: 'srd', contentVersion: 1, grantedAtLevel: level,
+        effects: source({
+          id: fid, name,
+          completeness: 'partial',
+          narrative: [{
+            text: `Your Destroy Undead threshold rises to challenge rating ${cr}.`,
+            dmPromptable: true
+          }]
+        })
+      }
+    }),
+
+    // --- 20th --------------------------------------------------------------
+    {
+      id: 'srd:class.cleric.divine-intervention-20',
+      name: 'Divine Intervention (improvement)',
+      provenance: 'srd', contentVersion: 1, grantedAtLevel: 20,
+      effects: source({
+        id: 'srd:class.cleric.divine-intervention-20',
+        name: 'Divine Intervention (improvement)',
+        // The roll goes away entirely, which is a rule about a d100 the engine
+        // never rolled — Divine Intervention has always been a use tracked here
+        // and an outcome decided at the table.
+        completeness: 'partial',
+        narrative: [{
+          text: 'Your call for Divine Intervention succeeds automatically — no roll '
+            + 'is needed. The use is still spent, and you still wait seven days '
+            + 'before calling again.',
           dmPromptable: true
         }]
       })

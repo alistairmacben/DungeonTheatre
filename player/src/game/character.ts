@@ -518,8 +518,80 @@ export const VESSA_EMBERLINE: Character = {
   toggles: {}
 }
 
+/**
+ * Thalia Rooksbane, Human Ranger 11 (Hunter) — the twelfth and last class.
+ *
+ * The ranger is the only class in SRD 5.1 this content set never had at all;
+ * every other one existed in some partial form and was extended. With her on
+ * the roster, every class in the document exists, runs to 20th level, and has
+ * a subclass behind its subclass slot.
+ *
+ * Eleventh so both Favored Enemy and Natural Explorer have improved, Land's
+ * Stride and Hide in Plain Sight are in play, and all three Hunter choices up
+ * to Multiattack have been made.
+ */
+export const THALIA_ROOKSBANE: Character = {
+  id: 'char:thalia',
+  campaignId: 'camp-1',
+  name: 'Thalia Rooksbane',
+  playerId: 'player-11',
+  speciesId: 'srd:species.human',
+  classLevels: [{
+    classId: 'srd:class.ranger', level: 11, subclassId: 'srd:subclass.hunter'
+  }],
+  abilityScoreBase: { str: 12, dex: 16, con: 14, int: 10, wis: 15, cha: 8 },
+  buildChoices: [],
+  // Human raises CON to 15 (+2): 10 + 2 at 1st, then 6 + 2 per level after
+  // (8 x 10 = 80): 92.
+  hitPointsCurrent: 92,
+  hitPointsTemp: 0,
+  hitDiceSpent: {},
+  resourcesSpent: {},
+  conditions: [],
+  effectInstances: [],
+  exhaustionLevel: 0,
+  selections: {
+    'srd:class.ranger.proficiencies': {
+      skills: ['stealth', 'survival', 'perception']
+    },
+    'srd:class.ranger.favored-enemy.1': { 'favored-enemy': ['monstrosities'] },
+    'srd:class.ranger.favored-enemy.6': { 'favored-enemy': ['undead'] },
+    'srd:class.ranger.natural-explorer.1': { 'favored-terrain': ['forest'] },
+    'srd:class.ranger.natural-explorer.6': { 'favored-terrain': ['mountain'] },
+    'srd:class.ranger.natural-explorer.10': { 'favored-terrain': ['swamp'] },
+    'srd:class.ranger.fighting-style': { 'fighting-style': ['archery'] },
+    'srd:class.ranger.spells-known.2': {
+      spells: ['srd:spell.cure-wounds', 'srd:spell.longstrider']
+    },
+    'srd:class.ranger.spells-known.3': { spells: ['srd:spell.detect-magic'] },
+    'srd:subclass.hunter.hunters-prey': { 'hunters-prey': ['colossus-slayer'] },
+    'srd:subclass.hunter.defensive-tactics': { 'defensive-tactics': ['steel-will'] },
+    'srd:subclass.hunter.multiattack': { multiattack: ['volley'] }
+  },
+  inventory: {
+    instances: [
+      { instanceId: 'r-bow', definitionId: 'srd:weapon.longbow', contentVersion: 1, identified: true },
+      { instanceId: 'r-shortsword', definitionId: 'srd:weapon.shortsword', contentVersion: 1, quantity: 2, identified: true },
+      { instanceId: 'r-leather', definitionId: 'srd:armor.leather', contentVersion: 1, identified: true },
+      { instanceId: 'r-potion2', definitionId: 'srd:item.potion-of-healing', contentVersion: 1, quantity: 2, identified: true }
+    ],
+    equipped: { mainHand: 'r-bow', armor: 'r-leather' },
+    attunedInstanceIds: []
+  },
+  deathSaves: { successes: 0, failures: 0 },
+  // Archery is the style she chose, on the fighter's own toggle. Steel Will is
+  // her Defensive Tactics option, and it is the one Hunter option in eleven
+  // that the engine can actually apply.
+  toggles: {
+    'wearing-armor': true,
+    'fighter.style.archery': true,
+    'ranger.steel-will': true
+  }
+}
+
 /** The party. One entry per archetype the content can express today. */
 export const PARTY: Character[] = [
   SIR_ALDREN, ILYANA_VESS, PIP_UNDERBOUGH, BROTHER_ALDWIN, WEN_SHAO,
-  GROG_IRONJAW, NYX_VAELTHORNE, MAEVE_THORNWOOD, SER_BRYN, VESSA_EMBERLINE
+  GROG_IRONJAW, NYX_VAELTHORNE, MAEVE_THORNWOOD, SER_BRYN, VESSA_EMBERLINE,
+  THALIA_ROOKSBANE
 ]

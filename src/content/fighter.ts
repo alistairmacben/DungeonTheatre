@@ -28,7 +28,7 @@
 //    what "that doesn't already use your proficiency bonus" means.
 
 import type {
-  ClassDefinition, EffectSource, Modifier, ProficiencyGrant, SubclassDefinition
+  ClassDefinition, ClassFeatureDefinition, EffectSource, Modifier, ProficiencyGrant, SubclassDefinition
 } from '../rules/types.js'
 import {
   abilityModifierPath, ARMOR_CLASS, ATTACK_ROLL, CRIT_RANGE, DAMAGE_WEAPON,
@@ -108,6 +108,27 @@ const INDOMITABLE_USES = [
  */
 const ATTACKS_PER_ACTION = [
   1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4
+]
+
+/**
+ * The rows the Features column repeats: three of the fighter's features are
+ * named again at higher levels with a bigger number.
+ */
+const IMPROVEMENTS: [number, string, string][] = [
+  [11, 'Extra Attack (2)',
+    'You now attack three times whenever you take the Attack action, instead of '
+    + 'twice. The app does not track the attack count — roll them yourself.'],
+  [13, 'Indomitable (2)',
+    'You can now use Indomitable twice between long rests. The use track above '
+    + 'has already grown.'],
+  [17, 'Action Surge (2)',
+    'You can now use Action Surge twice between rests, though still only once on '
+    + 'a turn. The use track above has already grown.'],
+  [17, 'Indomitable (3)',
+    'You can now use Indomitable three times between long rests.'],
+  [20, 'Extra Attack (3)',
+    'You now attack four times whenever you take the Attack action — more than '
+    + 'any other class in the SRD.']
 ]
 
 /** The fighter takes seven ASIs — more than any other class. */
@@ -414,7 +435,27 @@ export const FIGHTER_CLASS: ClassDefinition = {
           dmPromptable: true
         }]
       })
-    }
+    },
+
+    // --- the improvements the Features column names again ------------------
+    //
+    // Action Surge, Extra Attack and Indomitable each appear a second and
+    // third time in the fighter's Features column, and their *numbers* have
+    // been right all along: the use counts come from the tables above and
+    // ATTACKS_PER_ACTION records the attack count. What was missing was a row
+    // at each level, so a fighter levelling into one sees something happen
+    // rather than a resource silently ticking up.
+    ...IMPROVEMENTS.map(([level, name, text]): ClassFeatureDefinition => {
+      const fid = `${FIGHTER}.improvement-${level}-${name.toLowerCase().replace(/[^a-z]+/g, '-')}`
+      return {
+        id: fid, name, provenance: 'srd', contentVersion: 1, grantedAtLevel: level,
+        effects: source({
+          id: fid, name,
+          completeness: 'partial',
+          narrative: [{ text, dmPromptable: false }]
+        })
+      }
+    })
   ]
 }
 

@@ -429,6 +429,7 @@ export const MAGIC_MISSILE = spell({
 /** Every spell, with the class lists it appears on. */
 const DRUID = 'srd:list.druid'
 const PALADIN = 'srd:list.paladin'
+const RANGER = 'srd:list.ranger'
 
 export const ALL_SPELLS: SpellDefinition[] = [
   { ...FIRE_BOLT, lists: [WIZARD, SORCERER] },
@@ -445,11 +446,11 @@ export const ALL_SPELLS: SpellDefinition[] = [
   // Longstrider, Detect Magic and Cure Wounds are all genuinely on the SRD
   // druid list (docs/srd/08-spell-lists.md) — the druid's own content file
   // said adding this tag was "a one-word data edit, not an engine change."
-  { ...LONGSTRIDER, lists: [WIZARD, DRUID] },
+  { ...LONGSTRIDER, lists: [WIZARD, DRUID, RANGER] },
   { ...PROTECTION_FROM_ENERGY, lists: [WIZARD, SORCERER, CLERIC] },
-  { ...DETECT_MAGIC, lists: [WIZARD, SORCERER, CLERIC, DRUID, PALADIN] },
+  { ...DETECT_MAGIC, lists: [WIZARD, SORCERER, CLERIC, DRUID, PALADIN, RANGER] },
   { ...IDENTIFY, lists: [WIZARD] },
-  { ...CURE_WOUNDS, lists: [CLERIC, DRUID, PALADIN] },
+  { ...CURE_WOUNDS, lists: [CLERIC, DRUID, PALADIN, RANGER] },
   { ...MAGIC_MISSILE, lists: [WIZARD, SORCERER] },
   { ...DRUIDCRAFT, lists: [DRUID] },
   // Also genuinely on the bard cantrip list. Bard's own grant draws from a
