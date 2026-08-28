@@ -29,6 +29,7 @@ import { ALL_LEVEL9_SPELLS } from './spells-level9.js'
 import { ALL_ITEMS_A } from './items-a.js'
 import { ALL_ITEMS_B } from './items-b.js'
 import { ALL_ITEMS_C } from './items-c.js'
+import { ALL_ITEMS_D1 } from './items-d1.js'
 import { WIZARD_CLASSES, WIZARD_ITEMS, WIZARD_SPECIES } from './wizard.js'
 import { PARTY_CLASSES, PARTY_ITEMS, PARTY_SPECIES } from './party.js'
 import {
@@ -77,7 +78,7 @@ const CLASSES: ClassDefinition[] = [
 const ITEMS: ItemDefinition[] = [
   ...ALL_ITEMS, ...EXTRA_ITEMS, ...WIZARD_ITEMS, ...PARTY_ITEMS,
   ...BARBARIAN_ITEMS, ...BARD_ITEMS, ...WARLOCK_ITEMS, ...DRUID_ITEMS,
-  ...SORCERER_ITEMS, ...ALL_ITEMS_A, ...ALL_ITEMS_B, ...ALL_ITEMS_C
+  ...SORCERER_ITEMS, ...ALL_ITEMS_A, ...ALL_ITEMS_B, ...ALL_ITEMS_C, ...ALL_ITEMS_D1
 ]
 const SPELLS: SpellDefinition[] = [
   ...ALL_SPELLS, ...WARLOCK_SPELLS, ...ALL_LEVEL1_SPELLS, ...ALL_LEVEL2_SPELLS,

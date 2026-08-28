@@ -195,7 +195,11 @@ export const HANDAXE = weapon('srd:weapon.handaxe', 'Handaxe', {
 // Armour and shields
 // ===========================================================================
 
-function armor(
+// Exported so magic-armor items (Dragon Scale Mail, Dwarven Plate, and
+// similar entries whose SRD name is a real base armor type, not a generic
+// enhancement) can build a real base AC and Dexterity cap instead of
+// stacking a bare `add` on top of nothing.
+export function armor(
   aid: string, name: string, profile: ArmorProfile, modifiers: Modifier[] = []
 ): ItemDefinition {
   // A shield sets no base AC — it adds to whatever the body armour established.
