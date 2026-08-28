@@ -278,7 +278,12 @@ export function resistancesOf(target: Resolution): Partial<Record<DamageType, Re
   for (const t of DAMAGE_TYPE_PATHS) {
     if (t === 'all') continue
     const own = target.stat(resistancePath(t)).total
-    const value = Math.max(own, blanket)
+    // A blanket effect (petrification's resistance to everything) only
+    // overrides the type's own value when it is actually present — taking
+    // Math.max unconditionally would let the default "no blanket" value of 0
+    // silently erase a genuine vulnerability (a negative `own`) whenever
+    // nothing granted blanket protection, which is the common case.
+    const value = blanket !== 0 ? Math.max(own, blanket) : own
     out[t as DamageType] =
       value >= 2 ? 'immune' : value === 1 ? 'resistant' : value < 0 ? 'vulnerable' : 'none'
   }
