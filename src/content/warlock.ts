@@ -405,7 +405,10 @@ const WARLOCK_SPELL_IDS = [
   'srd:spell.charm-person', 'srd:spell.hellish-rebuke', 'srd:spell.darkness',
   'srd:spell.comprehend-languages', 'srd:spell.expeditious-retreat',
   'srd:spell.illusory-script', 'srd:spell.protection-from-evil-and-good',
-  'srd:spell.unseen-servant'
+  'srd:spell.unseen-servant',
+  'srd:spell.enthrall', 'srd:spell.hold-person', 'srd:spell.invisibility',
+  'srd:spell.mirror-image', 'srd:spell.misty-step', 'srd:spell.ray-of-enfeeblement',
+  'srd:spell.shatter', 'srd:spell.suggestion'
 ]
 
 /**

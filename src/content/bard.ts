@@ -114,7 +114,13 @@ const BARD_SPELL_POOL = [
   'srd:spell.faerie-fire', 'srd:spell.feather-fall', 'srd:spell.healing-word',
   'srd:spell.heroism', 'srd:spell.hideous-laughter', 'srd:spell.illusory-script',
   'srd:spell.silent-image', 'srd:spell.sleep', 'srd:spell.speak-with-animals',
-  'srd:spell.thunderwave', 'srd:spell.unseen-servant'
+  'srd:spell.thunderwave', 'srd:spell.unseen-servant',
+  'srd:spell.animal-messenger', 'srd:spell.blindness-deafness', 'srd:spell.calm-emotions',
+  'srd:spell.detect-thoughts', 'srd:spell.enhance-ability', 'srd:spell.enthrall',
+  'srd:spell.heat-metal', 'srd:spell.hold-person', 'srd:spell.invisibility',
+  'srd:spell.knock', 'srd:spell.lesser-restoration', 'srd:spell.locate-animals-or-plants',
+  'srd:spell.locate-object', 'srd:spell.magic-mouth', 'srd:spell.see-invisibility',
+  'srd:spell.shatter', 'srd:spell.silence', 'srd:spell.suggestion', 'srd:spell.zone-of-truth'
 ]
 
 // ===========================================================================

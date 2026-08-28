@@ -18,6 +18,7 @@ import {
 import { RANGER_CLASSES, RANGER_SUBCLASSES } from './ranger.js'
 import { ALL_SPELLS } from './spells.js'
 import { ALL_LEVEL1_SPELLS } from './spells-level1.js'
+import { ALL_LEVEL2_SPELLS } from './spells-level2.js'
 import { WIZARD_CLASSES, WIZARD_ITEMS, WIZARD_SPECIES } from './wizard.js'
 import { PARTY_CLASSES, PARTY_ITEMS, PARTY_SPECIES } from './party.js'
 import {
@@ -68,7 +69,9 @@ const ITEMS: ItemDefinition[] = [
   ...BARBARIAN_ITEMS, ...BARD_ITEMS, ...WARLOCK_ITEMS, ...DRUID_ITEMS,
   ...SORCERER_ITEMS
 ]
-const SPELLS: SpellDefinition[] = [...ALL_SPELLS, ...WARLOCK_SPELLS, ...ALL_LEVEL1_SPELLS]
+const SPELLS: SpellDefinition[] = [
+  ...ALL_SPELLS, ...WARLOCK_SPELLS, ...ALL_LEVEL1_SPELLS, ...ALL_LEVEL2_SPELLS
+]
 const SUBCLASSES: SubclassDefinition[] = [
   ...MONK_SUBCLASSES, ...FIGHTER_SUBCLASSES, ...WIZARD_SUBCLASSES, ...PARTY_SUBCLASSES,
   ...BARD_SUBCLASSES, ...BARBARIAN_SUBCLASSES, ...WARLOCK_SUBCLASSES,

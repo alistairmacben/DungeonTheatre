@@ -149,7 +149,11 @@ const RANGER_SPELL_POOL = [
   'srd:spell.cure-wounds', 'srd:spell.detect-magic', 'srd:spell.longstrider',
   'srd:spell.alarm', 'srd:spell.animal-friendship', 'srd:spell.detect-poison-and-disease',
   'srd:spell.fog-cloud', 'srd:spell.goodberry', 'srd:spell.hunters-mark',
-  'srd:spell.jump', 'srd:spell.speak-with-animals'
+  'srd:spell.jump', 'srd:spell.speak-with-animals',
+  'srd:spell.animal-messenger', 'srd:spell.barkskin', 'srd:spell.darkvision',
+  'srd:spell.find-traps', 'srd:spell.lesser-restoration', 'srd:spell.locate-animals-or-plants',
+  'srd:spell.locate-object', 'srd:spell.pass-without-trace', 'srd:spell.silence',
+  'srd:spell.spike-growth'
 ]
 
 const SPELLS_KNOWN_FEATURES = RANGER_SPELLS_KNOWN
