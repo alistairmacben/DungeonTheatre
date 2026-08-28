@@ -153,7 +153,10 @@ const SORCERER_SPELL_POOL = [
   'srd:spell.animate-objects', 'srd:spell.cloudkill', 'srd:spell.cone-of-cold',
   'srd:spell.creation', 'srd:spell.dominate-person', 'srd:spell.hold-monster',
   'srd:spell.insect-plague', 'srd:spell.seeming', 'srd:spell.telekinesis',
-  'srd:spell.teleportation-circle', 'srd:spell.wall-of-stone'
+  'srd:spell.teleportation-circle', 'srd:spell.wall-of-stone',
+  'srd:spell.chain-lightning', 'srd:spell.circle-of-death', 'srd:spell.disintegrate',
+  'srd:spell.eyebite', 'srd:spell.globe-of-invulnerability', 'srd:spell.mass-suggestion',
+  'srd:spell.move-earth', 'srd:spell.sunbeam', 'srd:spell.true-seeing'
 ]
 
 const SORCERY_POINTS_MAX = declareResourceMax('sorceryPoints')

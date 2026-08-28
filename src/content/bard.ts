@@ -134,7 +134,10 @@ const BARD_SPELL_POOL = [
   'srd:spell.hold-monster', 'srd:spell.legend-lore', 'srd:spell.mass-cure-wounds',
   'srd:spell.mislead', 'srd:spell.modify-memory', 'srd:spell.planar-binding',
   'srd:spell.raise-dead', 'srd:spell.scrying', 'srd:spell.seeming',
-  'srd:spell.teleportation-circle'
+  'srd:spell.teleportation-circle',
+  'srd:spell.eyebite', 'srd:spell.find-the-path', 'srd:spell.guards-and-wards',
+  'srd:spell.irresistible-dance', 'srd:spell.mass-suggestion',
+  'srd:spell.programmed-illusion', 'srd:spell.true-seeing'
 ]
 
 // ===========================================================================

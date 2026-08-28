@@ -416,7 +416,10 @@ const WARLOCK_SPELL_IDS = [
   'srd:spell.banishment', 'srd:spell.blight', 'srd:spell.dimension-door',
   'srd:spell.hallucinatory-terrain',
   'srd:spell.contact-other-plane', 'srd:spell.dream', 'srd:spell.hold-monster',
-  'srd:spell.scrying'
+  'srd:spell.scrying',
+  'srd:spell.circle-of-death', 'srd:spell.conjure-fey', 'srd:spell.create-undead',
+  'srd:spell.eyebite', 'srd:spell.flesh-to-stone', 'srd:spell.mass-suggestion',
+  'srd:spell.true-seeing'
 ]
 
 /**
