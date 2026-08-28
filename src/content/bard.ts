@@ -125,7 +125,10 @@ const BARD_SPELL_POOL = [
   'srd:spell.fear', 'srd:spell.glyph-of-warding', 'srd:spell.hypnotic-pattern',
   'srd:spell.major-image', 'srd:spell.nondetection', 'srd:spell.sending',
   'srd:spell.speak-with-dead', 'srd:spell.speak-with-plants', 'srd:spell.stinking-cloud',
-  'srd:spell.tiny-hut', 'srd:spell.tongues'
+  'srd:spell.tiny-hut', 'srd:spell.tongues',
+  'srd:spell.compulsion', 'srd:spell.confusion', 'srd:spell.dimension-door',
+  'srd:spell.freedom-of-movement', 'srd:spell.greater-invisibility',
+  'srd:spell.hallucinatory-terrain', 'srd:spell.locate-creature', 'srd:spell.polymorph'
 ]
 
 // ===========================================================================

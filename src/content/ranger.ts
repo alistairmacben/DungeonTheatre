@@ -156,7 +156,9 @@ const RANGER_SPELL_POOL = [
   'srd:spell.spike-growth',
   'srd:spell.conjure-animals', 'srd:spell.daylight', 'srd:spell.nondetection',
   'srd:spell.plant-growth', 'srd:spell.speak-with-plants', 'srd:spell.water-breathing',
-  'srd:spell.water-walk', 'srd:spell.wind-wall'
+  'srd:spell.water-walk', 'srd:spell.wind-wall',
+  'srd:spell.conjure-woodland-beings', 'srd:spell.freedom-of-movement',
+  'srd:spell.locate-creature', 'srd:spell.stoneskin'
 ]
 
 const SPELLS_KNOWN_FEATURES = RANGER_SPELLS_KNOWN
