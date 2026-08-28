@@ -408,7 +408,11 @@ const WARLOCK_SPELL_IDS = [
   'srd:spell.unseen-servant',
   'srd:spell.enthrall', 'srd:spell.hold-person', 'srd:spell.invisibility',
   'srd:spell.mirror-image', 'srd:spell.misty-step', 'srd:spell.ray-of-enfeeblement',
-  'srd:spell.shatter', 'srd:spell.suggestion'
+  'srd:spell.shatter', 'srd:spell.suggestion',
+  'srd:spell.counterspell', 'srd:spell.dispel-magic', 'srd:spell.fear', 'srd:spell.fly',
+  'srd:spell.gaseous-form', 'srd:spell.hypnotic-pattern', 'srd:spell.magic-circle',
+  'srd:spell.major-image', 'srd:spell.remove-curse', 'srd:spell.tongues',
+  'srd:spell.vampiric-touch'
 ]
 
 /**

@@ -677,6 +677,14 @@ export function resolveDamagePools(
   const casting = resolveSpellcasting(r, content)
   const target = casting.accessible.find((s) => s.spell.id === source.spellId)
   if (!target) return { rejected: 'you do not have access to that spell' }
+  // `accessible` lists every spell on the character's lists, prepared or not
+  // — that is what lets the UI show "Fireball: not prepared" instead of
+  // nothing. It means this lookup alone does not prove the spell is castable:
+  // before every level-3-and-up spell existed, an unprepared, nonexistent
+  // spell id happened to fail for the right-shaped wrong reason (`!target`),
+  // which is exactly the kind of coincidence that survives until real content
+  // exposes it. Reject on the same terms the view already computed.
+  if (!target.available) return { rejected: target.unavailableReasons.join('; ') }
   const chosen = source.slotResourceId
     ? target.slotOptions.find((s) => s.resourceId === source.slotResourceId)
     : cheapestSlot(target)

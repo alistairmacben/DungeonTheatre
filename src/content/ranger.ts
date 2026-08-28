@@ -153,7 +153,10 @@ const RANGER_SPELL_POOL = [
   'srd:spell.animal-messenger', 'srd:spell.barkskin', 'srd:spell.darkvision',
   'srd:spell.find-traps', 'srd:spell.lesser-restoration', 'srd:spell.locate-animals-or-plants',
   'srd:spell.locate-object', 'srd:spell.pass-without-trace', 'srd:spell.silence',
-  'srd:spell.spike-growth'
+  'srd:spell.spike-growth',
+  'srd:spell.conjure-animals', 'srd:spell.daylight', 'srd:spell.nondetection',
+  'srd:spell.plant-growth', 'srd:spell.speak-with-plants', 'srd:spell.water-breathing',
+  'srd:spell.water-walk', 'srd:spell.wind-wall'
 ]
 
 const SPELLS_KNOWN_FEATURES = RANGER_SPELLS_KNOWN

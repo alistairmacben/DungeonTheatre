@@ -118,7 +118,12 @@ function wizard(level, prepared = []) {
 // ---------------------------------------------------------------------------
 
 {
-  const w = wizard(5)
+  // Magic Missile has to actually be prepared: resolveDamagePools used to
+  // accept any spell id that resolved to a real SpellDefinition, whether or
+  // not the character had it prepared — a gap only real 3rd-level content
+  // (Fireball) was able to expose, since every unprepared placeholder id
+  // used before that happened to also not exist yet.
+  const w = wizard(5, ['srd:spell.magic-missile'])
   const hit = applyCommand(w, {
     type: 'rollDamage', characterId: w.id,
     source: { kind: 'weapon', weaponInstanceId: 'd' },
@@ -156,6 +161,19 @@ function wizard(level, prepared = []) {
   }, content)
   check.eq('command: Magic Missile totals its three darts plus the folded flat bonus',
     spellCast.events[0].payload.total, 9)
+
+  // A spell on the wizard's list but never prepared — real content (Fireball)
+  // rather than a placeholder id, so `content.spells.has` can't reject it for
+  // the wrong reason. `accessible` lists it anyway, unavailable, which is what
+  // the UI needs to show "not prepared" instead of nothing; the command layer
+  // has to check `available` itself rather than reuse that lookup as proof.
+  const unprepared = applyCommand(w, {
+    type: 'rollDamage', characterId: w.id,
+    source: { kind: 'spell', spellId: 'srd:spell.fireball' },
+    critical: false, faces: [[1, 1, 1, 1, 1, 1, 1, 1]]
+  }, content)
+  check('command: a real but unprepared spell is rejected, not rolled',
+    unprepared.rejected !== undefined, JSON.stringify(unprepared))
 }
 
 // ---------------------------------------------------------------------------

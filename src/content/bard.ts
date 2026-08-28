@@ -120,7 +120,12 @@ const BARD_SPELL_POOL = [
   'srd:spell.heat-metal', 'srd:spell.hold-person', 'srd:spell.invisibility',
   'srd:spell.knock', 'srd:spell.lesser-restoration', 'srd:spell.locate-animals-or-plants',
   'srd:spell.locate-object', 'srd:spell.magic-mouth', 'srd:spell.see-invisibility',
-  'srd:spell.shatter', 'srd:spell.silence', 'srd:spell.suggestion', 'srd:spell.zone-of-truth'
+  'srd:spell.shatter', 'srd:spell.silence', 'srd:spell.suggestion', 'srd:spell.zone-of-truth',
+  'srd:spell.bestow-curse', 'srd:spell.clairvoyance', 'srd:spell.dispel-magic',
+  'srd:spell.fear', 'srd:spell.glyph-of-warding', 'srd:spell.hypnotic-pattern',
+  'srd:spell.major-image', 'srd:spell.nondetection', 'srd:spell.sending',
+  'srd:spell.speak-with-dead', 'srd:spell.speak-with-plants', 'srd:spell.stinking-cloud',
+  'srd:spell.tiny-hut', 'srd:spell.tongues'
 ]
 
 // ===========================================================================

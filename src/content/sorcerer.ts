@@ -140,7 +140,13 @@ const SORCERER_SPELL_POOL = [
   'srd:spell.invisibility', 'srd:spell.knock', 'srd:spell.levitate',
   'srd:spell.mirror-image', 'srd:spell.misty-step', 'srd:spell.scorching-ray',
   'srd:spell.see-invisibility', 'srd:spell.shatter', 'srd:spell.spider-climb',
-  'srd:spell.suggestion'
+  'srd:spell.suggestion',
+  'srd:spell.blink', 'srd:spell.clairvoyance', 'srd:spell.counterspell',
+  'srd:spell.daylight', 'srd:spell.dispel-magic', 'srd:spell.fear', 'srd:spell.fireball',
+  'srd:spell.fly', 'srd:spell.gaseous-form', 'srd:spell.haste', 'srd:spell.hypnotic-pattern',
+  'srd:spell.lightning-bolt', 'srd:spell.major-image', 'srd:spell.sleet-storm',
+  'srd:spell.slow', 'srd:spell.stinking-cloud', 'srd:spell.tongues',
+  'srd:spell.water-breathing', 'srd:spell.water-walk'
 ]
 
 const SORCERY_POINTS_MAX = declareResourceMax('sorceryPoints')

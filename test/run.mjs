@@ -76,6 +76,7 @@ for (const suite of [
   'test-cantrips-batch.mjs',
   'test-spells-level1.mjs',
   'test-spells-level2.mjs',
+  'test-spells-level3.mjs',
   'test-sorcerer.mjs',
   'test-bard-known-spells.mjs',
   'test-roll-damage.mjs'
