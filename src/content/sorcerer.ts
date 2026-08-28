@@ -161,7 +161,9 @@ const SORCERER_SPELL_POOL = [
   'srd:spell.fire-storm', 'srd:spell.plane-shift', 'srd:spell.prismatic-spray',
   'srd:spell.reverse-gravity', 'srd:spell.teleport',
   'srd:spell.dominate-monster', 'srd:spell.earthquake', 'srd:spell.incendiary-cloud',
-  'srd:spell.power-word-stun', 'srd:spell.sunburst'
+  'srd:spell.power-word-stun', 'srd:spell.sunburst',
+  'srd:spell.gate', 'srd:spell.meteor-swarm', 'srd:spell.power-word-kill',
+  'srd:spell.time-stop', 'srd:spell.wish'
 ]
 
 const SORCERY_POINTS_MAX = declareResourceMax('sorceryPoints')

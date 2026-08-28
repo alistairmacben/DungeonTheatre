@@ -423,7 +423,9 @@ const WARLOCK_SPELL_IDS = [
   'srd:spell.etherealness', 'srd:spell.finger-of-death', 'srd:spell.forcecage',
   'srd:spell.plane-shift',
   'srd:spell.demiplane', 'srd:spell.dominate-monster', 'srd:spell.feeblemind',
-  'srd:spell.glibness', 'srd:spell.power-word-stun'
+  'srd:spell.glibness', 'srd:spell.power-word-stun',
+  'srd:spell.astral-projection', 'srd:spell.foresight', 'srd:spell.imprisonment',
+  'srd:spell.power-word-kill', 'srd:spell.true-polymorph'
 ]
 
 /**

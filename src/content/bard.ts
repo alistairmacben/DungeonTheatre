@@ -142,7 +142,8 @@ const BARD_SPELL_POOL = [
   'srd:spell.magnificent-mansion', 'srd:spell.mirage-arcane', 'srd:spell.project-image',
   'srd:spell.regenerate', 'srd:spell.resurrection', 'srd:spell.symbol', 'srd:spell.teleport',
   'srd:spell.dominate-monster', 'srd:spell.feeblemind', 'srd:spell.glibness',
-  'srd:spell.mind-blank', 'srd:spell.power-word-stun'
+  'srd:spell.mind-blank', 'srd:spell.power-word-stun',
+  'srd:spell.foresight', 'srd:spell.power-word-kill', 'srd:spell.true-polymorph'
 ]
 
 // ===========================================================================

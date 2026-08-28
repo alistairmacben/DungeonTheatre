@@ -82,6 +82,7 @@ for (const suite of [
   'test-spells-level6.mjs',
   'test-spells-level7.mjs',
   'test-spells-level8.mjs',
+  'test-spells-level9.mjs',
   'test-sorcerer.mjs',
   'test-bard-known-spells.mjs',
   'test-roll-damage.mjs'
