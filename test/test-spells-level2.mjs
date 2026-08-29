@@ -204,6 +204,28 @@ const effectOf = (spellId, character, ability, slotLevel = 0) =>
 }
 
 // ---------------------------------------------------------------------------
+// Scorching Ray and Ray of Enfeeblement carry a real attack roll
+//
+// Both used to be fully narrative — an attack-shaped cast the Spells tab had
+// nothing to roll for. Scorching Ray's one real ray matches Fire Bolt's
+// shape (the ray *count* stays narrative, Eldritch Blast's own gap); Ray of
+// Enfeeblement's attack roll is real even though it has no damage of its
+// own to follow it with.
+// ---------------------------------------------------------------------------
+
+{
+  const wizard = caster('srd:class.wizard', 5, { str: 8, dex: 14, con: 14, int: 16, wis: 12, cha: 10 })
+  const scorching = effectOf('srd:spell.scorching-ray', wizard, 'int', 2)
+  check.eq('scorching ray: one ray is a real attack', scorching?.delivery, 'attack')
+  check.eq('scorching ray: 2d6 fire per ray', scorching?.damage?.[0]?.dice.count, 2)
+  check.eq('scorching ray: fire damage', scorching?.damage?.[0]?.type, 'fire')
+
+  const enfeeble = effectOf('srd:spell.ray-of-enfeeblement', wizard, 'int', 2)
+  check.eq('ray of enfeeblement: a real attack roll', enfeeble?.delivery, 'attack')
+  check.eq('ray of enfeeblement: no damage of its own', enfeeble?.damage?.length ?? 0, 0)
+}
+
+// ---------------------------------------------------------------------------
 // Partial spells still say what the player must do themselves
 // ---------------------------------------------------------------------------
 
@@ -216,7 +238,7 @@ const effectOf = (spellId, character, ability, slotLevel = 0) =>
     'srd:spell.branding-smite', 'srd:spell.magic-weapon', 'srd:spell.mirror-image',
     'srd:spell.ray-of-enfeeblement', 'srd:spell.warding-bond', 'srd:spell.heat-metal',
     'srd:spell.alter-self', 'srd:spell.find-steed', 'srd:spell.lesser-restoration',
-    'srd:spell.prayer-of-healing'
+    'srd:spell.prayer-of-healing', 'srd:spell.scorching-ray'
   ]) {
     const def = spell(sid)
     check(`partial: ${def.name} carries narrative explaining its gap`,

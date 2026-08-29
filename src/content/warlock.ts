@@ -137,13 +137,22 @@ export const ELDRITCH_BLAST = spell({
 export const CHILL_TOUCH = spell({
   id: 'srd:spell.chill-touch', name: 'Chill Touch', level: 0,
   school: 'necromancy', rangeFeet: 120, durationSeconds: 6,
+  // Single attack, single damage die — exactly Fire Bolt's shape, and just
+  // as constantly cast. Only the healing-block and undead-disadvantage
+  // riders stay narrative; the roll itself is real.
+  effect: {
+    delivery: 'attack',
+    damage: [{ dice: { count: 1, sides: 8 }, type: 'necrotic' }],
+    cantripScaling: true
+  },
   effects: spellEffects({
     id: 'srd:spell.chill-touch', name: 'Chill Touch',
+    completeness: 'partial',
     narrative: [{
-      text: 'A ranged spell attack for 1d8 necrotic damage. The target cannot '
-        + 'regain hit points until the start of your next turn, and an undead '
-        + 'target also has disadvantage on attacks against you until the end '
-        + 'of your next turn.',
+      text: 'A ranged spell attack for 1d8 necrotic damage (Cast rolls this). '
+        + 'The target cannot regain hit points until the start of your next '
+        + 'turn, and an undead target also has disadvantage on attacks '
+        + 'against you until the end of your next turn.',
       dmPromptable: false
     }]
   })

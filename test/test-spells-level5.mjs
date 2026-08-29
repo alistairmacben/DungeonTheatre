@@ -116,6 +116,18 @@ const effectOf = (spellId, character, ability, slotLevel = 0) =>
 }
 
 // ---------------------------------------------------------------------------
+// Contagion carries a real attack roll — the disease it inflicts is the
+// part with no channel, not the melee spell attack that delivers it.
+// ---------------------------------------------------------------------------
+
+{
+  const cleric = caster('srd:class.cleric', 9, { str: 10, dex: 10, con: 14, int: 10, wis: 16, cha: 10 })
+  const contagion = effectOf('srd:spell.contagion', cleric, 'wis', 5)
+  check.eq('contagion: a real melee spell attack', contagion?.delivery, 'attack')
+  check.eq('contagion: no damage of its own', contagion?.damage?.length ?? 0, 0)
+}
+
+// ---------------------------------------------------------------------------
 // Partial spells still say what the player must do themselves
 // ---------------------------------------------------------------------------
 

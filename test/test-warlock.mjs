@@ -266,4 +266,22 @@ const countPending = (level, selId, o) =>
     content.spells.get('srd:spell.eldritch-blast').effects.narrative[0].text.includes('two beams'))
 }
 
+// ---------------------------------------------------------------------------
+// Chill Touch — the other warlock cantrip caught by the same audit
+// ---------------------------------------------------------------------------
+
+{
+  const v = viewAt(5, {
+    selections: {
+      [PROFS]: { skills: ['arcana', 'deception'] },
+      'srd:class.warlock.pact-magic': { cantrips: ['srd:spell.chill-touch'], 'spells-known': [] },
+      'srd:class.warlock.pact-boon': { boon: ['pact-of-the-tome'] }
+    }
+  })
+  const chill = v.spellcasting.spells.find((s) => s.id === 'srd:spell.chill-touch')
+  check('chill touch: carries a real attack roll now', chill?.roll !== undefined)
+  check.eq('chill touch: necrotic damage, on a hit', chill?.damageRoll?.pools[0]?.type, 'necrotic')
+  check.eq('chill touch: 2d8 at 5th level, cantrip-scaled', chill?.damageRoll?.pools[0]?.dice.count, 2)
+}
+
 check.report()

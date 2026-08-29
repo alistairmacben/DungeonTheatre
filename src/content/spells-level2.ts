@@ -592,15 +592,17 @@ export const MIRROR_IMAGE = spell({
 export const RAY_OF_ENFEEBLEMENT = spell({
   id: 'srd:spell.ray-of-enfeeblement', name: 'Ray of Enfeeblement', level: 2,
   school: 'necromancy', rangeFeet: 60, concentration: true, durationSeconds: 60,
+  // The attack roll itself is real now — whether it lands is what decides
+  // the debuff. Only the debuff (halving the target's own future weapon
+  // rolls) has no damage/effect channel to carry, so `damage` stays absent.
+  effect: { delivery: 'attack' },
   effects: effects({
     id: 'srd:spell.ray-of-enfeeblement', name: 'Ray of Enfeeblement',
-    // A ranged spell attack with no damage of its own — the debuff halves the
-    // target's own future weapon rolls, which nothing here can reach.
     completeness: 'partial',
     narrative: [{
-      text: 'A ranged spell attack. On a hit, the target deals only half '
-        + 'damage with Strength-based weapon attacks until it succeeds a '
-        + 'Constitution save at the end of one of its turns.',
+      text: 'A ranged spell attack (Cast rolls it). On a hit, the target '
+        + 'deals only half damage with Strength-based weapon attacks until '
+        + 'it succeeds a Constitution save at the end of one of its turns.',
       dmPromptable: true
     }]
   })
@@ -1002,14 +1004,24 @@ export const PRAYER_OF_HEALING = spell({
 export const SCORCHING_RAY = spell({
   id: 'srd:spell.scorching-ray', name: 'Scorching Ray', level: 2, school: 'evocation',
   rangeFeet: 120,
+  // One ray is Fire Bolt's exact shape and is now real. The ray *count* is
+  // Eldritch Blast's own gap: a variable number of separate attack rolls —
+  // three at 2nd, one more per slot above — is not a roll request any spell
+  // here can carry, and folding them into one damage roll the way Magic
+  // Missile's auto-hitting darts do would be wrong, since each ray can miss
+  // on its own. Press Cast once per ray instead.
+  effect: {
+    delivery: 'attack',
+    damage: [{ dice: { count: 2, sides: 6 }, type: 'fire' }]
+  },
   effects: effects({
     id: 'srd:spell.scorching-ray', name: 'Scorching Ray',
-    // Eldritch Blast's own shape: a variable number of separate attack rolls
-    // is not a roll request any spell here can carry.
+    completeness: 'partial',
     narrative: [{
       text: 'Three rays of fire, distributed as you choose among one or more '
-        + 'targets. Make a separate ranged spell attack for each: 2d6 fire '
-        + 'damage on a hit. One more ray per slot level above 2nd.',
+        + 'targets. Make a separate ranged spell attack for each (Cast rolls '
+        + 'one ray): 2d6 fire damage on a hit. One more ray per slot level '
+        + 'above 2nd — press Cast once per ray.',
       dmPromptable: false
     }]
   })

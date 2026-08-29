@@ -453,15 +453,18 @@ export const CONTAGION = spell({
   id: 'srd:spell.contagion', name: 'Contagion', level: 5, school: 'necromancy',
   rangeKind: 'touch', durationSeconds: 604800,
   components: { verbal: true, somatic: true },
+  // The attack roll is real; the disease itself is a chosen rider with no
+  // damage/effect channel to carry.
+  effect: { delivery: 'attack' },
   effects: effects({
     id: 'srd:spell.contagion', name: 'Contagion',
     completeness: 'partial',
     narrative: [{
-      text: 'Melee spell attack; on a hit, inflict a disease of your '
-        + "choice. Constitution save at the end of the target's turns: "
-        + 'three failures locks the disease in for the duration, three '
-        + 'successes cures it. Because the disease is natural, anything '
-        + 'that removes or eases disease applies.',
+      text: 'Melee spell attack (Cast rolls it); on a hit, inflict a '
+        + "disease of your choice. Constitution save at the end of the target's "
+        + 'turns: three failures locks the disease in for the duration, '
+        + 'three successes cures it. Because the disease is natural, '
+        + 'anything that removes or eases disease applies.',
       dmPromptable: true
     }]
   })
