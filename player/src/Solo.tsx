@@ -232,7 +232,7 @@ function SoloCharacter({ character, dmOpen, onCloseDm }: {
           onTab={setMenuTab}
           onClose={() => setMenuTab(null)}
           dispatch={(c) => game.dispatch(c).rejected}
-          onRoll={(spec) => { setMenuTab(null); makeRoll(spec) }}
+          onRoll={(spec, damageRoll) => { setMenuTab(null); makeRoll(spec, damageRoll) }}
         />
       )}
 

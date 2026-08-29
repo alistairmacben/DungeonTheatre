@@ -745,4 +745,41 @@ function resolutionResistanceState(resolution, damageType) {
   return value >= 2 ? 'immune' : value === 1 ? 'resistant' : value < 0 ? 'vulnerable' : 'none'
 }
 
+// ---------------------------------------------------------------------------
+// SpellView carries its own roll, matching the pinned action's
+//
+// The Spells tab used to dispatch `spell.command` bare, with no d20 attached
+// — every attack cantrip failed with "this roll needs 1 d20, not 0" unless
+// pinned to the action bar, where a *different*, roll-carrying view (the
+// `cast:` entry on `actions`) was built instead. SpellView.roll/damageRoll
+// close that gap; this checks the two independently-built views agree.
+// ---------------------------------------------------------------------------
+
+{
+  const WIZARD = base({
+    id: 'char:wizard', name: 'Ilyana',
+    speciesId: 'srd:species.elf', subspeciesId: 'srd:species.elf.high',
+    classLevels: [{ classId: 'srd:class.wizard', level: 5 }],
+    abilityScoreBase: { str: 8, dex: 14, con: 14, int: 16, wis: 12, cha: 10 },
+    selections: {
+      'srd:class.wizard.spellcasting': { cantrips: ['srd:spell.fire-bolt'] }
+    },
+    spellsPrepared: ['srd:spell.mage-armor']
+  })
+
+  const v = view(WIZARD)
+  const fireBolt = v.spellcasting.spells.find((s) => s.id === 'srd:spell.fire-bolt')
+  const pinnedCast = v.actions.find((a) => a.id === 'cast:srd:spell.fire-bolt')
+
+  check('spellview: an attack cantrip carries a roll spec', fireBolt?.roll !== undefined)
+  check.eq('spellview: matches the pinned action bar\'s own roll for the same cast',
+    JSON.stringify(fireBolt.roll), JSON.stringify(pinnedCast.roll))
+  check('spellview: and something to roll for damage once it lands',
+    fireBolt.damageRoll !== undefined && fireBolt.damageRoll.pools.length > 0)
+
+  // A buff with nothing to roll gets neither field, rather than an empty one.
+  const mageArmor = v.spellcasting.spells.find((s) => s.id === 'srd:spell.mage-armor')
+  check('spellview: a spell with no to-hit roll carries none', mageArmor?.roll === undefined)
+}
+
 check.report()

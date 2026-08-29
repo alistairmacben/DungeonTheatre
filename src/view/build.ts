@@ -1168,7 +1168,8 @@ function buildSpellcasting(
   const spells: SpellView[] = casting.accessible.map((c: CastableSpell) => {
     // The effect at the cheapest slot it could use, so the Spells tab shows the
     // same "2d10 fire" a weapon shows on the HUD — one shape for both.
-    const castLevel = c.slotOptions.find((s) => s.remaining > 0)?.level ?? c.spell.level
+    const cheapest = c.slotOptions.find((s) => s.remaining > 0)
+    const castLevel = cheapest?.level ?? c.spell.level
     const resolved = resolveSpellEffect(
       c.spell, { ability: c.ability, characterLevel: level, slotLevel: castLevel }, r
     )
@@ -1182,6 +1183,46 @@ function buildSpellcasting(
         ...(resolved.save
           ? { saveLabel: `DC ${resolved.save.dc} ${resolved.save.ability.toUpperCase()}` }
           : {})
+      }
+      : undefined
+
+    const baseCommand: PlayerCommand = {
+      type: 'castSpell', characterId, spellId: c.spell.id,
+      ...(cheapest ? { slotResourceId: cheapest.resourceId } : {})
+    }
+
+    // A spell that needs a d20 gets one, exactly as the pinned-bar version of
+    // this same cast does — the Spells tab used to skip straight to
+    // `dispatch`, which always failed with "this roll needs 1 d20, not 0"
+    // since no faces were ever rolled for it.
+    const roll = resolved?.delivery === 'attack'
+      ? rollSpecOf(
+        { ...resolveSpellAttackRoll(r), label: `${c.spell.name} attack` },
+        { ...baseCommand, faces: [] }
+      )
+      : undefined
+
+    // Healing and damage roll the same way; instances (Magic Missile's darts)
+    // fold into one pool, since three 1d4+1 summed is 3d4+3 rolled once.
+    const spellPools = resolved?.healing
+      ? [{
+        type: 'healing' as const,
+        dice: { count: resolved.healing.dice.count, sides: resolved.healing.dice.sides },
+        flat: resolved.healing.flatAdd
+      }]
+      : (resolved?.damage ?? []).map((d) => ({
+        type: d.type,
+        dice: { count: d.dice.count * resolved!.instances, sides: d.dice.sides },
+        flat: (d.dice.modifier ?? 0) * resolved!.instances
+      }))
+    const damageRoll = spellPools.length > 0
+      ? {
+        pools: spellPools,
+        characterId,
+        source: {
+          kind: 'spell' as const, spellId: c.spell.id,
+          ...(cheapest ? { slotResourceId: cheapest.resourceId } : {})
+        }
       }
       : undefined
 
@@ -1210,6 +1251,8 @@ function buildSpellcasting(
       unavailableReasons: c.unavailableReasons,
       slotOptions: c.slotOptions,
       command: { type: 'castSpell', characterId, spellId: c.spell.id },
+      ...(roll ? { roll } : {}),
+      ...(damageRoll ? { damageRoll } : {}),
       sourceLabel: c.grantSourceName
     }
   })

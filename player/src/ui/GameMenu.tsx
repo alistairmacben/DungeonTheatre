@@ -7,7 +7,7 @@
 
 import React, { useState } from 'react'
 import type {
-  ActionView, EffectView, ItemView, PlayerCommand, PlayerView, RollSpec, SpellView
+  ActionView, DamageRollSpec, EffectView, ItemView, PlayerCommand, PlayerView, RollSpec, SpellView
 } from '@engine'
 import { RollChip } from './RollWidget'
 import { BreakdownList, Value } from './Readouts'
@@ -79,7 +79,7 @@ export function GameMenu({
   onTab(tab: MenuTab): void
   onClose(): void
   dispatch(command: PlayerCommand): Promise<string[] | undefined> | string[] | undefined
-  onRoll(spec: RollSpec): void
+  onRoll(spec: RollSpec, damageRoll?: DamageRollSpec): void
 }): React.JSX.Element {
   // The same answer the HUD computes, so a pin star and the bar cannot disagree.
   const prefs = usePinnedActions(view.meta.characterId)
@@ -147,10 +147,10 @@ export function GameMenu({
           )}
           {tab === 'inventory' && <InventoryTab view={view} dispatch={dispatch} />}
           {tab === 'actions' && (
-            <ActionsTab view={view} dispatch={dispatch} bar={bar} prefs={prefs} />
+            <ActionsTab view={view} dispatch={dispatch} onRoll={onRoll} bar={bar} prefs={prefs} />
           )}
           {tab === 'spells' && view.spellcasting && (
-            <SpellsTab view={view} dispatch={dispatch} bar={bar} prefs={prefs} />
+            <SpellsTab view={view} dispatch={dispatch} onRoll={onRoll} bar={bar} prefs={prefs} />
           )}
           {tab === 'effects' && <EffectsTab view={view} />}
         </div>
@@ -172,7 +172,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function CharacterTab({ view, onRoll, dispatch }: {
   view: PlayerView
-  onRoll(spec: RollSpec): void
+  onRoll(spec: RollSpec, damageRoll?: DamageRollSpec): void
   dispatch(c: PlayerCommand): Promise<string[] | undefined> | string[] | undefined
 }): React.JSX.Element {
   return (
@@ -475,9 +475,10 @@ const FACETS = [
   { id: 'movement', label: 'Movement' }
 ] as const
 
-function ActionsTab({ view, dispatch, bar, prefs }: {
+function ActionsTab({ view, dispatch, onRoll, bar, prefs }: {
   view: PlayerView
   dispatch(command: PlayerCommand): Promise<string[] | undefined> | string[] | undefined
+  onRoll(spec: RollSpec, damageRoll?: DamageRollSpec): void
   bar: Set<string>
   prefs: PinnedActions
 }): React.JSX.Element {
@@ -532,16 +533,17 @@ function ActionsTab({ view, dispatch, bar, prefs }: {
 
       <ul className="space-y-2">
         {shown.map((a) => (
-          <ActionRow key={a.id} action={a} dispatch={dispatch} bar={bar} prefs={prefs} />
+          <ActionRow key={a.id} action={a} dispatch={dispatch} onRoll={onRoll} bar={bar} prefs={prefs} />
         ))}
       </ul>
     </div>
   )
 }
 
-function ActionRow({ action, dispatch, bar, prefs }: {
+function ActionRow({ action, dispatch, onRoll, bar, prefs }: {
   action: ActionView
   dispatch(command: PlayerCommand): Promise<string[] | undefined> | string[] | undefined
+  onRoll(spec: RollSpec, damageRoll?: DamageRollSpec): void
   bar: Set<string>
   prefs: PinnedActions
 }): React.JSX.Element {
@@ -600,7 +602,14 @@ function ActionRow({ action, dispatch, bar, prefs }: {
           <button
             type="button"
             disabled={!action.available}
-            onClick={() => { void Promise.resolve(dispatch(action.command)).then((r) => setRejected(r ?? null)) }}
+            onClick={() => {
+              // A roll-requiring action (an attack, a spell attack) has to
+              // throw dice before the command can carry them — dispatching
+              // the bare command straight through always failed with "this
+              // roll needs 1 d20, not 0", since no faces were ever attached.
+              if (action.roll) { onRoll(action.roll, action.damageRoll); return }
+              void Promise.resolve(dispatch(action.command)).then((r) => setRejected(r ?? null))
+            }}
             className="rounded-lg border border-arcane/50 bg-arcane/10 px-3 py-1 text-xs text-parchment transition hover:bg-arcane/20 disabled:opacity-40"
           >
             Use
@@ -635,9 +644,10 @@ function ActionRow({ action, dispatch, bar, prefs }: {
  * the level is also what a slot pays for. Everything shown is a field on
  * SpellView — this component computes nothing and knows no spell by name.
  */
-function SpellsTab({ view, dispatch, bar, prefs }: {
+function SpellsTab({ view, dispatch, onRoll, bar, prefs }: {
   view: PlayerView
   dispatch(command: PlayerCommand): Promise<string[] | undefined> | string[] | undefined
+  onRoll(spec: RollSpec, damageRoll?: DamageRollSpec): void
   bar: Set<string>
   prefs: PinnedActions
 }): React.JSX.Element {
@@ -695,7 +705,7 @@ function SpellsTab({ view, dispatch, bar, prefs }: {
         <Section key={level} title={level === 0 ? 'Cantrips' : `Level ${level}`}>
           <ul className="space-y-2">
             {byLevel.get(level)!.map((s) => (
-              <SpellRow key={s.id} spell={s} dispatch={dispatch} bar={bar} prefs={prefs} />
+              <SpellRow key={s.id} spell={s} dispatch={dispatch} onRoll={onRoll} bar={bar} prefs={prefs} />
             ))}
           </ul>
         </Section>
@@ -704,9 +714,10 @@ function SpellsTab({ view, dispatch, bar, prefs }: {
   )
 }
 
-function SpellRow({ spell, dispatch, bar, prefs }: {
+function SpellRow({ spell, dispatch, onRoll, bar, prefs }: {
   spell: SpellView
   dispatch(command: PlayerCommand): Promise<string[] | undefined> | string[] | undefined
+  onRoll(spec: RollSpec, damageRoll?: DamageRollSpec): void
   bar: Set<string>
   prefs: PinnedActions
 }): React.JSX.Element {
@@ -786,7 +797,14 @@ function SpellRow({ spell, dispatch, bar, prefs }: {
           <>
             <button
               type="button"
-              onClick={() => { void Promise.resolve(dispatch(spell.command)).then((r) => setRejected(r ?? null)) }}
+              onClick={() => {
+                // An attack spell has to throw its d20 before the command can
+                // carry it — dispatching the bare command straight through
+                // always failed with "this roll needs 1 d20, not 0", since no
+                // faces were ever attached.
+                if (spell.roll) { onRoll(spell.roll, spell.damageRoll); return }
+                void Promise.resolve(dispatch(spell.command)).then((r) => setRejected(r ?? null))
+              }}
               className="rounded-lg border border-arcane/50 bg-arcane/10 px-3 py-1 text-xs text-parchment transition hover:bg-arcane/20"
             >
               Cast
@@ -798,6 +816,13 @@ function SpellRow({ spell, dispatch, bar, prefs }: {
                 key={slot.resourceId}
                 type="button"
                 onClick={() => {
+                  if (spell.roll) {
+                    onRoll(
+                      { ...spell.roll, command: { ...spell.roll.command, slotResourceId: slot.resourceId } as PlayerCommand },
+                      spell.damageRoll
+                    )
+                    return
+                  }
                   void Promise.resolve(
                     dispatch({ ...spell.command, slotResourceId: slot.resourceId } as PlayerCommand)
                   ).then((r) => setRejected(r ?? null))

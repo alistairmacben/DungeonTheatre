@@ -342,6 +342,10 @@ export interface SpellView {
   slotOptions: { resourceId: string; label: string; level: number; remaining: number }[]
   /** Casts at the cheapest viable slot; name a slot to upcast. */
   command: PlayerCommand
+  /** Present when casting this spell means throwing dice — a spell attack. */
+  roll?: RollSpec
+  /** Present when the spell has damage or healing to roll, on a hit or at once. */
+  damageRoll?: DamageRollSpec
   sourceLabel: string
 }
 

@@ -260,7 +260,7 @@ function Stage({
           onTab={setMenuTab}
           onClose={() => setMenuTab(null)}
           dispatch={(c) => game.dispatch(c).then((r) => r.rejected)}
-          onRoll={(spec) => { setMenuTab(null); void makeRoll(spec) }}
+          onRoll={(spec, damageRoll) => { setMenuTab(null); void makeRoll(spec, damageRoll) }}
         />
       )}
 
