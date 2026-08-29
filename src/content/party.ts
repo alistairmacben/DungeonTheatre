@@ -230,6 +230,7 @@ export const ROGUE: ClassDefinition = {
   id: 'srd:class.rogue', name: 'Rogue', provenance: 'srd', contentVersion: 1,
   hitDie: 8, savingThrowProficiencies: ['dex', 'int'],
   subclassSlot: { grantedAtLevel: 3, options: ['srd:subclass.thief'] },
+  asiLevels: ROGUE_ASI_LEVELS,
   features: [
     {
       id: 'srd:class.rogue.proficiencies', name: 'Rogue Proficiencies',
@@ -626,6 +627,7 @@ export const CLERIC: ClassDefinition = {
   id: 'srd:class.cleric', name: 'Cleric', provenance: 'srd', contentVersion: 1,
   hitDie: 8, savingThrowProficiencies: ['wis', 'cha'],
   subclassSlot: { grantedAtLevel: 1, options: ['srd:subclass.life-domain'] },
+  asiLevels: CLERIC_ASI_LEVELS,
   features: [
     {
       id: 'srd:class.cleric.proficiencies', name: 'Cleric Proficiencies',

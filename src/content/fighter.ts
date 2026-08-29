@@ -227,6 +227,7 @@ export const FIGHTER_CLASS: ClassDefinition = {
   hitDie: 10,
   savingThrowProficiencies: ['str', 'con'],
   subclassSlot: { grantedAtLevel: 3, options: ['srd:subclass.champion'] },
+  asiLevels: ASI_LEVELS,
   features: [
     // --- 1st ---------------------------------------------------------------
     {

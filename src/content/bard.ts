@@ -327,6 +327,7 @@ export const BARD_CLASS: ClassDefinition = {
   id: BARD, name: 'Bard', provenance: 'srd', contentVersion: 1,
   hitDie: 8, savingThrowProficiencies: ['dex', 'cha'],
   subclassSlot: { grantedAtLevel: 3, options: ['srd:subclass.lore'] },
+  asiLevels: BARD_ASI_LEVELS,
   features: [
     {
       id: `${BARD}.proficiencies`, name: 'Bard Proficiencies',

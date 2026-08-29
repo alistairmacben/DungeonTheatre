@@ -194,6 +194,7 @@ export const WIZARD: ClassDefinition = {
   id: 'srd:class.wizard', name: 'Wizard', provenance: 'srd', contentVersion: 1,
   hitDie: 6, savingThrowProficiencies: ['int', 'wis'],
   subclassSlot: { grantedAtLevel: 2, options: ['srd:subclass.evocation'] },
+  asiLevels: WIZARD_ASI_LEVELS,
   features: [
     {
       id: 'srd:class.wizard.proficiencies', name: 'Wizard Proficiencies',

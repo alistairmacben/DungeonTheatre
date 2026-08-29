@@ -5,11 +5,12 @@
 // of silently omitting it.
 
 import type {
-  Character, ClassFeatureDefinition, CollectedSources, ContentIndex, EffectSource, ItemDefinition,
-  ItemInstance, Modifier, ProficiencyGrant
+  Ability, Character, ClassFeatureDefinition, CollectedSources, ContentIndex, EffectSource,
+  ItemDefinition, ItemInstance, Modifier, ProficiencyGrant
 } from './types.js'
 import { evaluate, type PredicateEnv } from './predicates.js'
 import { exhaustionSource } from './conditions.js'
+import { abilityScorePath } from './statPaths.js'
 
 const MAX_ATTUNED = 3
 
@@ -165,18 +166,40 @@ export function collectCandidates(character: Character, content: ContentIndex): 
   }
 
   for (const choice of character.buildChoices) {
-    if (choice.kind !== 'feat' || typeof choice.value !== 'string') continue
-    const feat = content.feats.get(choice.value)
-    if (!feat) continue
-    // The prerequisite is folded into activation so it is re-evaluated every
-    // resolve. "If you ever lose a feat's prerequisite, you can't use that feat
-    // until you regain the prerequisite."
-    out.push({
-      source: stamp({
-        ...feat.effects,
-        activation: { all: [feat.prerequisite, feat.effects.activation] }
+    if (choice.kind === 'feat' && typeof choice.value === 'string') {
+      const feat = content.feats.get(choice.value)
+      if (!feat) continue
+      // The prerequisite is folded into activation so it is re-evaluated every
+      // resolve. "If you ever lose a feat's prerequisite, you can't use that
+      // feat until you regain the prerequisite."
+      out.push({
+        source: stamp({
+          ...feat.effects,
+          activation: { all: [feat.prerequisite, feat.effects.activation] }
+        })
       })
-    })
+      continue
+    }
+
+    // An Ability Score Improvement was, until now, a value the type declared
+    // and nothing consumed — picking one raised nothing on the sheet. The
+    // 20-cap clamp is automatic (abilityScorePath depends on abilityMaxPath),
+    // so this is exactly the same shape a species racial bonus already uses.
+    if (choice.kind === 'abilityScoreImprovement' && typeof choice.value === 'object') {
+      const raised = choice.value as Partial<Record<Ability, number>>
+      const modifiers: Modifier[] = Object.entries(raised).map(([a, n]) => ({
+        id: `${choice.atLevel}.asi.${a}`, channel: 'value', target: abilityScorePath(a as Ability),
+        op: 'add', value: n, permanence: 'persistent'
+      }))
+      if (modifiers.length === 0) continue
+      out.push({
+        source: stamp({
+          id: `build-choice.asi.${choice.atLevel}`, name: 'Ability Score Improvement',
+          provenance: 'srd', contentVersion: 1, kind: 'feature',
+          activation: { always: true }, modifiers, completeness: 'complete'
+        })
+      })
+    }
   }
 
   out.push(...itemCandidates(character, content))

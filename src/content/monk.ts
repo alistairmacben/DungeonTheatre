@@ -137,6 +137,7 @@ export const MONK_CLASS: ClassDefinition = {
   hitDie: 8,
   savingThrowProficiencies: ['str', 'dex'],
   subclassSlot: { grantedAtLevel: 3, options: ['srd:subclass.open-hand'] },
+  asiLevels: ASI_LEVELS,
   features: [
     // --- 1st ---------------------------------------------------------------
     {

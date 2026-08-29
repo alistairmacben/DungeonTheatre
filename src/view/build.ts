@@ -1406,6 +1406,46 @@ function buildProgression(
     }
   }
 
+  // ASI/feat and subclass were never tracked here at all — a character could
+  // sail past level 4 with neither and the sheet would say nothing was owed.
+  // Both are read straight off the class's own declared data (`asiLevels`,
+  // `subclassSlot`), the same way every other pending choice already is.
+  for (const cl of c.classLevels) {
+    const def = content.classes.get(cl.classId)
+    if (!def) continue
+
+    for (const atLevel of def.asiLevels ?? []) {
+      if (cl.level < atLevel) continue
+      const answered = c.buildChoices.some((b) =>
+        b.atLevel === atLevel && (b.kind === 'abilityScoreImprovement' || b.kind === 'feat'))
+      if (answered) continue
+      pendingChoices.push({
+        id: `${def.id}:asi:${atLevel}`,
+        prompt: `Ability Score Improvement or feat (level ${atLevel})`,
+        kind: 'abilityScoreImprovement',
+        count: 1,
+        atLevel,
+        // Feat names, for the "take a feat instead" half of this choice —
+        // the ability-score half needs no content, just the six abilities.
+        options: [...content.feats.values()].map((f) => ({ id: f.id, label: f.name }))
+      })
+    }
+
+    if (def.subclassSlot && cl.level >= def.subclassSlot.grantedAtLevel && !cl.subclassId) {
+      pendingChoices.push({
+        id: `${def.id}:subclass`,
+        prompt: `Choose your ${def.name} subclass`,
+        kind: 'subclass',
+        count: 1,
+        from: def.subclassSlot.options,
+        atLevel: def.subclassSlot.grantedAtLevel,
+        options: def.subclassSlot.options.map((id) => ({
+          id, label: content.subclasses.get(id)?.name ?? id
+        }))
+      })
+    }
+  }
+
   return {
     level: characterLevel(c),
     proficiencyBonus: readout(r.stat(PROFICIENCY_BONUS), 'Proficiency Bonus', detail, signed),

@@ -57,6 +57,7 @@ for (const suite of [
   'test-projection.mjs',
   'test-authority.mjs',
   'test-creation.mjs',
+  'test-levelup.mjs',
   'test-spell-effect.mjs',
   'test-level-tables.mjs',
   'test-content-integrity.mjs',

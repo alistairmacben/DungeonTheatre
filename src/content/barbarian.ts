@@ -222,6 +222,7 @@ export const BARBARIAN: ClassDefinition = {
   id: 'srd:class.barbarian', name: 'Barbarian', provenance: 'srd', contentVersion: 1,
   hitDie: 12, savingThrowProficiencies: ['str', 'con'],
   subclassSlot: { grantedAtLevel: 3, options: ['srd:subclass.berserker'] },
+  asiLevels: BARBARIAN_ASI_LEVELS,
   features: [
     {
       id: 'srd:class.barbarian.proficiencies', name: 'Barbarian Proficiencies',

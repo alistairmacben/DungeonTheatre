@@ -566,6 +566,7 @@ export const WARLOCK_CLASS: ClassDefinition = {
   id: WARLOCK, name: 'Warlock', provenance: 'srd', contentVersion: 1,
   hitDie: 8, savingThrowProficiencies: ['wis', 'cha'],
   subclassSlot: { grantedAtLevel: 1, options: ['srd:subclass.fiend'] },
+  asiLevels: WARLOCK_ASI_LEVELS,
   features: [
     {
       id: 'srd:class.warlock.proficiencies', name: 'Warlock Proficiencies',

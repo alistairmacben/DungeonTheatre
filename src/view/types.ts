@@ -376,7 +376,13 @@ export interface ProgressionView {
   species: { id: SpeciesId; label: string; subspeciesLabel?: string }
   hitDice: { size: number; total: number; spent: number }[]
   /** Choices the character is entitled to but has not made. */
-  pendingChoices: { id: string; prompt: string; kind: string; count: number; from?: string[] }[]
+  pendingChoices: {
+    id: string; prompt: string; kind: string; count: number; from?: string[]
+    /** Present for a level-up choice (ASI/feat, subclass) — absent for a feature selection. */
+    atLevel?: number
+    /** Human-readable options, for a choice `from` alone can't render a button for. */
+    options?: { id: string; label: string }[]
+  }[]
 }
 
 /**
@@ -467,6 +473,28 @@ export type PlayerCommand =
     }
   | { type: 'prepareSpells'; characterId: string; spellIds: string[] }
   | { type: 'endConcentration'; characterId: string }
+  /** Raises one class's level by one. HP grows by the average-formula delta. */
+  | { type: 'levelUp'; characterId: string; classId: string }
+  /**
+   * Answers a level-up choice: an Ability Score Improvement (a flat bonus
+   * split across at most two abilities), a feat (gated on its own
+   * prerequisite), or a subclass (one of the class's own `subclassSlot.options`).
+   */
+  | {
+      type: 'answerBuildChoice'; characterId: string; atLevel: number
+      kind: 'abilityScoreImprovement'; value: Partial<Record<Ability, number>>
+    }
+  | { type: 'answerBuildChoice'; characterId: string; atLevel: number; kind: 'feat'; value: string }
+  | { type: 'answerBuildChoice'; characterId: string; atLevel: number; kind: 'subclass'; value: string }
+  /**
+   * Answers a feature's own "choose N" selection (cantrips known, skills,
+   * a spell list) — the primitive `defaultSelections()` in creation has
+   * always used internally, now reachable as a real command.
+   */
+  | {
+      type: 'answerSelection'; characterId: string; sourceId: string; selectionId: string
+      values: string[]
+    }
   | { type: 'spendResource'; characterId: string; resourceId: string; amount: number }
   | { type: 'restoreResource'; characterId: string; resourceId: string; amount: number }
   | { type: 'applyCondition'; characterId: string; conditionId: ConditionId; sourceId: string; durationSeconds?: number }

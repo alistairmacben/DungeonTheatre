@@ -283,6 +283,7 @@ export const DRUID: ClassDefinition = {
   id: 'srd:class.druid', name: 'Druid', provenance: 'srd', contentVersion: 1,
   hitDie: 8, savingThrowProficiencies: ['int', 'wis'],
   subclassSlot: { grantedAtLevel: 2, options: ['srd:subclass.circle-of-the-land'] },
+  asiLevels: DRUID_ASI_LEVELS,
   features: [
     {
       id: 'srd:class.druid.proficiencies', name: 'Druid Proficiencies',

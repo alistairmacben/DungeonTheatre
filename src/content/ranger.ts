@@ -297,6 +297,7 @@ export const RANGER: ClassDefinition = {
   id: RANGER_ID, name: 'Ranger', provenance: 'srd', contentVersion: 1,
   hitDie: 10, savingThrowProficiencies: ['str', 'dex'],
   subclassSlot: { grantedAtLevel: 3, options: ['srd:subclass.hunter'] },
+  asiLevels: RANGER_ASI_LEVELS,
   features: [
     {
       id: 'srd:class.ranger.proficiencies', name: 'Ranger Proficiencies',

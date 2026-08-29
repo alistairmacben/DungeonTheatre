@@ -270,6 +270,7 @@ export const SORCERER: ClassDefinition = {
   id: SORCERER_ID, name: 'Sorcerer', provenance: 'srd', contentVersion: 1,
   hitDie: 6, savingThrowProficiencies: ['con', 'cha'],
   subclassSlot: { grantedAtLevel: 1, options: ['srd:subclass.draconic-bloodline'] },
+  asiLevels: SORCERER_ASI_LEVELS,
   features: [
     {
       id: 'srd:class.sorcerer.spellcasting', name: 'Spellcasting',

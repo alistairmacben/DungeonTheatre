@@ -7,7 +7,8 @@
 
 import React, { useState } from 'react'
 import type {
-  ActionView, DamageRollSpec, EffectView, ItemView, PlayerCommand, PlayerView, RollSpec, SpellView
+  Ability, ActionView, DamageRollSpec, EffectView, ItemView, PlayerCommand, PlayerView, RollSpec,
+  SpellView
 } from '@engine'
 import { RollChip } from './RollWidget'
 import { BreakdownList, Value } from './Readouts'
@@ -98,6 +99,18 @@ export function GameMenu({
             </p>
           </div>
           <div className="flex items-center gap-2">
+            {/* No XP tracking exists anywhere in this engine — leveling stays
+                DM-driven, the same way a rest is a decision nobody's timer
+                enforces. v1 only ever puts one entry in classLevels. */}
+            {view.progression.classes[0] && (
+              <button
+                type="button"
+                onClick={() => dispatch({ type: 'levelUp', characterId: view.meta.characterId, classId: view.progression.classes[0]!.classId })}
+                className="rounded-lg border border-arcane/50 bg-arcane/10 px-3 py-1.5 text-sm text-parchment transition hover:bg-arcane/20"
+              >
+                Level Up
+              </button>
+            )}
             {/* Resting is the other half of spending. Which resources come back
                 is the refresh rule each one declares, not anything decided here. */}
             <button
@@ -199,6 +212,19 @@ function CharacterTab({ view, onRoll, dispatch }: {
           <Stat label="Proficiency"><Value readout={view.progression.proficiencyBonus} size="lg" /></Stat>
         </div>
       </Section>
+
+      {/* What Level Up unlocked but didn't answer — an ASI/feat, a subclass,
+          a feature's own "choose N" — surfaced right where the level itself
+          is shown, not buried in a menu nobody thinks to open. */}
+      {view.progression.pendingChoices.length > 0 && (
+        <Section title="Pending Choices">
+          <div className="space-y-3">
+            {view.progression.pendingChoices.map((choice) => (
+              <PendingChoiceCard key={choice.id} choice={choice} dispatch={dispatch} characterId={view.meta.characterId} />
+            ))}
+          </div>
+        </Section>
+      )}
 
       {/* Only shown when there is one — a character with nothing unusual has
           nothing to say here, same as the effects list below it. */}
@@ -318,6 +344,200 @@ function CharacterTab({ view, onRoll, dispatch }: {
           </ul>
         </Section>
       )}
+    </div>
+  )
+}
+
+type PendingChoice = PlayerView['progression']['pendingChoices'][number]
+
+const ABILITY_LABELS: Record<Ability, string> = {
+  str: 'Strength', dex: 'Dexterity', con: 'Constitution',
+  int: 'Intelligence', wis: 'Wisdom', cha: 'Charisma'
+}
+
+/**
+ * One owed choice, answered inline.
+ *
+ * Three shapes share this card because they're the same thing from the
+ * player's chair: something the sheet says is owed, answered once.
+ * `abilityScoreImprovement` additionally toggles between the SRD's two
+ * routes — a flat +2 across at most two abilities, or a feat — since the
+ * engine models them as the same slot (`BuildChoice.kind`) filled two ways.
+ */
+function PendingChoiceCard({ choice, dispatch, characterId }: {
+  choice: PendingChoice
+  dispatch(c: PlayerCommand): Promise<string[] | undefined> | string[] | undefined
+  characterId: string
+}): React.JSX.Element {
+  const [rejected, setRejected] = useState<string[] | null>(null)
+  const [route, setRoute] = useState<'ability' | 'feat'>('ability')
+  const [picked, setPicked] = useState<Ability[]>([])
+
+  const send = (c: PlayerCommand): void => {
+    void Promise.resolve(dispatch(c)).then((r) => setRejected(r ?? null))
+  }
+
+  const toggleAbility = (a: Ability): void => {
+    setPicked((prev) => {
+      if (prev.includes(a)) return prev.filter((x) => x !== a)
+      if (prev.length >= 2) return prev
+      return [...prev, a]
+    })
+  }
+
+  return (
+    <div className="rounded-xl border border-arcane/30 bg-arcane/[0.04] px-4 py-3">
+      <p className="text-sm text-parchment">{choice.prompt}</p>
+
+      {choice.kind === 'abilityScoreImprovement' && (
+        <div className="mt-2 space-y-2">
+          <div className="flex gap-1">
+            {(['ability', 'feat'] as const).map((r) => (
+              <button
+                key={r}
+                type="button"
+                onClick={() => { setRoute(r); setPicked([]) }}
+                className={`rounded-lg border px-2.5 py-1 text-[11px] transition ${
+                  route === r
+                    ? 'border-arcane/60 bg-arcane/10 text-parchment'
+                    : 'border-white/10 text-parchment/50 hover:text-parchment/80'
+                }`}
+              >
+                {r === 'ability' ? 'Raise ability scores' : 'Take a feat'}
+              </button>
+            ))}
+          </div>
+
+          {route === 'ability' && (
+            <div className="flex flex-wrap items-center gap-2">
+              {(Object.keys(ABILITY_LABELS) as Ability[]).map((a) => (
+                <button
+                  key={a}
+                  type="button"
+                  onClick={() => toggleAbility(a)}
+                  className={`rounded-lg border px-2.5 py-1 text-[12px] transition ${
+                    picked.includes(a)
+                      ? 'border-arcane/60 bg-arcane/10 text-parchment'
+                      : 'border-white/10 text-parchment/60 hover:text-parchment/90'
+                  }`}
+                >
+                  {ABILITY_LABELS[a]}
+                </button>
+              ))}
+              <button
+                type="button"
+                disabled={picked.length === 0}
+                onClick={() => {
+                  const value: Partial<Record<Ability, number>> =
+                    picked.length === 1 ? { [picked[0]!]: 2 } : { [picked[0]!]: 1, [picked[1]!]: 1 }
+                  send({ type: 'answerBuildChoice', characterId, atLevel: choice.atLevel!, kind: 'abilityScoreImprovement', value })
+                }}
+                className="rounded-lg border border-arcane/50 bg-arcane/10 px-3 py-1 text-xs text-parchment transition hover:bg-arcane/20 disabled:opacity-40"
+              >
+                {picked.length === 1 ? `+2 ${ABILITY_LABELS[picked[0]!]}` : picked.length === 2
+                  ? `+1 ${ABILITY_LABELS[picked[0]!]}, +1 ${ABILITY_LABELS[picked[1]!]}`
+                  : 'Pick one or two abilities'}
+              </button>
+            </div>
+          )}
+
+          {route === 'feat' && (
+            <div className="flex flex-wrap gap-2">
+              {(choice.options ?? []).map((f) => (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => send({ type: 'answerBuildChoice', characterId, atLevel: choice.atLevel!, kind: 'feat', value: f.id })}
+                  className="rounded-lg border border-white/15 px-2.5 py-1 text-[12px] text-parchment/80 transition hover:border-arcane/50 hover:text-parchment"
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {choice.kind === 'subclass' && (
+        <div className="mt-2 flex flex-wrap gap-2">
+          {(choice.options ?? []).map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              onClick={() => send({ type: 'answerBuildChoice', characterId, atLevel: choice.atLevel!, kind: 'subclass', value: s.id })}
+              className="rounded-lg border border-white/15 px-2.5 py-1 text-[12px] text-parchment/80 transition hover:border-arcane/50 hover:text-parchment"
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {choice.kind !== 'abilityScoreImprovement' && choice.kind !== 'subclass' && (
+        <FeatureSelectionPicker choice={choice} onAnswer={(values) =>
+          send({
+            type: 'answerSelection', characterId,
+            sourceId: choice.id.split(':').slice(0, -1).join(':'),
+            selectionId: choice.id.split(':').at(-1)!,
+            values
+          })} />
+      )}
+
+      {rejected && rejected.length > 0 && (
+        <p className="mt-2 text-[12px] text-ember">{rejected.join(' · ')}</p>
+      )}
+    </div>
+  )
+}
+
+/**
+ * A feature's own "choose N from a list" — cantrips, skills, a spell list.
+ * `choice.id` is `${sourceId}:${selectionId}`, the exact shape build.ts
+ * stamps it with; splitting it back apart is cheaper than widening the view
+ * with two redundant fields.
+ */
+// A raw content id ("srd:spell.fire-bolt") read as a label until the view
+// model carries real ones for every selection kind — every id in this
+// codebase ends in a dash-cased name segment, so this gets legible results
+// ("Fire Bolt") without a content lookup this component has no access to.
+function guessLabel(id: string): string {
+  const last = id.split('.').at(-1) ?? id
+  return last.split('-').map((w) => w[0]?.toUpperCase() + w.slice(1)).join(' ')
+}
+
+function FeatureSelectionPicker({ choice, onAnswer }: {
+  choice: PendingChoice
+  onAnswer(values: string[]): void
+}): React.JSX.Element {
+  const [picked, setPicked] = useState<string[]>([])
+  const options = choice.from ?? []
+
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-2">
+      {options.map((opt) => (
+        <button
+          key={opt}
+          type="button"
+          onClick={() => setPicked((prev) => prev.includes(opt)
+            ? prev.filter((v) => v !== opt)
+            : prev.length < choice.count ? [...prev, opt] : prev)}
+          className={`rounded-lg border px-2.5 py-1 text-[12px] transition ${
+            picked.includes(opt)
+              ? 'border-arcane/60 bg-arcane/10 text-parchment'
+              : 'border-white/10 text-parchment/60 hover:text-parchment/90'
+          }`}
+        >
+          {guessLabel(opt)}
+        </button>
+      ))}
+      <button
+        type="button"
+        disabled={picked.length !== choice.count}
+        onClick={() => onAnswer(picked)}
+        className="rounded-lg border border-arcane/50 bg-arcane/10 px-3 py-1 text-xs text-parchment transition hover:bg-arcane/20 disabled:opacity-40"
+      >
+        Confirm ({picked.length}/{choice.count})
+      </button>
     </div>
   )
 }

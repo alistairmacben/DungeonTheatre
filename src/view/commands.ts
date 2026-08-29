@@ -48,6 +48,7 @@ export type DomainEventType =
   | 'ShortRestTaken' | 'LongRestTaken'
   | 'AbilityUsed'
   | 'SpellCast' | 'SpellsPrepared' | 'ConcentrationBroken'
+  | 'LeveledUp' | 'BuildChoiceAnswered' | 'SelectionAnswered'
   | 'RollMade'
   | 'DamageTaken' | 'Healed' | 'TemporaryHitPointsGained' | 'Bloodied' | 'Downed'
   | 'EffectApplied' | 'EffectRemoved' | 'ResourceSet'
@@ -105,6 +106,9 @@ export function applyCommand(
     case 'setToggle': return setToggle(character, command)
     case 'shortRest': return rest(character, content, 'short')
     case 'longRest': return rest(character, content, 'long')
+    case 'levelUp': return levelUp(character, command, content)
+    case 'answerBuildChoice': return answerBuildChoice(character, command, content)
+    case 'answerSelection': return answerSelection(character, command, content)
     default:
       // Rolls, attacks and spell effects are resolved by the authority against
       // the rules engine, not by this reducer — it only moves state.
@@ -1076,6 +1080,129 @@ function rest(character: Character, content: ContentIndex, kind: 'short' | 'long
 }
 
 // ---------------------------------------------------------------------------
+
+/**
+ * Raises one class's level by one.
+ *
+ * HP_MAX is already a fully derived stat (average hit die + CON per level),
+ * so the new maximum needs no formula here — only the *delta* is applied to
+ * current hit points, so damage already taken survives the level (this does
+ * not heal to full, the way a long rest does).
+ */
+function levelUp(
+  character: Character,
+  command: Extract<PlayerCommand, { type: 'levelUp' }>,
+  content: ContentIndex
+): CommandResult {
+  const cl = character.classLevels.find((c) => c.classId === command.classId)
+  if (!cl) return reject(character, [`you have no levels in "${command.classId}"`])
+
+  const before = createResolution(character, content).stat(HP_MAX).total
+
+  const next = clone(character)
+  const nextCl = next.classLevels.find((c) => c.classId === command.classId)!
+  nextCl.level += 1
+
+  const def = content.classes.get(command.classId)
+  const hitDie = def?.hitDie ?? 8
+  next.hitDiceSpent[hitDie] = next.hitDiceSpent[hitDie] ?? 0
+
+  const after = createResolution(next, content).stat(HP_MAX).total
+  next.hitPointsCurrent += Math.max(0, after - before)
+
+  return {
+    character: next,
+    events: [event('LeveledUp', next, {
+      classId: command.classId, level: nextCl.level, hitPointsMaxDelta: after - before
+    })]
+  }
+}
+
+/**
+ * Answers a level-up choice — an ASI, a feat, or a subclass. Three shapes,
+ * one command, because all three are the same thing from the player's chair:
+ * a choice the sheet says is owed, answered once.
+ */
+function answerBuildChoice(
+  character: Character,
+  command: Extract<PlayerCommand, { type: 'answerBuildChoice' }>,
+  content: ContentIndex
+): CommandResult {
+  const next = clone(character)
+  next.buildChoices = next.buildChoices.filter(
+    (b) => !(b.atLevel === command.atLevel && (b.kind === command.kind
+      || (b.kind === 'feat' && command.kind === 'abilityScoreImprovement')
+      || (b.kind === 'abilityScoreImprovement' && command.kind === 'feat'))))
+
+  if (command.kind === 'abilityScoreImprovement') {
+    const total = Object.values(command.value).reduce((n, v) => n + (v ?? 0), 0)
+    const abilities = Object.keys(command.value).length
+    if (total !== 2 || abilities > 2 || abilities < 1) {
+      return reject(character, ['an Ability Score Improvement raises abilities by a total of 2, split across at most two of them'])
+    }
+    next.buildChoices.push({ atLevel: command.atLevel, kind: 'abilityScoreImprovement', value: command.value })
+    return { character: next, events: [event('BuildChoiceAnswered', next, { atLevel: command.atLevel, kind: 'abilityScoreImprovement', value: command.value })] }
+  }
+
+  if (command.kind === 'feat') {
+    const feat = content.feats.get(command.value)
+    if (!feat) return reject(character, [`unknown feat "${command.value}"`])
+    const trial = clone(next)
+    trial.buildChoices.push({ atLevel: command.atLevel, kind: 'feat', value: command.value })
+    const resolution = createResolution(trial, content)
+    const blocked = resolution.sources.inactive.find((i) => i.source.id === feat.effects.id)
+    if (blocked) return reject(character, [`${feat.effects.name}: ${blocked.reason}`])
+    next.buildChoices = trial.buildChoices
+    return { character: next, events: [event('BuildChoiceAnswered', next, { atLevel: command.atLevel, kind: 'feat', value: command.value })] }
+  }
+
+  // subclass — v1 only ever puts one entry in classLevels (see Character.classLevels)
+  const cl = next.classLevels.find((c) => content.classes.get(c.classId)?.subclassSlot)
+  const def = cl ? content.classes.get(cl.classId) : undefined
+  if (!cl || !def?.subclassSlot) return reject(character, ['no class here offers a subclass'])
+  if (!def.subclassSlot.options.includes(command.value)) {
+    return reject(character, [`"${command.value}" is not one of ${def.name}'s subclasses`])
+  }
+  cl.subclassId = command.value
+  return { character: next, events: [event('BuildChoiceAnswered', next, { atLevel: command.atLevel, kind: 'subclass', value: command.value })] }
+}
+
+/**
+ * Answers a feature's own "choose N" selection — cantrips known, a skill
+ * list, spells known. Until now `character.selections` was only ever
+ * written by creation's deterministic auto-fill; this is the first
+ * interactive path to it.
+ */
+function answerSelection(
+  character: Character,
+  command: Extract<PlayerCommand, { type: 'answerSelection' }>,
+  content: ContentIndex
+): CommandResult {
+  const resolution = createResolution(character, content)
+  const source = resolution.sources.active.find((s) => s.id === command.sourceId)
+  const sel = source?.selections?.find((s) => s.id === command.selectionId)
+  if (!source || !sel) {
+    return reject(character, [`no such selection on "${command.sourceId}"`])
+  }
+  if (command.values.length > sel.count) {
+    return reject(character, [`${sel.prompt} allows ${sel.count}, not ${command.values.length}`])
+  }
+  if (sel.from && command.values.some((v) => !sel.from!.includes(v))) {
+    return reject(character, [`${sel.prompt}: one of the values offered isn't a valid choice`])
+  }
+
+  const next = clone(character)
+  next.selections ??= {}
+  next.selections[command.sourceId] ??= {}
+  next.selections[command.sourceId]![command.selectionId] = command.values
+
+  return {
+    character: next,
+    events: [event('SelectionAnswered', next, {
+      sourceId: command.sourceId, selectionId: command.selectionId, values: command.values
+    })]
+  }
+}
 
 /**
  * Moving an item between two characters. Two-party, so it returns both sides

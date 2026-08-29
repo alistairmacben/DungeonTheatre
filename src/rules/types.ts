@@ -688,6 +688,8 @@ export interface ClassDefinition extends Identity {
   features: ClassFeatureDefinition[]
   /** Present from day one even though v1 offers a menu of one. */
   subclassSlot?: { grantedAtLevel: number; options: string[] }
+  /** The character levels at which this class grants an Ability Score Improvement. */
+  asiLevels?: number[]
 }
 
 export interface FeatDefinition extends Identity {

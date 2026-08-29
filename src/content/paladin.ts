@@ -108,6 +108,7 @@ export const PALADIN: ClassDefinition = {
   id: PALADIN_ID, name: 'Paladin', provenance: 'srd', contentVersion: 1,
   hitDie: 10, savingThrowProficiencies: ['wis', 'cha'],
   subclassSlot: { grantedAtLevel: 3, options: ['srd:subclass.devotion'] },
+  asiLevels: PALADIN_ASI_LEVELS,
   features: [
     {
       id: 'srd:class.paladin.core', name: 'Paladin Training',
