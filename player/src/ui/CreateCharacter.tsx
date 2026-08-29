@@ -13,7 +13,7 @@
 import { useMemo, useState } from 'react'
 import {
   createCharacter, playerViewOf, STANDARD_ARRAY, startingKitFor,
-  type Ability, type ContentIndex, type SpeciesId
+  type Ability, type ContentIndex, type PlayerView, type SpeciesId
 } from '@engine'
 
 const ABILITY_LABEL: Record<Ability, string> = {
@@ -91,6 +91,54 @@ export function CreateCharacter({
   })
 
   const stepIndex = STEPS.indexOf(step)
+
+  // Each step's own answer, for the rail. `value` is what to show; `complete`
+  // is whether it counts as answered — the two differ for abilities, where a
+  // partial "3/6 assigned" is worth displaying but is not yet an answer.
+  const assignedCount = ABILITY_ORDER.filter((a) => assignment[a] !== null).length
+  const stepMeta: { id: Step; label: string; value?: string; complete: boolean }[] = [
+    {
+      id: 'species',
+      label: 'Species',
+      complete: speciesId !== null && (!needsSubspecies || subspeciesId !== undefined),
+      ...(selectedSpecies
+        ? {
+          value: selectedSpecies.subspecies?.find((s) => s.id === subspeciesId)?.name
+            ?? selectedSpecies.effects.name
+        }
+        : {})
+    },
+    {
+      id: 'class',
+      label: 'Class',
+      complete: classId !== null,
+      ...(classId ? { value: content.classes.get(classId)?.name ?? classId } : {})
+    },
+    {
+      id: 'abilities',
+      label: 'Abilities',
+      complete: abilitiesComplete,
+      ...(assignedCount > 0 ? { value: `${assignedCount}/6 assigned` } : {})
+    },
+    {
+      id: 'equipment',
+      label: 'Equipment',
+      complete: classId !== null,
+      ...(kit ? { value: `${kit.items.length} items` } : {})
+    },
+    {
+      id: 'name',
+      label: 'Name',
+      complete: name.trim().length > 0,
+      ...(name.trim() ? { value: name.trim() } : {})
+    }
+  ]
+
+  // Anything whose prerequisites are all answered can be jumped to, in either
+  // direction. Going back to change your species should not cost four clicks
+  // to return from.
+  const reachable = (i: number): boolean =>
+    i === 0 || stepMeta.slice(0, i).every((s) => s.complete)
   const canAdvance =
     (step === 'species' && speciesId !== null && (!needsSubspecies || subspeciesId !== undefined))
     || (step === 'class' && classId !== null)
@@ -127,19 +175,45 @@ export function CreateCharacter({
           <p className="mt-0.5 text-xs text-parchment/50">
             A level 1 character. Species, class, abilities, equipment, name.
           </p>
-          <div className="mt-3 flex gap-1.5">
-            {STEPS.map((s, i) => (
-              <div
-                key={s}
-                className={`h-1 flex-1 rounded-full ${
-                  i <= stepIndex ? 'bg-arcane' : 'bg-white/10'
-                }`}
-              />
-            ))}
-          </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto px-6 py-5">
+        <div className="flex min-h-0 flex-1">
+          {/* The rail carries the answers, not just the position. A player
+              three steps in can see what they picked and click straight back
+              to change it, rather than reversing one step at a time. */}
+          <nav className="w-44 shrink-0 space-y-1 overflow-y-auto border-r border-white/10 px-3 py-4">
+            {stepMeta.map((s, i) => {
+              const current = i === stepIndex
+              const open = reachable(i)
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  disabled={!open}
+                  onClick={() => setStep(s.id)}
+                  className={`w-full rounded-lg px-2.5 py-1.5 text-left transition ${
+                    current
+                      ? 'bg-arcane/10 text-parchment'
+                      : open
+                        ? 'text-parchment/60 hover:bg-white/5 hover:text-parchment'
+                        : 'cursor-not-allowed text-parchment/25'
+                  }`}
+                >
+                  <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-widest">
+                    <span className={s.complete ? 'text-verdigris' : 'text-parchment/30'}>
+                      {s.complete ? '✓' : '○'}
+                    </span>
+                    {s.label}
+                  </span>
+                  <span className="mt-0.5 block truncate text-[12px] text-parchment/45">
+                    {s.value ?? '—'}
+                  </span>
+                </button>
+              )
+            })}
+          </nav>
+
+          <div className="min-w-0 flex-1 overflow-y-auto px-6 py-5">
           {step === 'species' && (
             <div className="space-y-6">
               <Section title="Species">
@@ -275,6 +349,25 @@ export function CreateCharacter({
               )}
             </Section>
           )}
+          </div>
+
+          {/* The character you are building, on every step rather than two of
+              them. Nothing here is computed locally — it is the same
+              `playerViewOf` the live sheet renders, so what you see while
+              choosing is exactly what you get. */}
+          <aside className="hidden w-60 shrink-0 overflow-y-auto border-l border-white/10 px-4 py-4 lg:block">
+            {preview ? (
+              <CharacterSummary
+                view={preview.view}
+                name={name.trim() || suggestedName}
+              />
+            ) : (
+              <p className="text-[12px] leading-relaxed text-parchment/35">
+                Pick a species, a class and your ability scores — a live summary
+                of the character appears here as you go.
+              </p>
+            )}
+          </aside>
         </div>
 
         <footer className="flex items-center justify-between border-t border-white/10 px-6 py-4">
@@ -306,6 +399,84 @@ export function CreateCharacter({
           )}
         </footer>
       </div>
+    </div>
+  )
+}
+
+/**
+ * The live character, as the reference UIs show it: who they are, the six
+ * scores, the vitals, and what the build has already granted them.
+ *
+ * Every value is read off the resolved `PlayerView` — this computes nothing.
+ */
+function CharacterSummary({
+  view, name
+}: { view: PlayerView; name: string }): React.JSX.Element {
+  const klass = view.progression.classes[0]
+  const species = view.progression.species
+  const cantrips = (view.spellcasting?.spells ?? []).filter((s) => s.level === 0)
+  // System-provenance sources (the ambient `system:baseline` that supplies
+  // unarmoured AC) belong in the Effects tab, where the full explanation of a
+  // number lives. Here the question is "what did my choices give me", and a
+  // rule that applies to every creature alive is not an answer to it.
+  const features = view.effects
+    .filter((e) => e.kind === 'passive' && !e.id.startsWith('system:'))
+    .slice(0, 6)
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <p className="truncate text-sm text-parchment">{name}</p>
+        <p className="text-[11px] text-parchment/45">
+          {species.subspeciesLabel ?? species.label}
+          {klass ? ` · Level ${klass.level} ${klass.label}` : ''}
+        </p>
+      </div>
+
+      <div className="grid grid-cols-3 gap-x-2 gap-y-2">
+        {view.abilities.map((a) => (
+          <div key={a.ability} className="text-center">
+            <p className="text-[9px] uppercase tracking-widest text-parchment/35">
+              {a.ability}
+            </p>
+            <p className="text-sm tabular-nums text-parchment">{a.score.value}</p>
+            <p className="text-[10px] tabular-nums text-parchment/45">{a.modifier.display}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex justify-between border-t border-white/10 pt-3">
+        {[
+          { label: 'HP', value: String(view.vitals.hitPoints.max.value) },
+          { label: 'AC', value: String(view.vitals.armorClass.value) },
+          { label: 'Speed', value: view.vitals.speed.display }
+        ].map((s) => (
+          <div key={s.label}>
+            <p className="text-[9px] uppercase tracking-widest text-parchment/35">{s.label}</p>
+            <p className="text-sm tabular-nums text-parchment">{s.value}</p>
+          </div>
+        ))}
+      </div>
+
+      {cantrips.length > 0 && (
+        <div className="border-t border-white/10 pt-3">
+          <p className="mb-1.5 text-[9px] uppercase tracking-widest text-parchment/35">Cantrips</p>
+          <p className="text-[12px] leading-relaxed text-parchment/70">
+            {cantrips.map((c) => c.label).join(', ')}
+          </p>
+        </div>
+      )}
+
+      {features.length > 0 && (
+        <div className="border-t border-white/10 pt-3">
+          <p className="mb-1.5 text-[9px] uppercase tracking-widest text-parchment/35">Features</p>
+          <ul className="space-y-0.5">
+            {features.map((f) => (
+              <li key={f.id} className="truncate text-[12px] text-parchment/70">{f.label}</li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   )
 }

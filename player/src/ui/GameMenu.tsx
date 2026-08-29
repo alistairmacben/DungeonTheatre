@@ -11,6 +11,7 @@ import type {
   SpellView
 } from '@engine'
 import { RollChip } from './RollWidget'
+import { DetailCard } from './DetailCard'
 import { BreakdownList, Value } from './Readouts'
 import { suggestedBar } from './Hud'
 import { HUD_SLOTS, barFor, usePinnedActions, type PinnedActions } from './usePinnedActions'
@@ -514,6 +515,19 @@ function PendingChoiceCard({ choice, dispatch, characterId }: {
 // model carries real ones for every selection kind — every id in this
 // codebase ends in a dash-cased name segment, so this gets legible results
 // ("Fire Bolt") without a content lookup this component has no access to.
+/**
+ * What casting it actually spends: the action, and the slot when it needs one.
+ * A cantrip costs no slot, which is the whole of what makes it a cantrip.
+ */
+function spellCost(spell: SpellView): string[] {
+  const slot = spell.slotOptions.find((s) => s.remaining > 0)
+  return [
+    spell.castingTimeLabel,
+    ...(spell.level > 0 && slot ? [slot.label] : []),
+    ...(spell.concentration ? ['Concentration'] : [])
+  ]
+}
+
 function guessLabel(id: string): string {
   const last = id.split('.').at(-1) ?? id
   return last.split('-').map((w) => w[0]?.toUpperCase() + w.slice(1)).join(' ')
@@ -923,10 +937,35 @@ function ActionRow({ action, dispatch, onRoll, bar, prefs }: {
         )}
       </div>
 
-      {open && action.breakdown && (
-        <div className="mt-3 border-t border-white/10 pt-3">
-          <BreakdownList breakdown={action.breakdown} />
-        </div>
+      {open && (
+        <>
+          <DetailCard
+            subtitle={`${action.cost.label} · ${action.kind}`}
+            {...(action.damageRoll ? { damage: action.damageRoll } : {})}
+            {...(action.preview?.attackBonusDisplay
+              ? { toHit: action.preview.attackBonusDisplay }
+              : {})}
+            {...(action.preview?.saveDc
+              ? {
+                saveLabel: `DC ${action.preview.saveDc}`
+                  + (action.preview.saveAbility ? ` ${action.preview.saveAbility.toUpperCase()}` : '')
+              }
+              : {})}
+            {...(action.description ? { description: action.description } : {})}
+            {...(action.targeting?.rangeLabel
+              ? { meta: [{ label: 'Range', value: action.targeting.rangeLabel }] }
+              : {})}
+            cost={[action.cost.label, ...action.costs.map((c) => c.label)]}
+            {...(!action.available ? { unavailable: action.unavailableReasons } : {})}
+          />
+          {/* The full arithmetic still sits underneath, for anyone who wants
+              to know where the number came from rather than just what it is. */}
+          {action.breakdown && (
+            <div className="mt-3 border-t border-white/10 pt-3">
+              <BreakdownList breakdown={action.breakdown} />
+            </div>
+          )}
+        </>
       )}
     </li>
   )
@@ -1048,9 +1087,10 @@ function SpellRow({ spell, dispatch, onRoll, bar, prefs }: {
               <span className="text-[10px] uppercase tracking-wide text-parchment/30">always ready</span>
             )}
           </p>
+          {/* Just the two a player scans for. Components and duration moved
+              into the card below, where they have room to be labelled. */}
           <p className="mt-0.5 text-[12px] text-parchment/50">
-            {spell.castingTimeLabel} · {spell.rangeLabel} · {spell.componentsLabel}
-            {spell.durationLabel ? ` · ${spell.durationLabel}` : ''}
+            {spell.castingTimeLabel} · {spell.rangeLabel}
           </p>
           {/* What the spell does when it lands — the same shape a weapon shows. */}
           {spell.effectPreview && (
@@ -1075,18 +1115,24 @@ function SpellRow({ spell, dispatch, onRoll, bar, prefs }: {
       </button>
 
       {open && (
-        <div className="mt-3 space-y-2 border-t border-white/10 pt-3">
-          {spell.description && (
-            <p className="text-[13px] leading-relaxed text-parchment/70">{spell.description}</p>
-          )}
-          {spell.effects.length > 0 && (
-            <ul className="space-y-0.5">
-              {spell.effects.map((line, i) => (
-                <li key={i} className="text-[13px] text-parchment/55">· {line}</li>
-              ))}
-            </ul>
-          )}
-        </div>
+        <DetailCard
+          subtitle={`${spell.levelLabel} ${spell.school} spell`}
+          {...(spell.damageRoll ? { damage: spell.damageRoll } : {})}
+          {...(spell.effectPreview?.attackBonusDisplay
+            ? { toHit: spell.effectPreview.attackBonusDisplay }
+            : {})}
+          {...(spell.effectPreview?.saveLabel ? { saveLabel: spell.effectPreview.saveLabel } : {})}
+          {...(spell.description ? { description: spell.description } : {})}
+          lines={spell.effects}
+          meta={[
+            { label: 'Cast', value: spell.castingTimeLabel },
+            { label: 'Range', value: spell.rangeLabel },
+            ...(spell.durationLabel ? [{ label: 'Duration', value: spell.durationLabel }] : []),
+            { label: 'Components', value: spell.componentsLabel }
+          ]}
+          cost={spellCost(spell)}
+          {...(!spell.available ? { unavailable: spell.unavailableReasons } : {})}
+        />
       )}
 
       <div className="mt-2 flex flex-wrap items-center gap-2">
