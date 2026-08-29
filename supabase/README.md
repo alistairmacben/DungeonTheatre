@@ -16,6 +16,15 @@ Project `sakzpiurgrbeewzhvvng` (Dungeon Theatre, `ap-south-1`).
   the bundled rules engine, rebuilt with `npm run build:edge` before each
   deploy and never hand-edited.
 
+  **Always rebuild before deploying.** Nothing about the deploy forces it, and
+  a stale bundle is silent: the server keeps answering, just with older rules
+  than the client predicts with. This has already happened once — the bundle
+  went seven days stale and lost every level-up command, so the whole feature
+  worked locally and would have been refused by the server. `test-edge-parity.mjs`
+  now guards it: it dispatches every command the reducer handles *into the
+  bundle*, compares the deployed content counts against the local ones, and
+  fails with the rebuild command if the bundle is older than the engine source.
+
 Data (characters, campaigns, dice history) is not backed up by anything in
 this repo — Supabase backs up the data. `schema.sql` covers the *shape*, so a
 lost project could be rebuilt structurally from scratch if it ever came to
