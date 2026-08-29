@@ -100,22 +100,35 @@ function spellEffects(o: Partial<EffectSource> & { id: string; name: string }): 
 /**
  * Eldritch Blast.
  *
- * The one cantrip in the SRD that scales by *number of attack rolls* rather
- * than by damage dice, so what a cast produces is a variable-length list of
- * attacks. No part of the vocabulary describes a spell's roll shape — spells
- * carry narrative and modifiers, never a dice request — so the beam count is
- * prose here exactly as *fire bolt*'s damage progression is prose in spells.ts.
+ * A warlock's bread-and-butter attack, cast every turn from 1st level on —
+ * leaving it narrative-only because the beam *count* scales in a way the
+ * vocabulary can't express meant the one roll a player actually throws
+ * constantly never worked from the menu at all. `effect` now carries a
+ * single beam exactly like Fire Bolt does: a real spell attack roll, real
+ * 1d10 force damage, `cantripScaling` for the same 5th/11th/17th die
+ * progression. What still has no channel is the *beam count* — two beams at
+ * 5th, three at 11th, four at 17th, each independently against the same or
+ * a different target. The engine has no "N attack rolls from one action"
+ * primitive anywhere (Extra Attack hits the identical wall in fighter.ts),
+ * so extra beams are cast the same way extra weapon attacks are taken: press
+ * Cast again. Each press is now a fully real, fully rollable attack.
  */
 export const ELDRITCH_BLAST = spell({
   id: 'srd:spell.eldritch-blast', name: 'Eldritch Blast', level: 0,
   school: 'evocation', rangeFeet: 120,
+  effect: {
+    delivery: 'attack',
+    damage: [{ dice: { count: 1, sides: 10 }, type: 'force' }],
+    cantripScaling: true
+  },
   effects: spellEffects({
     id: 'srd:spell.eldritch-blast', name: 'Eldritch Blast',
+    completeness: 'partial',
     narrative: [{
-      text: 'A beam of crackling energy. Make a ranged spell attack for 1d10 '
-        + 'force damage. You create two beams at 5th level, three at 11th and '
-        + 'four at 17th, each with its own attack roll, at the same or '
-        + 'different targets.',
+      text: 'A beam of crackling energy: a ranged spell attack for 1d10 '
+        + 'force damage (Cast rolls this beam). You create two beams at 5th '
+        + 'level, three at 11th and four at 17th, each its own attack roll, '
+        + 'at the same or different targets — press Cast once per beam.',
       dmPromptable: false
     }]
   })

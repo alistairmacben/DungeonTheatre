@@ -234,4 +234,36 @@ const countPending = (level, selId, o) =>
   check.eq('integrity: the Fiend is no longer unauthored debt', debt.length, 0)
 }
 
+// ---------------------------------------------------------------------------
+// Eldritch Blast — a real, rollable attack, not just prose
+//
+// The beam a player throws every turn was left fully narrative, which meant
+// the Spells tab's Cast button had nothing to roll for it at all. One beam
+// is now a real spell attack (1d10 force, cantrip-scaled), matching Fire
+// Bolt's shape; only the beam *count* at 5th/11th/17th stays narrative,
+// the same gap Extra Attack has for weapon attacks.
+// ---------------------------------------------------------------------------
+
+{
+  const v = viewAt(11, {
+    selections: {
+      [PROFS]: { skills: ['arcana', 'deception'] },
+      'srd:class.warlock.pact-magic': { cantrips: ['srd:spell.eldritch-blast'], 'spells-known': [] },
+      'srd:class.warlock.pact-boon': { boon: ['pact-of-the-tome'] }
+    }
+  })
+  const blast = v.spellcasting.spells.find((s) => s.id === 'srd:spell.eldritch-blast')
+  const pinnedCast = v.actions.find((a) => a.id === 'cast:srd:spell.eldritch-blast')
+
+  check('eldritch blast: exists on the sheet', blast !== undefined)
+  check('eldritch blast: carries a real attack roll now', blast?.roll !== undefined)
+  check('eldritch blast: and matches the pinned-bar version of the same cast',
+    JSON.stringify(blast.roll) === JSON.stringify(pinnedCast.roll))
+  check.eq('eldritch blast: force damage, on a hit', blast.damageRoll?.pools[0]?.type, 'force')
+  check('eldritch blast: still flagged partial for the un-modeled beam count',
+    content.spells.get('srd:spell.eldritch-blast').effects.completeness === 'partial')
+  check('eldritch blast: narrative still tells the player about the extra beams',
+    content.spells.get('srd:spell.eldritch-blast').effects.narrative[0].text.includes('two beams'))
+}
+
 check.report()
