@@ -92,6 +92,7 @@ for (const suite of [
   'test-items-ir2.mjs',
   'test-items-ir3.mjs',
   'test-items-sz1.mjs',
+  'test-items-sz2.mjs',
   'test-sorcerer.mjs',
   'test-bard-known-spells.mjs',
   'test-roll-damage.mjs'
