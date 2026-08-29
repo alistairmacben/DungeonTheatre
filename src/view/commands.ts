@@ -1184,11 +1184,14 @@ function answerSelection(
   if (!source || !sel) {
     return reject(character, [`no such selection on "${command.sourceId}"`])
   }
-  if (command.values.length > sel.count) {
-    return reject(character, [`${sel.prompt} allows ${sel.count}, not ${command.values.length}`])
+  if (command.values.length !== sel.count) {
+    return reject(character, [`${sel.prompt} needs exactly ${sel.count}, not ${command.values.length}`])
   }
   if (sel.from && command.values.some((v) => !sel.from!.includes(v))) {
     return reject(character, [`${sel.prompt}: one of the values offered isn't a valid choice`])
+  }
+  if (new Set(command.values).size !== command.values.length) {
+    return reject(character, [`${sel.prompt}: the same value was picked twice`])
   }
 
   const next = clone(character)

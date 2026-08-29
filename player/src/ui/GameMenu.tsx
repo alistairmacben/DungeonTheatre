@@ -512,6 +512,41 @@ function FeatureSelectionPicker({ choice, onAnswer }: {
   const [picked, setPicked] = useState<string[]>([])
   const options = choice.from ?? []
 
+  // Some selections offer no enumerated list at all — "any language", "any
+  // artisan's tool" — because the SRD genuinely leaves the choice open. A
+  // button list has nothing to build from, so this takes free text instead.
+  if (options.length === 0) {
+    const texts = Array.from({ length: choice.count }, (_, i) => picked[i] ?? '')
+    const complete = texts.every((t) => t.trim().length > 0)
+      && new Set(texts.map((t) => t.trim())).size === texts.length
+    return (
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        {texts.map((t, i) => (
+          <input
+            key={i}
+            type="text"
+            value={t}
+            onChange={(e) => setPicked((prev) => {
+              const next = [...prev]
+              next[i] = e.target.value
+              return next
+            })}
+            placeholder={choice.count > 1 ? `Choice ${i + 1}` : 'Your choice'}
+            className="rounded-lg border border-white/15 bg-ink/60 px-2.5 py-1 text-[12px] text-parchment placeholder:text-parchment/30 focus:border-arcane/50 focus:outline-none"
+          />
+        ))}
+        <button
+          type="button"
+          disabled={!complete}
+          onClick={() => onAnswer(texts.map((t) => t.trim()))}
+          className="rounded-lg border border-arcane/50 bg-arcane/10 px-3 py-1 text-xs text-parchment transition hover:bg-arcane/20 disabled:opacity-40"
+        >
+          Confirm
+        </button>
+      </div>
+    )
+  }
+
   return (
     <div className="mt-2 flex flex-wrap items-center gap-2">
       {options.map((opt) => (
