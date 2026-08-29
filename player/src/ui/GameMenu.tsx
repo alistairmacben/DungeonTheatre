@@ -372,6 +372,13 @@ function PendingChoiceCard({ choice, dispatch, characterId }: {
   const [rejected, setRejected] = useState<string[] | null>(null)
   const [route, setRoute] = useState<'ability' | 'feat'>('ability')
   const [picked, setPicked] = useState<Ability[]>([])
+  // ASI/feat and subclass are rare and high-signal — open immediately. A
+  // feature's own "choose N" (cantrips, skills, spells known) is the case
+  // that piles up: a ranger behind on spells known shows one of these per
+  // missed level, each a wall of buttons if left expanded by default.
+  const [open, setOpen] = useState(
+    choice.kind === 'abilityScoreImprovement' || choice.kind === 'subclass'
+  )
 
   const send = (c: PlayerCommand): void => {
     void Promise.resolve(dispatch(c)).then((r) => setRejected(r ?? null))
@@ -387,9 +394,16 @@ function PendingChoiceCard({ choice, dispatch, characterId }: {
 
   return (
     <div className="rounded-xl border border-arcane/30 bg-arcane/[0.04] px-4 py-3">
-      <p className="text-sm text-parchment">{choice.prompt}</p>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between gap-2 text-left"
+      >
+        <p className="text-sm text-parchment">{choice.prompt}</p>
+        <span className="shrink-0 text-[11px] text-parchment/40">{open ? '▾' : '▸'}</span>
+      </button>
 
-      {choice.kind === 'abilityScoreImprovement' && (
+      {open && choice.kind === 'abilityScoreImprovement' && (
         <div className="mt-2 space-y-2">
           <div className="flex gap-1">
             {(['ability', 'feat'] as const).map((r) => (
@@ -458,7 +472,7 @@ function PendingChoiceCard({ choice, dispatch, characterId }: {
         </div>
       )}
 
-      {choice.kind === 'subclass' && (
+      {open && choice.kind === 'subclass' && (
         <div className="mt-2 flex flex-wrap gap-2">
           {(choice.options ?? []).map((s) => (
             <button
@@ -473,7 +487,7 @@ function PendingChoiceCard({ choice, dispatch, characterId }: {
         </div>
       )}
 
-      {choice.kind !== 'abilityScoreImprovement' && choice.kind !== 'subclass' && (
+      {open && choice.kind !== 'abilityScoreImprovement' && choice.kind !== 'subclass' && (
         <FeatureSelectionPicker choice={choice} onAnswer={(values) =>
           send({
             type: 'answerSelection', characterId,
@@ -483,7 +497,7 @@ function PendingChoiceCard({ choice, dispatch, characterId }: {
           })} />
       )}
 
-      {rejected && rejected.length > 0 && (
+      {open && rejected && rejected.length > 0 && (
         <p className="mt-2 text-[12px] text-ember">{rejected.join(' · ')}</p>
       )}
     </div>
@@ -510,6 +524,7 @@ function FeatureSelectionPicker({ choice, onAnswer }: {
   onAnswer(values: string[]): void
 }): React.JSX.Element {
   const [picked, setPicked] = useState<string[]>([])
+  const [search, setSearch] = useState('')
   const options = choice.from ?? []
 
   // Some selections offer no enumerated list at all — "any language", "any
@@ -547,32 +562,59 @@ function FeatureSelectionPicker({ choice, onAnswer }: {
     )
   }
 
+  // A short list (abilities, feats, a handful of skills) just shows every
+  // button — search would be one more thing to look at for no benefit. A
+  // long one (any spell list) never dumps all of it: unfiltered, only the
+  // first 20 plus whatever's already picked render; typing narrows to
+  // actual matches, which is normally a short list on its own.
+  const searchable = options.length > 8
+  const query = search.trim().toLowerCase()
+  const base = query
+    ? options.filter((opt) => guessLabel(opt).toLowerCase().includes(query))
+    : options.slice(0, 20)
+  const visible = [...picked.filter((p) => !base.includes(p)), ...base]
+  const hiddenCount = !query ? Math.max(0, options.length - 20) : 0
+
   return (
-    <div className="mt-2 flex flex-wrap items-center gap-2">
-      {options.map((opt) => (
+    <div className="mt-2 space-y-2">
+      {searchable && (
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder={`Search ${options.length} options…`}
+          className="w-full max-w-[240px] rounded-lg border border-white/15 bg-black/30 px-2.5 py-1 text-[12px] text-parchment placeholder:text-parchment/30 focus:border-arcane/50 focus:outline-none"
+        />
+      )}
+      <div className="flex flex-wrap items-center gap-2">
+        {visible.map((opt) => (
+          <button
+            key={opt}
+            type="button"
+            onClick={() => setPicked((prev) => prev.includes(opt)
+              ? prev.filter((v) => v !== opt)
+              : prev.length < choice.count ? [...prev, opt] : prev)}
+            className={`rounded-lg border px-2.5 py-1 text-[12px] transition ${
+              picked.includes(opt)
+                ? 'border-arcane/60 bg-arcane/10 text-parchment'
+                : 'border-white/10 text-parchment/60 hover:text-parchment/90'
+            }`}
+          >
+            {guessLabel(opt)}
+          </button>
+        ))}
+        {hiddenCount > 0 && (
+          <span className="text-[11px] text-parchment/30">{hiddenCount} more — search to narrow</span>
+        )}
         <button
-          key={opt}
           type="button"
-          onClick={() => setPicked((prev) => prev.includes(opt)
-            ? prev.filter((v) => v !== opt)
-            : prev.length < choice.count ? [...prev, opt] : prev)}
-          className={`rounded-lg border px-2.5 py-1 text-[12px] transition ${
-            picked.includes(opt)
-              ? 'border-arcane/60 bg-arcane/10 text-parchment'
-              : 'border-white/10 text-parchment/60 hover:text-parchment/90'
-          }`}
+          disabled={picked.length !== choice.count}
+          onClick={() => onAnswer(picked)}
+          className="rounded-lg border border-arcane/50 bg-arcane/10 px-3 py-1 text-xs text-parchment transition hover:bg-arcane/20 disabled:opacity-40"
         >
-          {guessLabel(opt)}
+          Confirm ({picked.length}/{choice.count})
         </button>
-      ))}
-      <button
-        type="button"
-        disabled={picked.length !== choice.count}
-        onClick={() => onAnswer(picked)}
-        className="rounded-lg border border-arcane/50 bg-arcane/10 px-3 py-1 text-xs text-parchment transition hover:bg-arcane/20 disabled:opacity-40"
-      >
-        Confirm ({picked.length}/{choice.count})
-      </button>
+      </div>
     </div>
   )
 }

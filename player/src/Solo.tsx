@@ -9,45 +9,59 @@
 // Everything here is either a component the Stage also renders or a harness
 // affordance clearly marked as one.
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { StageView } from '@stage-ui/StageView'
 import { EMPTY_SNAPSHOT } from '@shared/types'
 import { totalOf, type DiceRoll } from '@shared/dice'
-import type { Character, DamageRollSpec, RollSpec } from '@engine'
+import { loadContent, type Character, type ContentIndex, type DamageRollSpec, type RollSpec } from '@engine'
 import { useGameState } from './game/useGameState'
 import { PARTY } from './game/character'
 import { Hud } from './ui/Hud'
 import { GameMenu, type MenuTab } from './ui/GameMenu'
 import { DmPanel } from './ui/DmPanel'
+import { CreateCharacter } from './ui/CreateCharacter'
 import {
   DamagePrompt, DamageResult, RollResult, damageLabelOf, damageOutcomeFromEvents, isHealing,
   rollDamageFaces, rollFor, outcomeFromEvents, type DamageOutcome, type RollOutcome
 } from './ui/RollWidget'
 import { HUD_RESERVED_PX } from './ui/usePinnedActions'
 
+let nextCustomId = 1
+
 export function Solo(): React.JSX.Element {
-  const [who, setWho] = useState(0)
+  // A dedicated, harness-level load: `CreateCharacter` needs a ContentIndex
+  // before any character (and therefore any `useGameState`) exists yet.
+  const content = useMemo<ContentIndex>(() => loadContent(), [])
+  const [customParty, setCustomParty] = useState<Character[]>([])
+  const roster = [...PARTY, ...customParty]
+
+  // An id, not an index — the roster grows at runtime now, and an index
+  // silently points at the wrong character the moment one is added.
+  const [selectedId, setSelectedId] = useState(PARTY[0]!.id)
+  const selected = roster.find((c) => c.id === selectedId) ?? roster[0]!
+
   const [dmOpen, setDmOpen] = useState(false)
+  const [creating, setCreating] = useState(false)
 
   return (
     <div className="relative h-full w-full">
       {/* Keyed on the character, because game state is seeded from it and a
           different character means a fresh game, not a re-render. */}
       <SoloCharacter
-        key={PARTY[who]!.id}
-        character={PARTY[who]!}
+        key={selected.id}
+        character={selected}
         dmOpen={dmOpen}
         onCloseDm={() => setDmOpen(false)}
       />
 
       <div className="pointer-events-auto absolute left-4 top-4 flex gap-1">
-        {PARTY.map((c, i) => (
+        {roster.map((c) => (
           <button
             key={c.id}
             type="button"
-            onClick={() => setWho(i)}
+            onClick={() => setSelectedId(c.id)}
             className={`rounded-lg border px-3 py-1.5 text-xs transition ${
-              i === who
+              c.id === selectedId
                 ? 'border-arcane/60 bg-arcane/10 text-parchment'
                 : 'border-white/10 bg-ink/70 text-parchment/50 hover:text-parchment/80'
             }`}
@@ -55,6 +69,13 @@ export function Solo(): React.JSX.Element {
             {c.name}
           </button>
         ))}
+        <button
+          type="button"
+          onClick={() => setCreating(true)}
+          className="ml-2 rounded-lg border border-white/10 bg-ink/70 px-3 py-1.5 text-xs text-parchment/50 transition hover:text-parchment/80"
+        >
+          + New
+        </button>
         <button
           type="button"
           onClick={() => setDmOpen((v) => !v)}
@@ -67,6 +88,24 @@ export function Solo(): React.JSX.Element {
           DM
         </button>
       </div>
+
+      {creating && (
+        <CreateCharacter
+          content={content}
+          characterId={`custom-${nextCustomId}`}
+          campaignId="camp-1"
+          suggestedName="New Character"
+          onCancel={() => setCreating(false)}
+          onSubmit={async (character) => {
+            if (!character) return 'something went wrong building that character'
+            nextCustomId += 1
+            setCustomParty((prev) => [...prev, character])
+            setSelectedId(character.id)
+            setCreating(false)
+            return undefined
+          }}
+        />
+      )}
     </div>
   )
 }
