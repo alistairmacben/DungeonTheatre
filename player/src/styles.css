@@ -16,6 +16,17 @@
   --color-ink-line: #262234;
   --color-ember: #e0a458;
   --color-arcane: #8b7ee8;
+  /*
+   * `parchment` and `verdigris` were used in 200+ places across the player UI
+   * and the stage without ever being declared here. Tailwind v4 generates
+   * utilities only for colours defined in `@theme`, so every `text-parchment`,
+   * `text-parchment/40` and `bg-verdigris` in the codebase emitted no CSS at
+   * all: the whole three-tier text hierarchy collapsed to the inherited body
+   * colour, and the HP bar's fill was transparent — an invisible health bar.
+   * Declaring them is what turns all of that on.
+   */
+  --color-parchment: #e8e2d6;
+  --color-verdigris: #4fae94;
   --font-display: 'Cinzel', Georgia, serif;
 }
 
