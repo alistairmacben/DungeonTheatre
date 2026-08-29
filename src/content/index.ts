@@ -32,6 +32,7 @@ import { ALL_ITEMS_C } from './items-c.js'
 import { ALL_ITEMS_D1 } from './items-d1.js'
 import { ALL_ITEMS_D2 } from './items-d2.js'
 import { ALL_ITEMS_IR1 } from './items-ir1.js'
+import { ALL_ITEMS_IR2 } from './items-ir2.js'
 import { WIZARD_CLASSES, WIZARD_ITEMS, WIZARD_SPECIES } from './wizard.js'
 import { PARTY_CLASSES, PARTY_ITEMS, PARTY_SPECIES } from './party.js'
 import {
@@ -81,7 +82,7 @@ const ITEMS: ItemDefinition[] = [
   ...ALL_ITEMS, ...EXTRA_ITEMS, ...WIZARD_ITEMS, ...PARTY_ITEMS,
   ...BARBARIAN_ITEMS, ...BARD_ITEMS, ...WARLOCK_ITEMS, ...DRUID_ITEMS,
   ...SORCERER_ITEMS, ...ALL_ITEMS_A, ...ALL_ITEMS_B, ...ALL_ITEMS_C, ...ALL_ITEMS_D1,
-  ...ALL_ITEMS_D2, ...ALL_ITEMS_IR1
+  ...ALL_ITEMS_D2, ...ALL_ITEMS_IR1, ...ALL_ITEMS_IR2
 ]
 const SPELLS: SpellDefinition[] = [
   ...ALL_SPELLS, ...WARLOCK_SPELLS, ...ALL_LEVEL1_SPELLS, ...ALL_LEVEL2_SPELLS,
