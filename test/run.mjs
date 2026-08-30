@@ -63,6 +63,7 @@ for (const suite of [
   'test-level-tables.mjs',
   'test-content-integrity.mjs',
   'test-edge-parity.mjs',
+  'test-ui-smoke.mjs',
   'test-monk.mjs',
   'test-subclass.mjs',
   'test-fighter.mjs',
