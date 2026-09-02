@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { StageView } from '@stage-ui/StageView'
 import { DiceTray } from '@stage-ui/DiceTray'
 import { supabase, storageUrl } from './supabase'
@@ -18,6 +18,10 @@ import {
   rollDamageFaces, outcomeFromEvents, type DamageOutcome, type RollOutcome
 } from './ui/RollWidget'
 import { CreateCharacter } from './ui/CreateCharacter'
+import { LevelUpWizard } from './ui/LevelUpWizard'
+import { PortraitPicker } from './ui/PortraitPicker'
+import { supabasePortraits } from './game/portraitStore'
+import { usePortrait } from './game/usePortrait'
 import { HUD_RESERVED_PX } from './ui/usePinnedActions'
 import { claimAndCreateSheet } from './game/sheetStore'
 import { Solo } from './Solo'
@@ -99,6 +103,15 @@ function Stage({
     viewer: { kind: isDm ? 'dm' : 'owner' }
   })
   const [menuTab, setMenuTab] = useState<MenuTab | null>(null)
+  // The class being levelled, or null when the wizard is closed.
+  const [levellingClassId, setLevellingClassId] = useState<string | null>(null)
+  const [pickingPortrait, setPickingPortrait] = useState(false)
+  // Memoised: `usePortrait` takes the store as an effect dependency, and a
+  // store rebuilt every render would re-fetch the portrait forever.
+  const portraitStore = useMemo(() => supabasePortraits(campaignId), [campaignId])
+  const { portrait, save: savePortrait } = usePortrait(
+    portraitStore, identity.characterId ?? 'none'
+  )
   const [actionNote, setActionNote] = useState<string | null>(null)
   const [outcome, setOutcome] = useState<RollOutcome | null>(null)
   const [damageSpec, setDamageSpec] = useState<import('@engine').DamageRollSpec | null>(null)
@@ -228,6 +241,7 @@ function Stage({
         {game.view && (
           <Hud
             view={game.view}
+            portraitUrl={portrait?.head}
             onOpenMenu={(tab) => setMenuTab((tab as MenuTab) ?? 'character')}
             onAction={(actionId) => {
               const action = game.view!.actions.find((a) => a.id === actionId)
@@ -261,6 +275,30 @@ function Stage({
           onClose={() => setMenuTab(null)}
           dispatch={(c) => game.dispatch(c).then((r) => r.rejected)}
           onRoll={(spec, damageRoll) => { setMenuTab(null); void makeRoll(spec, damageRoll) }}
+          onLevelUp={(classId) => { setMenuTab(null); setLevellingClassId(classId) }}
+          portraitFullUrl={portrait?.full}
+          onEditPortrait={() => setPickingPortrait(true)}
+        />
+      )}
+
+      {pickingPortrait && (
+        <PortraitPicker
+          initialHead={portrait?.head}
+          onCancel={() => setPickingPortrait(false)}
+          onChoose={async (blobs) => {
+            await savePortrait(blobs)
+            setPickingPortrait(false)
+          }}
+        />
+      )}
+
+      {levellingClassId && game.character && (
+        <LevelUpWizard
+          character={game.character}
+          content={game.content}
+          classId={levellingClassId}
+          commit={(commands) => game.dispatchAll(commands).then((r) => r.rejected)}
+          onClose={() => setLevellingClassId(null)}
         />
       )}
 

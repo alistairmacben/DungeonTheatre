@@ -29,6 +29,20 @@ export interface GameState {
    * which silently loses the result of the roll you just made.
    */
   dispatch(command: PlayerCommand): DispatchResult
+  /**
+   * Send several commands as one change.
+   *
+   * NOT the same as calling `dispatch` in a loop, and the difference is a bug
+   * rather than an optimisation: `dispatch` is a callback closed over the
+   * current `character`, so a second call in the same tick re-applies to the
+   * state the first one started from and the last `setCharacter` wins. The
+   * level-up wizard commits four commands at once and lost three of them that
+   * way. This threads the character through the fold and sets state once.
+   *
+   * Stops at the first rejection, keeping the commands before it — they are
+   * ordered and each assumes the last one landed.
+   */
+  dispatchAll(commands: PlayerCommand[]): DispatchResult
   /** Most recent first. The theatre will eventually consume these. */
   events: DomainEvent[]
   content: ContentIndex
@@ -67,5 +81,23 @@ export function useGameState(initial: Character = SIR_ALDREN): GameState {
     return { events: result.events }
   }, [character, content])
 
-  return { view, detail, setDetail, dispatch, events, content, character }
+  const dispatchAll = useCallback((commands: PlayerCommand[]): DispatchResult => {
+    let next = character
+    const produced: DomainEvent[] = []
+    for (const command of commands) {
+      const result = applyCommand(next, command, content)
+      produced.push(...result.events)
+      if (result.rejected) {
+        setEvents((prev) => [...produced, ...prev].slice(0, 50))
+        return { rejected: result.rejected.reasons, events: produced }
+      }
+      next = result.character
+    }
+    setCharacter(next)
+    setRevision((n) => n + 1)
+    setEvents((prev) => [...produced, ...prev].slice(0, 50))
+    return { events: produced }
+  }, [character, content])
+
+  return { view, detail, setDetail, dispatch, dispatchAll, events, content, character }
 }

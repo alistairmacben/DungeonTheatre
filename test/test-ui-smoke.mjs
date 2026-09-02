@@ -69,7 +69,11 @@ const uiFiles = [join(root, 'player/src'), join(root, 'src/stage-ui')]
     'white', 'black', 'transparent', 'current', 'inherit',
     'base', 'center', 'left', 'right', 'top', 'bottom',
     'sm', 'md', 'lg', 'xl', 'xs', 'none', 'b', 't', 'l', 'r', 'x', 'y',
-    'gradient', 'inset', 'offset', 'clip', 'text', 'border', 'collapse', 'separate'
+    'gradient', 'inset', 'offset', 'clip', 'text', 'border', 'collapse', 'separate',
+    // Border *styles*, which share the `border-<word>` shape a colour has.
+    // `border-dashed` is core Tailwind and emits real CSS; reading it as an
+    // undeclared colour is this check crying wolf at a working class.
+    'solid', 'dashed', 'dotted', 'double', 'hidden', 'groove', 'ridge'
   ])
   const PREFIXES = ['text', 'bg', 'border', 'ring', 'from', 'to', 'via', 'fill',
     'stroke', 'outline', 'accent', 'caret', 'decoration', 'divide', 'shadow']

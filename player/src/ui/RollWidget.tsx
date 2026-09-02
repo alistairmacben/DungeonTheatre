@@ -74,12 +74,14 @@ export interface RollOutcome {
  * seeing it; everything behind it stays behind it.
  */
 export function RollChip({
-  spec, sublabel, marker, onRoll
+  spec, sublabel, marker, icon, onRoll
 }: {
   spec: RollSpec
   sublabel?: string
   /** A proficiency dot, an advantage arrow — whatever the caller wants shown. */
   marker?: React.ReactNode
+  /** URL of a small icon shown before the label, if one exists for this roll. */
+  icon?: string
   onRoll(spec: RollSpec): void
 }): React.JSX.Element {
   const advantaged = spec.diceCount > 1
@@ -90,6 +92,7 @@ export function RollChip({
       className="group flex w-full items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2 text-left transition hover:border-arcane/50 hover:bg-arcane/10"
     >
       <span className="flex min-w-0 items-center gap-1.5">
+        {icon && <img src={icon} alt="" className="h-4 w-4 shrink-0 opacity-90" />}
         {marker}
         <span className="truncate text-[13px] text-parchment/85">{spec.label.replace(/\s[+-]\d+$/, '')}</span>
         {sublabel && (

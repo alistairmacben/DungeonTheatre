@@ -24,3 +24,7 @@ Thumbs.db
 .idea/
 supabase/functions/_shared/engine.mjs
 supabase/.temp/
+
+# Full bg3.wiki icon source library (25MB) — only the curated subset in
+# player/public/icons/ is actually used by the app.
+game icons/

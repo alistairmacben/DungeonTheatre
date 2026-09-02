@@ -12,6 +12,7 @@
 // model already carries, not a rules decision.
 
 import type { DamageRollSpec, DamageType } from '@engine'
+import { damageTypeIcon } from './icons'
 
 /**
  * The lowest and highest a damage pool can roll.
@@ -108,7 +109,14 @@ export function DetailCard({
                 {healing ? 'Healing' : 'Damage'}
               </span>
             </p>
-            <p className={`mt-1 text-[12px] tabular-nums ${tone}`}>
+            <p className={`mt-1 flex items-center gap-1.5 text-[12px] tabular-nums ${tone}`}>
+              {!healing && damage!.pools[0] && damageTypeIcon(damage!.pools[0].type as DamageType) && (
+                <img
+                  src={damageTypeIcon(damage!.pools[0]!.type as DamageType)}
+                  alt=""
+                  className="h-3.5 w-3.5 opacity-90"
+                />
+              )}
               {damageFormula(damage!)} {damage!.pools[0]?.type}
             </p>
           </div>

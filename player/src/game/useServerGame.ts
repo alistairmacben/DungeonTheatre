@@ -45,10 +45,35 @@ export interface ServerGame {
   detail: DetailLevel
   setDetail(detail: DetailLevel): void
   dispatch(command: PlayerCommand): Promise<ServerDispatchResult>
+  /**
+   * Send several commands as one change — the level-up wizard's Accept.
+   *
+   * Deliberately not `dispatch` in a loop. Two things break there: `dispatch`
+   * closes over `character`, so every iteration predicts against pre-level-up
+   * state and can refuse a perfectly good command locally before it is ever
+   * sent; and `revision.current` only advances on an authoritative reply, so
+   * a queued second command carries a revision the server has already moved
+   * past and comes back as a conflict.
+   *
+   * So this skips prediction entirely and threads the revision forward from
+   * each reply. A level-up is a deliberate act behind a button that already
+   * says "Applying…" — it can afford the round trips, and correctness here
+   * matters more than optimism.
+   */
+  dispatchAll(commands: PlayerCommand[]): Promise<ServerDispatchResult>
   events: DomainEvent[]
   /** True while a command is in flight, for a spinner on the roll card. */
   busy: boolean
   content: ContentIndex
+  /**
+   * The raw character behind `view`.
+   *
+   * Everything that renders should read `view` — that is the whole point of a
+   * view model. This exists for the one case that genuinely needs the state
+   * itself: staging a multi-command change (the level-up wizard) by folding
+   * `applyCommand` onto a local copy before any of it is sent.
+   */
+  character: Character | null
   reload(): void
 }
 
@@ -158,9 +183,41 @@ export function useServerGame({
     }
   }, [character, characterId, content, role])
 
+  const dispatchAll = useCallback(async (
+    commands: PlayerCommand[]
+  ): Promise<ServerDispatchResult> => {
+    if (!characterId) return { events: [], rejected: ['no character loaded'] }
+    const produced: DomainEvent[] = []
+    setBusy(true)
+    try {
+      for (const command of commands) {
+        const { data, error: fnError } = await supabase().functions.invoke('command', {
+          body: { characterId, command, revision: revision.current }
+        })
+        if (fnError) return { events: produced, rejected: [fnError.message] }
+        if (data?.rejected) return { events: produced, rejected: data.rejected }
+        if (data?.conflict) {
+          setReloadKey((n) => n + 1)
+          return { events: produced, rejected: ['somebody else changed this character; reloading'] }
+        }
+        // Threaded forward, so the next command is based on this one's result
+        // rather than on the state the batch started from.
+        revision.current = data.revision
+        setCharacter(data.character)
+        produced.push(...(data.events ?? []))
+      }
+      setEvents((prev) => [...produced, ...prev].slice(0, 50))
+      return { events: produced }
+    } catch (e: unknown) {
+      return { events: produced, rejected: [e instanceof Error ? e.message : String(e)] }
+    } finally {
+      setBusy(false)
+    }
+  }, [characterId])
+
   return {
-    view, loading, error, problems, detail, setDetail, dispatch, events, busy,
-    content,
+    view, loading, error, problems, detail, setDetail, dispatch, dispatchAll, events, busy,
+    content, character,
     reload: () => setReloadKey((n) => n + 1)
   }
 }

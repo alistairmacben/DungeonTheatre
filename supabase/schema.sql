@@ -548,3 +548,44 @@ create policy campaign_art_update_dm on storage.objects
 create policy campaign_art_delete_dm on storage.objects
   for delete to authenticated
   using (bucket_id = 'campaign-art' and public.is_campaign_dm(public.storage_campaign_id(name)));
+
+-- --- player portraits --------------------------------------------------------
+--
+-- The one file in this bucket a player is the author of. Everything else here
+-- is the DM's — backgrounds, NPC art — which is why this is a narrow pair of
+-- policies rather than a widening of the DM's.
+--
+-- The path IS the authorisation. `<campaignId>/portrait/<characterId>.webp`
+-- (with `-head` beside it for the crop) lets the check confirm the campaign,
+-- that this is a portrait rather than DM art, and that the caller owns that
+-- exact character. A player cannot write another player's portrait, a
+-- background, or anything outside portrait/.
+
+create or replace function public.is_own_character_portrait(object_name text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public, storage
+as $$
+  select exists (
+    select 1
+    from public.characters c
+    where c.owner_id = auth.uid()
+      and (storage.foldername(object_name))[2] = 'portrait'
+      and c.campaign_id::text = (storage.foldername(object_name))[1]
+      and regexp_replace(
+            regexp_replace(storage.filename(object_name), '\.webp$', ''),
+            '-head$', ''
+          ) = c.id::text
+  );
+$$;
+
+create policy campaign_art_write_player_portrait on storage.objects
+  for insert to authenticated
+  with check (bucket_id = 'campaign-art' and public.is_own_character_portrait(name));
+
+create policy campaign_art_update_player_portrait on storage.objects
+  for update to authenticated
+  using (bucket_id = 'campaign-art' and public.is_own_character_portrait(name))
+  with check (bucket_id = 'campaign-art' and public.is_own_character_portrait(name));

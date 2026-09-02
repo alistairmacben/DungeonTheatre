@@ -15,6 +15,7 @@ import {
   createCharacter, playerViewOf, STANDARD_ARRAY, startingKitFor,
   type Ability, type ContentIndex, type PlayerView, type SpeciesId
 } from '@engine'
+import { classIcon, speciesIcon } from './icons'
 
 const ABILITY_LABEL: Record<Ability, string> = {
   str: 'Strength', dex: 'Dexterity', con: 'Constitution',
@@ -222,6 +223,7 @@ export function CreateCharacter({
                     <PickCard
                       key={s.id}
                       label={s.effects.name}
+                      icon={speciesIcon(s.id)}
                       selected={speciesId === s.id}
                       onClick={() => { setSpeciesId(s.id); setSubspeciesId(undefined) }}
                     />
@@ -253,6 +255,7 @@ export function CreateCharacter({
                     key={c.id}
                     label={c.name}
                     sublabel={`d${c.hitDie} hit die`}
+                    icon={classIcon(c.id)}
                     selected={classId === c.id}
                     onClick={() => setClassId(c.id)}
                   />
@@ -491,20 +494,23 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 function PickCard({
-  label, sublabel, selected, onClick
-}: { label: string; sublabel?: string; selected: boolean; onClick(): void }): React.JSX.Element {
+  label, sublabel, selected, icon, onClick
+}: { label: string; sublabel?: string; selected: boolean; icon?: string; onClick(): void }): React.JSX.Element {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-xl border px-3 py-2.5 text-left transition ${
+      className={`flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left transition ${
         selected
           ? 'border-arcane/60 bg-arcane/10 text-parchment'
           : 'border-white/10 bg-white/[0.03] text-parchment/70 hover:border-white/25 hover:text-parchment'
       }`}
     >
-      <p className="text-sm">{label}</p>
-      {sublabel && <p className="text-[11px] text-parchment/40">{sublabel}</p>}
+      {icon && <img src={icon} alt="" className="h-8 w-8 shrink-0 rounded-full object-cover" />}
+      <span className="min-w-0">
+        <p className="text-sm">{label}</p>
+        {sublabel && <p className="text-[11px] text-parchment/40">{sublabel}</p>}
+      </span>
     </button>
   )
 }

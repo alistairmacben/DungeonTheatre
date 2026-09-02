@@ -20,6 +20,10 @@ import { Hud } from './ui/Hud'
 import { GameMenu, type MenuTab } from './ui/GameMenu'
 import { DmPanel } from './ui/DmPanel'
 import { CreateCharacter } from './ui/CreateCharacter'
+import { LevelUpWizard } from './ui/LevelUpWizard'
+import { PortraitPicker } from './ui/PortraitPicker'
+import { localPortraits } from './game/portraitStore'
+import { usePortrait } from './game/usePortrait'
 import {
   DamagePrompt, DamageResult, RollResult, damageLabelOf, damageOutcomeFromEvents, isHealing,
   rollDamageFaces, rollFor, outcomeFromEvents, type DamageOutcome, type RollOutcome
@@ -117,6 +121,12 @@ function SoloCharacter({ character, dmOpen, onCloseDm }: {
 }): React.JSX.Element {
   const game = useGameState(character)
   const [menuTab, setMenuTab] = useState<MenuTab | null>(null)
+  // The class being levelled, or null when the wizard is closed.
+  const [levellingClassId, setLevellingClassId] = useState<string | null>(null)
+  const [pickingPortrait, setPickingPortrait] = useState(false)
+  // `localPortraits` is a module constant, which is what keeps `usePortrait`'s
+  // effect from re-running every render.
+  const { portrait, save: savePortrait } = usePortrait(localPortraits, character.id)
   const [note, setNote] = useState<string | null>(null)
   const [outcome, setOutcome] = useState<RollOutcome | null>(null)
   const [damageSpec, setDamageSpec] = useState<DamageRollSpec | null>(null)
@@ -241,6 +251,7 @@ function SoloCharacter({ character, dmOpen, onCloseDm }: {
         )}
         <Hud
           view={game.view}
+          portraitUrl={portrait?.head}
           onOpenMenu={(tab) => setMenuTab((tab as MenuTab) ?? 'character')}
           onAction={(actionId) => {
             const action = game.view.actions.find((a) => a.id === actionId)
@@ -272,6 +283,30 @@ function SoloCharacter({ character, dmOpen, onCloseDm }: {
           onClose={() => setMenuTab(null)}
           dispatch={(c) => game.dispatch(c).rejected}
           onRoll={(spec, damageRoll) => { setMenuTab(null); makeRoll(spec, damageRoll) }}
+          onLevelUp={(classId) => { setMenuTab(null); setLevellingClassId(classId) }}
+          portraitFullUrl={portrait?.full}
+          onEditPortrait={() => setPickingPortrait(true)}
+        />
+      )}
+
+      {pickingPortrait && (
+        <PortraitPicker
+          initialHead={portrait?.head}
+          onCancel={() => setPickingPortrait(false)}
+          onChoose={async (blobs) => {
+            await savePortrait(blobs)
+            setPickingPortrait(false)
+          }}
+        />
+      )}
+
+      {levellingClassId && (
+        <LevelUpWizard
+          character={game.character}
+          content={game.content}
+          classId={levellingClassId}
+          commit={(commands) => game.dispatchAll(commands).rejected}
+          onClose={() => setLevellingClassId(null)}
         />
       )}
 

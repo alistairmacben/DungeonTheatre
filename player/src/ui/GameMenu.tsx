@@ -13,6 +13,8 @@ import type {
 import { RollChip } from './RollWidget'
 import { DetailCard } from './DetailCard'
 import { BreakdownList, Value } from './Readouts'
+import { abilityIcon, classIcon, skillIcon, speciesIcon, subclassIcon, weaponTypeIconForName } from './icons'
+import { EquipmentDoll } from './EquipmentDoll'
 import { suggestedBar } from './Hud'
 import { HUD_SLOTS, barFor, usePinnedActions, type PinnedActions } from './usePinnedActions'
 
@@ -74,7 +76,7 @@ const TABS: { id: MenuTab; label: string }[] = [
 ]
 
 export function GameMenu({
-  view, tab, onTab, onClose, dispatch, onRoll
+  view, tab, onTab, onClose, dispatch, onRoll, onLevelUp, portraitFullUrl, onEditPortrait
 }: {
   view: PlayerView
   tab: MenuTab
@@ -82,6 +84,17 @@ export function GameMenu({
   onClose(): void
   dispatch(command: PlayerCommand): Promise<string[] | undefined> | string[] | undefined
   onRoll(spec: RollSpec, damageRoll?: DamageRollSpec): void
+  /**
+   * Hands the level-up off to its own full-screen wizard rather than firing
+   * the command from here. Levelling is a build decision with consequences a
+   * one-click button cannot show, and staging it needs the raw character —
+   * which the menu, correctly, does not have.
+   */
+  onLevelUp(classId: string): void
+  /** The whole picture, shown as the standing figure beside the sheet. */
+  portraitFullUrl?: string
+  /** Opens the portrait picker. Absent where portraits aren't available. */
+  onEditPortrait?(): void
 }): React.JSX.Element {
   // The same answer the HUD computes, so a pin star and the bar cannot disagree.
   const prefs = usePinnedActions(view.meta.characterId)
@@ -92,12 +105,36 @@ export function GameMenu({
       <div className="flex h-[82%] w-[86%] max-w-6xl flex-col overflow-hidden rounded-2xl border border-white/10 bg-ink/95 shadow-2xl">
 
         <header className="flex items-center justify-between border-b border-white/10 px-6 py-4">
-          <div>
-            <h2 className="text-lg text-parchment">{view.meta.name}</h2>
-            <p className="text-xs text-parchment/50">
-              Level {view.progression.level} {view.progression.species.subspeciesLabel ?? view.progression.species.label}
-              {' '}{view.progression.classes.map((c) => c.label).join(' / ')}
-            </p>
+          <div className="flex items-center gap-3">
+            <div className="flex -space-x-2">
+              {speciesIcon(view.progression.species.id) && (
+                <img
+                  src={speciesIcon(view.progression.species.id)}
+                  alt=""
+                  title={view.progression.species.subspeciesLabel ?? view.progression.species.label}
+                  className="h-9 w-9 rounded-full border-2 border-ink bg-ink-soft object-cover"
+                />
+              )}
+              {view.progression.classes.map((c) => {
+                const src = (c.subclassId && subclassIcon(c.subclassId)) ?? classIcon(c.classId)
+                return src ? (
+                  <img
+                    key={c.classId}
+                    src={src}
+                    alt=""
+                    title={c.label}
+                    className="h-9 w-9 rounded-full border-2 border-ink bg-ink-soft object-cover"
+                  />
+                ) : null
+              })}
+            </div>
+            <div>
+              <h2 className="text-lg text-parchment">{view.meta.name}</h2>
+              <p className="text-xs text-parchment/50">
+                Level {view.progression.level} {view.progression.species.subspeciesLabel ?? view.progression.species.label}
+                {' '}{view.progression.classes.map((c) => c.label).join(' / ')}
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             {/* No XP tracking exists anywhere in this engine — leveling stays
@@ -106,7 +143,7 @@ export function GameMenu({
             {view.progression.classes[0] && (
               <button
                 type="button"
-                onClick={() => dispatch({ type: 'levelUp', characterId: view.meta.characterId, classId: view.progression.classes[0]!.classId })}
+                onClick={() => onLevelUp(view.progression.classes[0]!.classId)}
                 className="rounded-lg border border-arcane/50 bg-arcane/10 px-3 py-1.5 text-sm text-parchment transition hover:bg-arcane/20"
               >
                 Level Up
@@ -155,11 +192,32 @@ export function GameMenu({
           ))}
         </nav>
 
-        <div className="flex-1 overflow-y-auto px-6 py-5">
+        <div className="flex min-h-0 flex-1">
+          {/* The standing figure, where BG3 puts the character model. Only on
+              the two tabs that are about the character rather than about a
+              list, and only when the window is wide enough to spare the
+              column — a 260px portrait beside a phone-width sheet is worse
+              than no portrait. */}
+          {tab === 'character' && onEditPortrait && (
+            <StandingFigure
+              url={portraitFullUrl}
+              name={view.meta.name}
+              onEdit={onEditPortrait}
+            />
+          )}
+
+          <div className="flex-1 overflow-y-auto px-6 py-5">
           {tab === 'character' && (
             <CharacterTab view={view} onRoll={onRoll} dispatch={dispatch} />
           )}
-          {tab === 'inventory' && <InventoryTab view={view} dispatch={dispatch} />}
+          {tab === 'inventory' && (
+            <InventoryTab
+              view={view}
+              dispatch={dispatch}
+              portraitFullUrl={portraitFullUrl}
+              onEditPortrait={onEditPortrait}
+            />
+          )}
           {tab === 'actions' && (
             <ActionsTab view={view} dispatch={dispatch} onRoll={onRoll} bar={bar} prefs={prefs} />
           )}
@@ -167,8 +225,44 @@ export function GameMenu({
             <SpellsTab view={view} dispatch={dispatch} onRoll={onRoll} bar={bar} prefs={prefs} />
           )}
           {tab === 'effects' && <EffectsTab view={view} />}
+          </div>
         </div>
       </div>
+    </div>
+  )
+}
+
+/**
+ * The character, standing there.
+ *
+ * There is no 3D model to render, so this is the picture the player uploaded —
+ * which is why the picker keeps the whole image and not only the crop. Clicking
+ * it is how a portrait gets set or replaced; without one it is an invitation
+ * rather than an empty frame.
+ */
+function StandingFigure({ url, name, onEdit }: {
+  url?: string
+  name: string
+  onEdit(): void
+}): React.JSX.Element {
+  return (
+    <div className="hidden w-64 shrink-0 border-r border-white/10 p-4 lg:block">
+      <button
+        type="button"
+        onClick={onEdit}
+        className="group relative h-full w-full overflow-hidden rounded-xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-transparent"
+      >
+        {url ? (
+          <img src={url} alt={name} className="h-full w-full object-cover" />
+        ) : (
+          <span className="grid h-full w-full place-items-center px-4 text-center text-[12px] text-parchment/35">
+            No picture yet — click to add one
+          </span>
+        )}
+        <span className="absolute inset-x-0 bottom-0 bg-ink/85 py-1.5 text-center text-[11px] text-parchment/0 backdrop-blur transition group-hover:text-parchment/80">
+          {url ? 'Change picture' : 'Add a picture'}
+        </span>
+      </button>
     </div>
   )
 }
@@ -255,7 +349,12 @@ function CharacterTab({ view, onRoll, dispatch }: {
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
           {view.abilities.map((a) => (
             <div key={a.ability} className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
-              <p className="text-[10px] uppercase tracking-widest text-parchment/40">{a.label}</p>
+              <p className="flex items-center gap-1 text-[10px] uppercase tracking-widest text-parchment/40">
+                {abilityIcon(a.ability) && (
+                  <img src={abilityIcon(a.ability)} alt="" className="h-3.5 w-3.5 opacity-80" />
+                )}
+                {a.label}
+              </p>
               <div className="mt-1"><Value readout={a.modifier} /></div>
               <p className="mt-1 text-[11px] text-parchment/40">score {a.score.display}</p>
               {/* Both the raw check and the save are one tap. A new player
@@ -291,6 +390,7 @@ function CharacterTab({ view, onRoll, dispatch }: {
               key={s.id}
               spec={s.roll}
               sublabel={s.ability}
+              icon={skillIcon(s.id)}
               onRoll={onRoll}
               marker={(
                 <>
@@ -672,8 +772,13 @@ function Stat({ label, children }: { label: string; children: React.ReactNode })
 // ---------------------------------------------------------------------------
 
 function InventoryTab({
-  view, dispatch
-}: { view: PlayerView; dispatch(c: PlayerCommand): Promise<string[] | undefined> | string[] | undefined }): React.JSX.Element {
+  view, dispatch, portraitFullUrl, onEditPortrait
+}: {
+  view: PlayerView
+  dispatch(c: PlayerCommand): Promise<string[] | undefined> | string[] | undefined
+  portraitFullUrl?: string
+  onEditPortrait?(): void
+}): React.JSX.Element {
   const [error, setError] = useState<string | null>(null)
 
   const equip = (item: ItemView): void => {
@@ -697,18 +802,31 @@ function InventoryTab({
         <p className="mb-4 rounded-lg border border-ember/40 bg-ember/10 px-3 py-2 text-sm text-ember">{error}</p>
       )}
 
-      <Section title="Equipment Slots">
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {view.equipment.map((s) => (
-            <div key={s.slot} className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
-              <p className="text-[10px] uppercase tracking-widest text-parchment/40">{s.label}</p>
-              <p className="mt-1 truncate text-sm text-parchment">{s.itemLabel ?? '—'}</p>
-              {s.effectSummary.length > 0 && (
-                <p className="mt-1 text-[11px] text-parchment/45">{s.effectSummary.slice(0, 2).join(' · ')}</p>
-              )}
-            </div>
-          ))}
-        </div>
+      <Section title="Equipment">
+        {onEditPortrait ? (
+          <EquipmentDoll
+            view={view}
+            portraitUrl={portraitFullUrl}
+            onEditPortrait={onEditPortrait}
+            onUnequip={(s) => {
+              if (!s.instanceId) return
+              void Promise.resolve(dispatch({
+                type: 'unequipItem', characterId: view.meta.characterId, slot: s.slot
+              })).then((r) => setError(r?.join(' · ') ?? null))
+            }}
+          />
+        ) : (
+          // No portrait backend (the create-preview harness) — the doll's whole
+          // centre column would be a dead frame, so the flat list stays.
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {view.equipment.map((s) => (
+              <div key={s.slot} className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+                <p className="text-[10px] uppercase tracking-widest text-parchment/40">{s.label}</p>
+                <p className="mt-1 truncate text-sm text-parchment">{s.itemLabel ?? '—'}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </Section>
 
       {groups.map(({ id, label }) => {
@@ -722,9 +840,15 @@ function InventoryTab({
                   key={item.instanceId}
                   className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5"
                 >
-                  {/* Placeholder art slot — real item icons land in a later phase. */}
+                  {/* A generic weapon-type icon when the item's name matches one
+                      (e.g. any "Longsword +1" gets the longsword icon) — bespoke
+                      art per named magic item is a separate, larger effort. */}
                   <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/5 text-[10px] text-parchment/30">
-                    {item.label.slice(0, 2).toUpperCase()}
+                    {weaponTypeIconForName(item.label) ? (
+                      <img src={weaponTypeIconForName(item.label)} alt="" className="h-7 w-7 opacity-90" />
+                    ) : (
+                      item.label.slice(0, 2).toUpperCase()
+                    )}
                   </div>
 
                   <div className="min-w-0 flex-1">

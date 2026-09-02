@@ -8,7 +8,7 @@
 
 import React from 'react'
 import type { ActionView, PlayerView } from '@engine'
-import { ResourceDisplay, Value } from './Readouts'
+import { ResourceDisplay } from './Readouts'
 import { barFor, usePinnedActions } from './usePinnedActions'
 
 /**
@@ -54,11 +54,13 @@ export function previewLine(a: ActionView): string | null {
 }
 
 export function Hud({
-  view, onOpenMenu, onAction
+  view, onOpenMenu, onAction, portraitUrl
 }: {
   view: PlayerView
   onOpenMenu(tab?: string): void
   onAction(actionId: string): void
+  /** The square crop from the portrait picker. Absent until one is chosen. */
+  portraitUrl?: string
 }): React.JSX.Element {
   const prefs = usePinnedActions(view.meta.characterId)
   // Only what is happening to you now. Permanent traits belong in the menu —
@@ -83,36 +85,56 @@ export function Hud({
   return (
     <div className="pointer-events-auto flex items-end gap-3 rounded-2xl border border-white/10 bg-ink/80 px-4 py-3 shadow-2xl backdrop-blur-md">
 
-      {/* Am I okay? */}
-      <div className="flex flex-col gap-1">
-        <div className="flex items-baseline gap-2">
-          <span className="text-[10px] uppercase tracking-widest text-parchment/45">HP</span>
-          <span className={`text-2xl font-semibold tabular-nums ${bloodied ? 'text-ember' : 'text-parchment'}`}>
-            {hp.current}
+      {/* Am I okay?
+          The portrait carries the answer rather than sitting beside it: the
+          ring is the health bar, so the thing the eye already goes to when
+          something hits you is the thing that changed. */}
+      <button
+        type="button"
+        onClick={() => onOpenMenu('character')}
+        title={`${view.meta.name} — ${hp.current}/${hp.max.display} hit points`}
+        className="group relative shrink-0"
+      >
+        <div
+          className="grid h-[4.5rem] w-[4.5rem] place-items-center rounded-full p-[3px] transition"
+          // A conic gradient is the ring: filled to the health fraction, track
+          // the rest of the way round. One element, no SVG, and it animates.
+          style={{
+            background: `conic-gradient(${bloodied ? '#e0a458' : '#4fae94'} ${hpPct}%, rgba(255,255,255,0.10) ${hpPct}%)`
+          }}
+        >
+          <div className="grid h-full w-full place-items-center overflow-hidden rounded-full border border-white/10 bg-ink-soft">
+            {portraitUrl ? (
+              <img src={portraitUrl} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <span className="font-display text-lg text-parchment/50">
+                {initialsOf(view.meta.name)}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Hit points, on the portrait's hem where BG3 puts them. */}
+        <span
+          className={`absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-full border border-white/15 px-2 py-px text-[11px] font-semibold tabular-nums backdrop-blur ${
+            bloodied ? 'bg-ink/95 text-ember' : 'bg-ink/95 text-parchment'
+          }`}
+        >
+          {hp.current}
+          <span className="text-parchment/40">/{hp.max.display}</span>
+        </span>
+
+        {/* Armour class, as its own badge rather than a labelled column. */}
+        <span className="absolute -right-1 -top-1 grid h-6 min-w-6 place-items-center rounded-full border border-arcane/50 bg-ink px-1 text-[11px] font-semibold tabular-nums text-parchment">
+          {view.vitals.armorClass.display}
+        </span>
+
+        {hp.temporary > 0 && (
+          <span className="absolute -left-1 -top-1 grid h-6 min-w-6 place-items-center rounded-full border border-arcane/60 bg-arcane/25 px-1 text-[11px] tabular-nums text-parchment">
+            +{hp.temporary}
           </span>
-          <span className="text-xs text-parchment/40">/</span>
-          <Value readout={hp.max} size="sm" />
-          {hp.temporary > 0 && (
-            <span className="rounded bg-arcane/20 px-1 text-[10px] tabular-nums text-arcane">
-              +{hp.temporary}
-            </span>
-          )}
-        </div>
-        <div className="h-1.5 w-40 overflow-hidden rounded-full bg-white/10">
-          <div
-            className={`h-full rounded-full transition-all duration-500 ${bloodied ? 'bg-ember' : 'bg-verdigris'}`}
-            style={{ width: `${hpPct}%` }}
-          />
-        </div>
-      </div>
-
-      <Divider />
-
-      {/* Armour Class — the number the equip loop changes */}
-      <div className="flex flex-col items-center gap-0.5">
-        <span className="text-[10px] uppercase tracking-widest text-parchment/45">AC</span>
-        <Value readout={view.vitals.armorClass} />
-      </div>
+        )}
+      </button>
 
       <Divider />
 
@@ -220,4 +242,14 @@ export function Hud({
 
 function Divider(): React.JSX.Element {
   return <div className="h-10 w-px shrink-0 self-center bg-white/10" />
+}
+
+/** "Sir Aldren" -> "SA". What the portrait shows before there is a portrait. */
+function initialsOf(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0]?.toUpperCase() ?? '')
+    .join('')
 }
