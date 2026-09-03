@@ -28,7 +28,7 @@ import {
 } from '@engine'
 import { supabase } from '../supabase'
 import { loadSheet } from './sheetStore'
-import { publishEvents } from './eventStream'
+import { publishEvents, subscribeToCharacterEvents } from './eventStream'
 
 export interface ServerDispatchResult {
   rejected?: string[]
@@ -131,6 +131,51 @@ export function useServerGame({
 
     return () => { cancelled = true }
   }, [characterId, reloadKey])
+
+  /**
+   * Keeps this sheet from going stale when somebody ELSE changes it.
+   *
+   * The gap this closes: the DM's loot browser writes a character's inventory
+   * through a one-shot call that never touches the tab holding that
+   * character's own sheet open, and that tab had no way to learn anything
+   * happened — a grant would land in the database, announce itself on the
+   * table's event stream as a splash, and then the player's own inventory
+   * would keep showing the old list until they closed and reopened the app.
+   *
+   * Silent and debounced: a fetch replaces the character in place with no
+   * loading flash, and a burst of events from one command (an attack can
+   * emit three) coalesces into one refetch rather than three.
+   *
+   * Every event for this character triggers it, including ones this client
+   * itself caused — not only the loot browser's, but any command dispatched
+   * through this same hook's `dispatch`. Skipping self-caused events looked
+   * safe (dispatch already applies the authoritative reply) and was not: the
+   * DM's Tools tab and the Loot tab act as the SAME actor, and the grant
+   * bypasses this hook's dispatch entirely, so a same-actor skip would leave
+   * the very tab a DM is watching stale forever. The cost of not skipping is
+   * one redundant read after a normal action, which is silent and cheap;
+   * the cost of skipping was the bug this fixes.
+   */
+  const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => {
+    if (!characterId) return
+    let cancelled = false
+    const channel = subscribeToCharacterEvents(supabase(), characterId, () => {
+      if (refreshTimer.current) clearTimeout(refreshTimer.current)
+      refreshTimer.current = setTimeout(() => {
+        void loadSheet(supabase(), characterId).then((stored) => {
+          if (cancelled || !stored) return
+          setCharacter(stored.character)
+          revision.current = stored.revision
+        })
+      }, 400)
+    })
+    return () => {
+      cancelled = true
+      if (refreshTimer.current) clearTimeout(refreshTimer.current)
+      void supabase().removeChannel(channel)
+    }
+  }, [characterId, actorId])
 
   const view = useMemo(
     () => character

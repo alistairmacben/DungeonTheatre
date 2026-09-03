@@ -114,6 +114,39 @@ export function subscribeToEvents(
     )
     .subscribe()
 }
+/**
+ * Subscribes to one character's own events, regardless of who caused them.
+ *
+ * `subscribeToEvents` watches a whole campaign and is what the STAGE reacts
+ * to; this is what tells a SHEET it is stale. The gap between them is real:
+ * the DM's loot browser writes a character's inventory through a one-shot
+ * call that never touches the browser tab holding that character's own
+ * sheet open, and `subscribeToEvents` alone cannot fix that — a player is
+ * never subscribed to their own events (see `useTableEvents`'s exclusion),
+ * so the one sheet that most needs to know it changed is the one thing that
+ * filter was built to leave out.
+ */
+export function subscribeToCharacterEvents(
+  db: SupabaseClient,
+  characterId: string,
+  /** The actor who caused it, so the caller can ignore its own writes. */
+  onEvent: (actorId: string | null) => void
+): RealtimeChannel {
+  return db
+    .channel(`character-events:${characterId}`)
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'game_events',
+        filter: `character_id=eq.${characterId}`
+      },
+      (message) => onEvent((message.new as { actor_id: string | null }).actor_id)
+    )
+    .subscribe()
+}
+
 
 function rowToEvent(row: Record<string, unknown>): StreamedEvent {
   return {
