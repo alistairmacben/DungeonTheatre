@@ -7,8 +7,10 @@
 // thing this product exists not to be.
 
 import React from 'react'
-import type { ActionView, PlayerView } from '@engine'
+import type { ActionCostView, ActionView, PlayerView } from '@engine'
 import { ResourceDisplay } from './Readouts'
+import { actionIcon } from './icons'
+import { ActionEconomyPips, isSpent, useActionEconomy } from './ActionEconomy'
 import { barFor, usePinnedActions } from './usePinnedActions'
 
 /**
@@ -63,6 +65,7 @@ export function Hud({
   portraitUrl?: string
 }): React.JSX.Element {
   const prefs = usePinnedActions(view.meta.characterId)
+  const economy = useActionEconomy()
   // Only what is happening to you now. Permanent traits belong in the menu —
   // a chip for "Fighting Style: Defense" that never goes away is furniture.
   const active = view.effects.filter((e) => e.kind !== 'passive')
@@ -138,6 +141,13 @@ export function Hud({
 
       <Divider />
 
+      {/* What do I have left this turn? Sits next to the portrait because it
+          answers the same question the health ring does: what shape am I in
+          right now. */}
+      <ActionEconomyPips economy={economy} />
+
+      <Divider />
+
       {/* What am I holding? */}
       <button
         type="button"
@@ -196,21 +206,35 @@ export function Hud({
       <div className="flex items-center gap-1.5">
         {pinned.map((a) => {
           const preview = previewLine(a)
+          // Spent is a nudge, not a veto: the engine models no turn at all,
+          // so the DM may well allow it. Dim it and say so.
+          const spent = isSpent(a.cost, economy)
           return (
             <button
               key={a.id}
               type="button"
               disabled={!a.available}
               title={a.available
-                ? [a.label, preview, a.cost.label].filter(Boolean).join(' — ')
+                ? [a.label, preview, a.cost.label, spent ? `(${a.cost.label} already used this turn)` : null]
+                  .filter(Boolean).join(' — ')
                 : a.unavailableReasons.join(' · ')}
-              onClick={() => onAction(a.id)}
-              className={`rounded-lg border px-2.5 py-2 text-left transition ${
+              onClick={() => { economy.spend(a.cost); onAction(a.id) }}
+              className={`relative flex items-center gap-2 rounded-lg border px-2.5 py-2 text-left transition ${
                 a.available
-                  ? 'border-white/15 bg-white/5 hover:border-arcane/60 hover:bg-arcane/10'
+                  ? `border-white/15 bg-white/5 hover:border-arcane/60 hover:bg-arcane/10 ${spent ? 'opacity-50' : ''}`
                   : 'cursor-not-allowed border-white/5 bg-transparent opacity-40'
               }`}
             >
+              {/* The picture is the point of a hotbar: a player learns the
+                  shape long before they re-read the name. */}
+              {/* The cost, as the same shape the pips use, cornered on the
+                  icon. Reading "this is a bonus action" should not require
+                  reading a word. */}
+              <CostMark cost={a.cost} />
+              {actionIcon(a) && (
+                <img src={actionIcon(a)} alt="" className="h-8 w-8 shrink-0 rounded" />
+              )}
+              <span className="min-w-0">
               <span className="block max-w-[7.5rem] truncate text-[12px] text-parchment">{a.label}</span>
               {/* What it does, not just what it costs. A caster picking between
                   three cantrips is choosing on the damage, and making them open
@@ -224,6 +248,7 @@ export function Hud({
                   {a.available ? a.cost.label : a.unavailableReasons[0]}
                 </span>
               )}
+              </span>
             </button>
           )
         })}
@@ -237,6 +262,29 @@ export function Hud({
         </button>
       </div>
     </div>
+  )
+}
+
+/**
+ * A cost, as a shape rather than a word.
+ *
+ * The same green circle / orange triangle / blue diamond the pips use, so
+ * "what does this cost" and "what do I have left" are answered in one
+ * vocabulary. Free and movement get no mark: nothing is rationed there, and a
+ * mark that never means anything is noise on every button that has one.
+ */
+function CostMark({ cost }: { cost: ActionCostView }): React.JSX.Element | null {
+  const shape =
+    cost.type === 'action' ? 'rounded-full bg-verdigris'
+      : cost.type === 'bonusAction' ? '[clip-path:polygon(50%_0%,100%_100%,0%_100%)] bg-ember'
+        : cost.type === 'reaction' ? 'rotate-45 bg-arcane'
+          : null
+  if (!shape) return null
+  return (
+    <span
+      title={cost.label}
+      className={`pointer-events-none absolute -left-1 -top-1 h-2.5 w-2.5 ${shape}`}
+    />
   )
 }
 

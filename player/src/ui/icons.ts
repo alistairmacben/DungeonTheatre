@@ -11,7 +11,10 @@
 // Content ids (e.g. `srd:class.barbarian`) are used purely as lookup keys;
 // nothing in `src/rules` or `src/content` reads or depends on this file.
 
-import type { Ability, DamageType } from '@engine'
+import type { Ability, ActionView, DamageType } from '@engine'
+import { GENERIC_ICONS, SPELL_ICONS } from './spellIcons.generated'
+import { CATEGORY_ICONS } from './itemIcons.generated'
+import { ACTION_ICONS } from './actionIcons.generated'
 
 const CLASS_ICONS: Record<string, string> = {
   barbarian: '/icons/classes/barbarian.png',
@@ -180,4 +183,133 @@ export function weaponTypeIconForName(name: string): string | undefined {
   const lower = name.toLowerCase()
   const key = WEAPON_TYPE_KEYS.find((k) => lower.includes(k))
   return key ? WEAPON_TYPE_ICONS[key] : undefined
+}
+
+// ---------------------------------------------------------------------------
+// Spells, and the glyph that stands in when a spell has no art of its own
+// ---------------------------------------------------------------------------
+
+/**
+ * Which generic glyph speaks for each school.
+ *
+ * Only about half the SRD spell list has bespoke art in the bg3.wiki set, and
+ * the misses are overwhelmingly utility spells — Prestidigitation, Alarm,
+ * Find Familiar — where the school genuinely is the most useful thing a small
+ * square can say. Every spell has a school, so this always resolves.
+ */
+const SCHOOL_GLYPH: Record<string, string> = {
+  abjuration: 'buff',
+  conjuration: 'summon',
+  divination: 'info',
+  enchantment: 'control',
+  evocation: 'damage',
+  illusion: 'invisibility',
+  necromancy: 'death',
+  transmutation: 'magical'
+}
+
+/** Bespoke art for a spell, if the icon set has any. */
+export function spellIcon(spellId: string): string | undefined {
+  return SPELL_ICONS[idSuffix(spellId)]
+}
+
+/** A glyph for a damage type, a school, or any generic key the set defines. */
+export function genericIcon(key: string | undefined): string | undefined {
+  if (!key) return undefined
+  return GENERIC_ICONS[key] ?? GENERIC_ICONS[SCHOOL_GLYPH[key] ?? '']
+}
+
+/**
+ * The icon to show for a spell, in order of how much it tells the player:
+ * its own art, then what it does to you, then what kind of magic it is.
+ *
+ * Always returns something for a real spell, which is what lets the spell
+ * list and the action bar be uniformly iconic instead of patchy.
+ */
+export function spellIconOrGlyph(
+  spellId: string, damageType?: string, school?: string
+): string | undefined {
+  return spellIcon(spellId) ?? genericIcon(damageType) ?? genericIcon(school)
+}
+
+/**
+ * The icon for anything on the action bar or in the Actions list.
+ *
+ * One resolver rather than a branch at each call site, because the HUD and the
+ * menu must never disagree about what a given action looks like — the whole
+ * value of an icon on a hotbar is that it is the same picture every time.
+ */
+export function actionIcon(action: ActionView): string | undefined {
+  const damageType = action.damageRoll?.pools[0]?.type
+
+  // A spell knows its own art; a weapon attack is named after the weapon
+  // ("Attack with Longsword"), which is the only handle on its type the view
+  // model offers.
+  if (action.command.type === 'castSpell') {
+    return spellIconOrGlyph(action.command.spellId, damageType) ?? genericIcon('magical')
+  }
+  // Dash, Disengage, Hide and friends have their own art. Matched on the
+  // label's first word so "Dash (Cunning Action)" still finds the dash icon.
+  const universal = ACTION_ICONS[action.label.toLowerCase().split(/[^a-z]/)[0] ?? '']
+  if (universal) return universal
+
+  const byName = nameIcon(action.label)
+  if (byName) return byName
+  if (damageType) return genericIcon(damageType)
+  return genericIcon(action.kind === 'attack' ? 'physical' : 'feature')
+}
+
+// ---------------------------------------------------------------------------
+// Items — by kind, because name-matching them does not work
+// ---------------------------------------------------------------------------
+
+/**
+ * What an item's *name* alone reveals: its weapon type, or that it is a potion,
+ * a scroll, a wand. Separate from `itemIcon` because an action needs exactly
+ * this much — "Use Potion of Healing" should show a potion — without
+ * inheriting `itemIcon`'s guarantee of always returning something, which would
+ * swallow the more meaningful fallbacks an action has.
+ */
+export function nameIcon(label: string): string | undefined {
+  const weapon = weaponTypeIconForName(label)
+  if (weapon) return weapon
+  const lower = label.toLowerCase()
+  if (lower.includes('potion') || lower.includes('elixir')) return CATEGORY_ICONS['potion']
+  if (lower.includes('scroll')) return CATEGORY_ICONS['scroll']
+  if (lower.includes('wand')) return CATEGORY_ICONS['wand']
+  return undefined
+}
+
+/** Equipment slot -> category glyph. Two slots share the ring icon. */
+const SLOT_CATEGORY: Record<string, string> = {
+  armor: 'armor',
+  shield: 'shield',
+  head: 'head',
+  cloak: 'cloak',
+  gloves: 'gloves',
+  boots: 'boots',
+  amulet: 'amulet',
+  ring1: 'ring',
+  ring2: 'ring'
+}
+
+/**
+ * The icon for an inventory item or an equipment slot.
+ *
+ * A weapon is recognised from its name, because "Longsword +1" and "Flame
+ * Tongue Longsword" are both longswords and the icon set has a longsword. For
+ * everything else the answer is its category: only 11% of SRD items have
+ * bespoke art in this set — BG3 ships its own itemisation — so a ring showing
+ * a ring is both the best available answer and an honest one.
+ */
+export function itemIcon(
+  { label, slot, group }: { label: string; slot?: string; group?: string }
+): string | undefined {
+  const byName = nameIcon(label)
+  if (byName) return byName
+
+  const bySlot = slot ? CATEGORY_ICONS[SLOT_CATEGORY[slot] ?? ''] : undefined
+  if (bySlot) return bySlot
+  if (group === 'consumables') return CATEGORY_ICONS['potion']
+  return genericIcon('magical')
 }

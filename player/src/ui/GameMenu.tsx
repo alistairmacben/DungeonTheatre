@@ -13,7 +13,10 @@ import type {
 import { RollChip } from './RollWidget'
 import { DetailCard } from './DetailCard'
 import { BreakdownList, Value } from './Readouts'
-import { abilityIcon, classIcon, skillIcon, speciesIcon, subclassIcon, weaponTypeIconForName } from './icons'
+import {
+  abilityIcon, actionIcon, classIcon, itemIcon, skillIcon, speciesIcon, spellIconOrGlyph,
+  subclassIcon
+} from './icons'
 import { EquipmentDoll } from './EquipmentDoll'
 import { suggestedBar } from './Hud'
 import { HUD_SLOTS, barFor, usePinnedActions, type PinnedActions } from './usePinnedActions'
@@ -253,7 +256,7 @@ function StandingFigure({ url, name, onEdit }: {
         className="group relative h-full w-full overflow-hidden rounded-xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-transparent"
       >
         {url ? (
-          <img src={url} alt={name} className="h-full w-full object-cover" />
+          <img src={url} alt={name} className="h-full w-full object-cover object-top" />
         ) : (
           <span className="grid h-full w-full place-items-center px-4 text-center text-[12px] text-parchment/35">
             No picture yet — click to add one
@@ -844,8 +847,8 @@ function InventoryTab({
                       (e.g. any "Longsword +1" gets the longsword icon) — bespoke
                       art per named magic item is a separate, larger effort. */}
                   <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/5 text-[10px] text-parchment/30">
-                    {weaponTypeIconForName(item.label) ? (
-                      <img src={weaponTypeIconForName(item.label)} alt="" className="h-7 w-7 opacity-90" />
+                    {itemIcon(item) ? (
+                      <img src={itemIcon(item)} alt="" className="h-8 w-8 opacity-90" />
                     ) : (
                       item.label.slice(0, 2).toUpperCase()
                     )}
@@ -872,6 +875,28 @@ function InventoryTab({
                       </p>
                     )}
                   </div>
+
+                  {/* Attunement was readable but not settable: the badge has
+                      always rendered and no control ever dispatched the
+                      command behind it. */}
+                  {item.requiresAttunement && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const command: PlayerCommand = item.attuned
+                          ? { type: 'endAttunement', characterId: view.meta.characterId, instanceId: item.instanceId }
+                          : { type: 'attuneItem', characterId: view.meta.characterId, instanceId: item.instanceId }
+                        void Promise.resolve(dispatch(command)).then((r) => setError(r?.join(' · ') ?? null))
+                      }}
+                      className={`shrink-0 rounded-lg border px-3 py-1.5 text-xs transition ${
+                        item.attuned
+                          ? 'border-arcane/50 bg-arcane/10 text-arcane hover:bg-arcane/20'
+                          : 'border-white/15 text-parchment/60 hover:border-arcane/40 hover:text-parchment'
+                      }`}
+                    >
+                      {item.attuned ? 'Attuned' : 'Attune'}
+                    </button>
+                  )}
 
                   {item.slot && (
                     <button
@@ -991,6 +1016,9 @@ function ActionRow({ action, dispatch, onRoll, bar, prefs }: {
       }`}
     >
       <button type="button" onClick={() => setOpen((v) => !v)} className="flex w-full items-start gap-3 text-left">
+        {actionIcon(action) && (
+          <img src={actionIcon(action)} alt="" className="mt-0.5 h-9 w-9 shrink-0 rounded" />
+        )}
         <div className="min-w-0 flex-1">
           <p className="flex items-center gap-2 text-sm text-parchment">
             {action.label}
@@ -1111,12 +1139,28 @@ function SpellsTab({ view, dispatch, onRoll, bar, prefs }: {
   bar: Set<string>
   prefs: PinnedActions
 }): React.JSX.Element {
+  const [prepareError, setPrepareError] = useState<string | null>(null)
   const casting = view.spellcasting!
   const byLevel = new Map<number, SpellView[]>()
   for (const s of casting.spells) {
     byLevel.set(s.level, [...(byLevel.get(s.level) ?? []), s])
   }
   const levels = [...byLevel.keys()].sort((a, b) => a - b)
+
+  /**
+   * Preparation is a whole-list command, not a per-spell one: the reducer
+   * replaces `spellsPrepared` wholesale and validates the count against
+   * `preparedMax`. So a toggle sends the list it wants to end up with.
+   */
+  const togglePrepared = (spell: SpellView): void => {
+    const current = casting.spells.filter((s) => s.prepared && !s.alwaysAvailable).map((s) => s.id)
+    const next = spell.prepared
+      ? current.filter((id) => id !== spell.id)
+      : [...current, spell.id]
+    void Promise.resolve(dispatch({
+      type: 'prepareSpells', characterId: view.meta.characterId, spellIds: next
+    })).then((r) => setPrepareError(r?.join(' · ') ?? null))
+  }
 
   return (
     <div className="space-y-6">
@@ -1146,6 +1190,10 @@ function SpellsTab({ view, dispatch, onRoll, bar, prefs }: {
         )}
       </div>
 
+      {prepareError && (
+        <p className="rounded-lg border border-ember/40 bg-ember/10 px-3 py-2 text-sm text-ember">{prepareError}</p>
+      )}
+
       {casting.slots.length > 0 && (
         <Section title="Slots">
           <div className="flex flex-wrap gap-5">
@@ -1165,7 +1213,8 @@ function SpellsTab({ view, dispatch, onRoll, bar, prefs }: {
         <Section key={level} title={level === 0 ? 'Cantrips' : `Level ${level}`}>
           <ul className="space-y-2">
             {byLevel.get(level)!.map((s) => (
-              <SpellRow key={s.id} spell={s} dispatch={dispatch} onRoll={onRoll} bar={bar} prefs={prefs} />
+              <SpellRow key={s.id} spell={s} dispatch={dispatch} onRoll={onRoll} bar={bar} prefs={prefs}
+                onTogglePrepared={casting.preparedMax > 0 ? togglePrepared : undefined} />
             ))}
           </ul>
         </Section>
@@ -1174,12 +1223,18 @@ function SpellsTab({ view, dispatch, onRoll, bar, prefs }: {
   )
 }
 
-function SpellRow({ spell, dispatch, onRoll, bar, prefs }: {
+function SpellRow({ spell, dispatch, onRoll, bar, prefs, onTogglePrepared }: {
   spell: SpellView
   dispatch(command: PlayerCommand): Promise<string[] | undefined> | string[] | undefined
   onRoll(spec: RollSpec, damageRoll?: DamageRollSpec): void
   bar: Set<string>
   prefs: PinnedActions
+  /**
+   * Absent for a known caster — a warlock, bard or sorcerer never prepares
+   * anything, so offering the control would be asking a question the rules
+   * do not put to them.
+   */
+  onTogglePrepared?(spell: SpellView): void
 }): React.JSX.Element {
   const [open, setOpen] = useState(false)
   const [rejected, setRejected] = useState<string[] | null>(null)
@@ -1191,6 +1246,13 @@ function SpellRow({ spell, dispatch, onRoll, bar, prefs }: {
       }`}
     >
       <button type="button" onClick={() => setOpen((v) => !v)} className="flex w-full items-start gap-3 text-left">
+        {spellIconOrGlyph(spell.id, spell.damageRoll?.pools[0]?.type, spell.school) && (
+          <img
+            src={spellIconOrGlyph(spell.id, spell.damageRoll?.pools[0]?.type, spell.school)}
+            alt=""
+            className="mt-0.5 h-9 w-9 shrink-0 rounded"
+          />
+        )}
         <div className="min-w-0 flex-1">
           <p className="flex flex-wrap items-center gap-2 text-sm text-parchment">
             {spell.label}
@@ -1209,6 +1271,24 @@ function SpellRow({ spell, dispatch, onRoll, bar, prefs }: {
             )}
             {spell.alwaysAvailable && (
               <span className="text-[10px] uppercase tracking-wide text-parchment/30">always ready</span>
+            )}
+            {/* Preparation, where the class actually has it. A prepared
+                spell reads as ready; an unprepared one is dimmed rather than
+                hidden, because the whole point of the wizard's spellbook is
+                that the unprepared spells are still yours. */}
+            {onTogglePrepared && !spell.alwaysAvailable && (
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onTogglePrepared(spell) }}
+                title={spell.prepared ? 'Prepared — click to unprepare' : 'Not prepared — click to prepare'}
+                className={`rounded px-1.5 py-0.5 text-[10px] uppercase tracking-wide transition ${
+                  spell.prepared
+                    ? 'bg-verdigris/20 text-verdigris hover:bg-verdigris/30'
+                    : 'bg-white/5 text-parchment/35 hover:bg-white/10 hover:text-parchment/70'
+                }`}
+              >
+                {spell.prepared ? '✓ prepared' : 'prepare'}
+              </button>
             )}
           </p>
           {/* Just the two a player scans for. Components and duration moved

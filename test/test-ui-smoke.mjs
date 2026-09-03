@@ -213,6 +213,20 @@ const uiFiles = [join(root, 'player/src'), join(root, 'src/stage-ui')]
   // removed from the button.
   const playerSrc = [join(root, 'player/src'), join(root, 'src/stage-ui'), join(root, 'src/view')]
     .flatMap((d) => walk(d, ['.ts', '.tsx']))
+    // Type-level code is not a dispatch site, and two files in src/view are
+    // nothing but type-level mentions of every command:
+    //
+    //   types.ts    declares the PlayerCommand union, so `type: 'x'` appears
+    //               there once per command by definition;
+    //   commands.ts is the REDUCER, narrowing each handler with
+    //               `Extract<PlayerCommand, { type: 'x' }>`.
+    //
+    // Scanning either makes this check vacuous. It passed for `prepareSpells`
+    // — which no UI has ever dispatched, so a wizard cannot prepare a spell —
+    // and would have passed for anything else nobody wired up. build.ts stays
+    // in scope: it genuinely builds commands the UI spreads into a dispatch.
+    .filter((f) => !f.endsWith(join('src', 'view', 'types.ts'))
+      && !f.endsWith(join('src', 'view', 'commands.ts')))
     .map((f) => readFileSync(f, 'utf8'))
     .join('\n')
 
@@ -220,7 +234,19 @@ const uiFiles = [join(root, 'player/src'), join(root, 'src/stage-ui')]
   // `type: 'x'` (a dispatched command) — this also matches the RollSpec
   // command embedded by `rollSpecOf` in build.ts's view, which is the same
   // literal shape the UI reads back out and forwards, so it counts.
-  const unreachable = handled.filter((type) => !new RegExp(`type:\\s*'${type}'`).test(playerSrc))
+  // Known-unreachable, with a reason. An allowlist is the honest way to keep
+  // a check like this useful: without one it either fails forever and gets
+  // ignored, or gets deleted. Anything NOT listed here that loses its last
+  // dispatch site still fails, which is the point.
+  //
+  // spendResource / restoreResource are manual pool adjustments with no
+  // player-facing need — a player spends a resource by taking the action that
+  // costs it, and the DM's panel corrects pools with `dmSetResource`.
+  const KNOWN_UNREACHABLE = new Set(['spendResource', 'restoreResource'])
+
+  const unreachable = handled
+    .filter((type) => !KNOWN_UNREACHABLE.has(type))
+    .filter((type) => !new RegExp(String.raw`type:\s*'${type}'`).test(playerSrc))
 
   check.eq('every command the reducer handles is dispatched from somewhere in the player UI',
     unreachable.length, 0, unreachable.join(', '))

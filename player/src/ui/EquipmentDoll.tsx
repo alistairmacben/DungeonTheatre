@@ -14,7 +14,7 @@
 import React from 'react'
 import type { PlayerView } from '@engine'
 import { Inspect, InspectPanel } from './Inspect'
-import { weaponTypeIconForName } from './icons'
+import { itemIcon } from './icons'
 
 /**
  * Which slot sits where — worn on the body down the left, accessories down the
@@ -79,7 +79,7 @@ export function EquipmentDoll({ view, portraitUrl, onEditPortrait, onUnequip }: 
           className="group relative w-44 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-gradient-to-b from-white/[0.05] to-transparent"
         >
           {portraitUrl ? (
-            <img src={portraitUrl} alt={view.meta.name} className="h-full w-full object-cover" />
+            <img src={portraitUrl} alt={view.meta.name} className="h-full w-full object-cover object-top" />
           ) : (
             <span className="grid h-full min-h-[15rem] w-full place-items-center px-3 text-center text-[11px] text-parchment/35">
               No picture yet — click to add one
@@ -121,7 +121,7 @@ function initialsOf(label: string): string {
 
 function SlotBox({ slot, onUnequip }: { slot: Slot; onUnequip(slot: Slot): void }): React.JSX.Element {
   const filled = Boolean(slot.itemLabel)
-  const icon = slot.itemLabel ? weaponTypeIconForName(slot.itemLabel) : undefined
+  const icon = slot.itemLabel ? itemIcon({ label: slot.itemLabel, slot: slot.slot }) : undefined
 
   const box = (
     <button
