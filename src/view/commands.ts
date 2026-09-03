@@ -813,7 +813,12 @@ function dmDamage(
   })
 
   const next = clone(character)
-  next.hitPointsCurrent = result.hitPointsRemaining
+  // A creature at 0 is at 0, not below it. `applyDamage` still reports the
+  // true arithmetic — overkill is what the SRD's instant-death rule reads to
+  // decide whether a hit kills outright — so the clamp belongs here, where
+  // the number becomes the character's state, rather than in the maths.
+  const landedOn = Math.max(0, result.hitPointsRemaining)
+  next.hitPointsCurrent = landedOn
   next.hitPointsTemp = result.temporaryHitPointsRemaining
 
   return {
@@ -832,7 +837,7 @@ function dmDamage(
         })),
         notes: result.notes
       }),
-      ...vitalityEvents(next, Math.min(character.hitPointsCurrent, max), result.hitPointsRemaining, max)
+      ...vitalityEvents(next, Math.min(character.hitPointsCurrent, max), landedOn, max)
     ]
   }
 }

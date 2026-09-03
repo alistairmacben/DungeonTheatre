@@ -1292,12 +1292,20 @@ function buildEffects(r: Resolution, content: ContentIndex): EffectView[] {
     if (source.kind !== 'condition') continue
     const def = content.conditions.get(source.id)
     const count = counts.get(source.id)
+    // The id that `removeCondition` addresses. Without it the DM's own
+    // toggle could not build a valid command: it was sending the condition
+    // id where an instance id was expected, the reducer found no such
+    // instance, and the condition could be applied but never lifted.
+    const instance = r.character.conditions.find(
+      (c) => c.conditionId === source.id && !c.suppressed
+    )
     out.push({
       id: source.id,
       label: source.name,
       kind: source.provenance === 'system' ? 'temporary' : 'condition',
       sourceLabel: source.name,
       effects: describeSource(source, r, content),
+      ...(instance ? { instanceId: instance.instanceId } : {}),
       ...(count !== undefined && count > 1 ? { instanceCount: count } : {}),
       removable: def !== undefined,
       ...(source.narrative?.[0] ? { description: source.narrative[0].text } : {})

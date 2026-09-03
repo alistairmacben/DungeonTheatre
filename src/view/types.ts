@@ -291,6 +291,12 @@ export interface EffectView {
   effects: string[]
   /** Present when the effect has a stated duration. */
   durationLabel?: string
+  /**
+   * The instance to address when removing this, present for conditions.
+   * `removeCondition` matches on the instance, not the condition, because a
+   * condition can be imposed twice by different sources.
+   */
+  instanceId?: string
   /** Conditions can be imposed several times; each instance expires separately. */
   instanceCount?: number
   removable: boolean

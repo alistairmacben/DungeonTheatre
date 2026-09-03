@@ -112,7 +112,8 @@ export function DmPanel({
         <p className="mb-1.5 text-[10px] uppercase tracking-wide text-parchment/40">Conditions</p>
         <div className="flex flex-wrap gap-1">
           {CONDITIONS.map((c) => {
-            const on = active.some((e) => e.id === `srd:condition.${c}`)
+            const held = active.find((e) => e.id === `srd:condition.${c}`)
+            const on = held !== undefined
             return (
               <button
                 key={c}
@@ -121,7 +122,8 @@ export function DmPanel({
                   on
                     ? {
                       type: 'removeCondition', characterId: id,
-                      instanceId: view.effects.find((e) => e.id === `srd:condition.${c}`)?.id ?? c
+                      // The INSTANCE, not the condition — see EffectView.instanceId.
+                      instanceId: held?.instanceId ?? ''
                     }
                     : {
                       type: 'applyCondition', characterId: id,
