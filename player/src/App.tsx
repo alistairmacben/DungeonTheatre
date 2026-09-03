@@ -17,11 +17,13 @@ import {
   DamagePrompt, DamageResult, RollResult, damageLabelOf, damageOutcomeFromEvents, isHealing,
   rollDamageFaces, outcomeFromEvents, type DamageOutcome, type RollOutcome
 } from './ui/RollWidget'
+import { TheatreReactions } from './ui/theatre/TheatreReactions'
 import { CreateCharacter } from './ui/CreateCharacter'
 import { LevelUpWizard } from './ui/LevelUpWizard'
 import { PortraitPicker } from './ui/PortraitPicker'
 import { supabasePortraits } from './game/portraitStore'
 import { usePortrait } from './game/usePortrait'
+import { useTableEvents } from './game/useTableEvents'
 import { HUD_RESERVED_PX } from './ui/usePinnedActions'
 import { claimAndCreateSheet } from './game/sheetStore'
 import { Solo } from './Solo'
@@ -100,8 +102,14 @@ function Stage({
   const game = useServerGame({
     characterId: identity.characterId,
     role,
-    viewer: { kind: isDm ? 'dm' : 'owner' }
+    viewer: { kind: isDm ? 'dm' : 'owner' },
+    // Publishing turns a private sheet change into something the table sees.
+    campaignId,
+    actorId: identity.profileId
   })
+  // Everyone else's actions, so the stage reacts to the session rather than
+  // to this one sheet.
+  const tableEvents = useTableEvents(campaignId, identity.characterId)
   const [menuTab, setMenuTab] = useState<MenuTab | null>(null)
   // The class being levelled, or null when the wizard is closed.
   const [levellingClassId, setLevellingClassId] = useState<string | null>(null)
@@ -117,6 +125,10 @@ function Stage({
   const [damageSpec, setDamageSpec] = useState<import('@engine').DamageRollSpec | null>(null)
   const [damageOutcome, setDamageOutcome] = useState<DamageOutcome | null>(null)
   const healingPending = isHealing(damageSpec)
+  // Two streams, kept apart on purpose — see useEventBeats.
+  const reactionStreams = useMemo(
+    () => [game.events, tableEvents], [game.events, tableEvents]
+  )
 
   // One path for every roll, and the order matters.
   //
@@ -207,6 +219,10 @@ function Stage({
         // Only when there is a HUD down there to clear.
         diceBottomInset={game.view ? HUD_RESERVED_PX : 0}
       />
+
+      {/* The stage reacting to what just happened — Phase L. Driven by the
+          same domain events the reducer has always emitted. */}
+      <TheatreReactions streams={reactionStreams} />
 
       {/* The HUD sits over the theatre and never competes with it. */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center gap-2 p-4">

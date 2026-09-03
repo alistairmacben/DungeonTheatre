@@ -43,3 +43,31 @@ body {
   font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   overscroll-behavior: none;
 }
+
+/*
+ * The theatre's reactions. Keyframes rather than Tailwind utilities because
+ * these are motion, not layout, and a damage number that rises as it fades is
+ * two properties moving together over one timeline.
+ */
+@keyframes beat-rise {
+  0%   { opacity: 0; transform: translateY(12px) scale(0.9); }
+  15%  { opacity: 1; transform: translateY(0) scale(1); }
+  70%  { opacity: 1; transform: translateY(-18px) scale(1); }
+  100% { opacity: 0; transform: translateY(-42px) scale(0.98); }
+}
+
+@keyframes beat-fade {
+  0%   { opacity: 0; transform: translateY(8px); }
+  12%  { opacity: 1; transform: translateY(0); }
+  75%  { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-10px); }
+}
+
+.animate-beat-rise { animation: beat-rise 2.6s ease-out forwards; }
+.animate-beat-fade { animation: beat-fade 2.6s ease-out forwards; }
+
+/* Motion is decoration here; the sheet always carries the same facts in text. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-beat-rise,
+  .animate-beat-fade { animation: none; opacity: 1; }
+}

@@ -28,6 +28,7 @@ import {
 } from '@engine'
 import { supabase } from '../supabase'
 import { loadSheet } from './sheetStore'
+import { publishEvents } from './eventStream'
 
 export interface ServerDispatchResult {
   rejected?: string[]
@@ -78,12 +79,20 @@ export interface ServerGame {
 }
 
 export function useServerGame({
-  characterId, viewer = { kind: 'owner' }, role = 'owner'
+  characterId, viewer = { kind: 'owner' }, role = 'owner', campaignId, actorId
 }: {
   characterId: string | null
   viewer?: Viewer
   /** The caller's relationship to this character, for predicting refusals. */
   role?: Role
+  /**
+   * The table to publish domain events to. Omitted in any context without a
+   * campaign (the create-preview harness), where publishing would be writing
+   * events nobody can read.
+   */
+  campaignId?: string
+  /** Whose action this was, for attribution on the shared stream. */
+  actorId?: string | null
 }): ServerGame {
   const content = useMemo<ContentIndex>(() => loadContent(), [])
   const [character, setCharacter] = useState<Character | null>(null)
@@ -174,6 +183,15 @@ export function useServerGame({
       revision.current = data.revision
       setCharacter(data.character)
       setEvents((prev) => [...(data.events ?? []), ...prev].slice(0, 50))
+
+      // Share what happened. Only the AUTHORITATIVE events are published —
+      // a local prediction that the server later disagreed with must never
+      // reach another player's stage. Failure is swallowed on purpose: an
+      // event that did not reach the table must not undo a state change that
+      // did, and the sheet is still correct either way.
+      if (campaignId && (data.events ?? []).length > 0) {
+        void publishEvents(supabase(), campaignId, characterId, actorId ?? null, data.events)
+      }
       return { events: data.events ?? [] }
     } catch (e: unknown) {
       if (predicted) setCharacter(character)
@@ -181,7 +199,7 @@ export function useServerGame({
     } finally {
       setBusy(false)
     }
-  }, [character, characterId, content, role])
+  }, [character, characterId, content, role, campaignId, actorId])
 
   const dispatchAll = useCallback(async (
     commands: PlayerCommand[]
@@ -205,6 +223,9 @@ export function useServerGame({
         revision.current = data.revision
         setCharacter(data.character)
         produced.push(...(data.events ?? []))
+        if (campaignId && (data.events ?? []).length > 0) {
+          void publishEvents(supabase(), campaignId, characterId, actorId ?? null, data.events)
+        }
       }
       setEvents((prev) => [...produced, ...prev].slice(0, 50))
       return { events: produced }
@@ -213,7 +234,7 @@ export function useServerGame({
     } finally {
       setBusy(false)
     }
-  }, [characterId])
+  }, [characterId, campaignId, actorId])
 
   return {
     view, loading, error, problems, detail, setDetail, dispatch, dispatchAll, events, busy,

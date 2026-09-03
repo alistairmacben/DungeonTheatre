@@ -28,6 +28,7 @@ import {
   DamagePrompt, DamageResult, RollResult, damageLabelOf, damageOutcomeFromEvents, isHealing,
   rollDamageFaces, rollFor, outcomeFromEvents, type DamageOutcome, type RollOutcome
 } from './ui/RollWidget'
+import { TheatreReactions } from './ui/theatre/TheatreReactions'
 import { HUD_RESERVED_PX } from './ui/usePinnedActions'
 
 let nextCustomId = 1
@@ -134,6 +135,9 @@ function SoloCharacter({ character, dmOpen, onCloseDm }: {
   const [roll, setRoll] = useState<DiceRoll | null>(null)
   const [rollSeq, setRollSeq] = useState(1)
   const healingPending = isHealing(damageSpec)
+  // Stable identity: the reactions hook takes this as an effect dependency,
+  // and a fresh array every render would re-run it forever.
+  const soloStreams = useMemo(() => [game.events], [game.events])
 
   /**
    * One path for every roll in the product.
@@ -221,6 +225,10 @@ function SoloCharacter({ character, dmOpen, onCloseDm }: {
         roll={roll}
         diceBottomInset={HUD_RESERVED_PX}
       />
+
+      {/* The stage reacting to what just happened — Phase L. Sits over the
+          scene and under the HUD, and never takes a click. */}
+      <TheatreReactions streams={soloStreams} />
 
       {/* The result sits above the HUD, where the eye already is. */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center gap-2 p-4">
