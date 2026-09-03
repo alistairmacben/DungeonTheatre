@@ -23,7 +23,8 @@ for (const [src, out] of [
   ['src/main/campaign/store.ts', 'store.mjs'],
   ['src/shared/dice.ts', 'dice.mjs'],
   ['src/engine.ts', 'engine.mjs'],
-  ['player/src/ui/theatre/reactions.ts', 'reactions.mjs']
+  ['player/src/ui/theatre/reactions.ts', 'reactions.mjs'],
+  ['src/view/authority.ts', 'authority.mjs']
 ]) {
   await esbuild.build({
     entryPoints: [join(root, src)],
@@ -66,6 +67,7 @@ for (const suite of [
   'test-edge-parity.mjs',
   'test-ui-smoke.mjs',
   'test-theatre-reactions.mjs',
+  'test-dm-grant.mjs',
   'test-monk.mjs',
   'test-subclass.mjs',
   'test-fighter.mjs',

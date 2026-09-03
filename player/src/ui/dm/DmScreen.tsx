@@ -17,9 +17,12 @@
 // `is_campaign_dm(campaign_id)`, so a DM has always been allowed to read and
 // write every sheet at their table. Nothing about the backend changed.
 
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
+import { loadContent, type ContentIndex, type PlayerView, type RollSpec } from '@engine'
 import { useServerGame } from '../../game/useServerGame'
 import { DmPanel } from '../DmPanel'
+import { LootBrowser } from './LootBrowser'
+import { DmDice, type StageRoll } from './DmDice'
 
 export interface RosterEntry {
   id: string
@@ -28,16 +31,26 @@ export interface RosterEntry {
   color: string
 }
 
-export function DmScreen({ campaignId, actorId, roster, onClose }: {
+export function DmScreen({ campaignId, actorId, roster, onRollToStage, onClose }: {
   campaignId: string
   actorId: string | null
   roster: RosterEntry[]
+  /** Sends a roll to the stage everyone is watching. */
+  onRollToStage(roll: StageRoll): void
   onClose(): void
 }): React.JSX.Element {
   // Players first: an NPC is scenery, and the DM reaches for a player's sheet
   // far more often than for anything else.
   const players = roster.filter((c) => c.kind === 'pc')
   const [selectedId, setSelectedId] = useState<string | null>(players[0]?.id ?? null)
+  const [tab, setTab] = useState<'tools' | 'loot' | 'dice'>('tools')
+  const [note, setNote] = useState<string | null>(null)
+  // The whole catalogue, loaded once — the loot browser searches it and the
+  // DM screen is the only place that needs it.
+  const content = useMemo<ContentIndex>(() => loadContent(), [])
+  // The open character's view, lifted so the dice tab can roll their saves.
+  const [openView, setOpenView] = useState<PlayerView | null>(null)
+  const [openRoll, setOpenRoll] = useState<((spec: RollSpec) => void) | null>(null)
 
   return (
     <div className="pointer-events-auto absolute inset-y-0 right-0 z-40 flex w-[26rem] flex-col border-l border-ember/30 bg-ink/95 shadow-2xl backdrop-blur">
@@ -81,10 +94,57 @@ export function DmScreen({ campaignId, actorId, roster, onClose }: {
         ))}
       </nav>
 
+      <nav className="flex gap-1 border-b border-white/10 px-4 py-2">
+        {([['tools', 'Tools'], ['loot', 'Loot'], ['dice', 'Dice']] as const).map(([id, label]) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setTab(id)}
+            className={`rounded-lg px-3 py-1 text-xs transition ${
+              tab === id ? 'bg-ember/15 text-ember' : 'text-parchment/50 hover:text-parchment/80'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </nav>
+
+      {note && (
+        <p className="border-b border-white/10 px-4 py-2 text-[12px] text-parchment/70">{note}</p>
+      )}
+
       <div className="min-h-0 flex-1 overflow-y-auto">
-        {selectedId
-          ? <DmCharacterTools key={selectedId} characterId={selectedId} campaignId={campaignId} actorId={actorId} />
-          : null}
+        {tab === 'tools' && (selectedId
+          ? (
+            <DmCharacterTools
+              key={selectedId}
+              characterId={selectedId}
+              campaignId={campaignId}
+              actorId={actorId}
+              onReady={(view, roll) => { setOpenView(view); setOpenRoll(() => roll) }}
+            />
+          )
+          : <Note>Pick a player above.</Note>)}
+
+        {tab === 'loot' && (
+          <div className="p-4">
+            <LootBrowser
+              content={content}
+              targets={players.map((p) => ({ id: p.id, name: p.name }))}
+              onGranted={setNote}
+            />
+          </div>
+        )}
+
+        {tab === 'dice' && (
+          <div className="p-4">
+            <DmDice
+              view={openView}
+              onRollToStage={onRollToStage}
+              onRollCharacter={(spec) => openRoll?.(spec)}
+            />
+          </div>
+        )}
       </div>
     </div>
   )
@@ -97,10 +157,17 @@ export function DmScreen({ campaignId, actorId, roster, onClose }: {
  * reusing a hook still holding the previous sheet — the same reason the solo
  * harness keys on its selection.
  */
-function DmCharacterTools({ characterId, campaignId, actorId }: {
+function DmCharacterTools({ characterId, campaignId, actorId, onReady }: {
   characterId: string
   campaignId: string
   actorId: string | null
+  /**
+   * Hands the loaded sheet up, so the Dice tab can roll this character's own
+   * saves and skills. The view lives in a hook here and the tab that needs it
+   * is a sibling, so it has to travel upward rather than be fetched twice —
+   * two hooks on one sheet would mean two revisions of it.
+   */
+  onReady(view: PlayerView, roll: (spec: RollSpec) => void): void
 }): React.JSX.Element {
   const game = useServerGame({
     characterId,
@@ -109,6 +176,13 @@ function DmCharacterTools({ characterId, campaignId, actorId }: {
     role: 'dm',
     viewer: { kind: 'dm' }
   })
+
+  // A ref-free effect: report the view whenever it changes identity.
+  React.useEffect(() => {
+    if (game.view) {
+      onReady(game.view, (spec) => { void game.dispatch({ ...spec.command, faces: [] } as never) })
+    }
+  }, [game.view])
 
   if (game.loading) return <Note>Opening their sheet…</Note>
   if (game.error || !game.view) {

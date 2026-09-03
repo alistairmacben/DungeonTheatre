@@ -25,7 +25,7 @@ export type BeatTone = 'harm' | 'heal' | 'arcane' | 'grim' | 'neutral'
 export interface Beat {
   /** Unique per occurrence, so React can key repeats of the same event. */
   id: string
-  kind: 'number' | 'flourish' | 'chip' | 'proclaim'
+  kind: 'number' | 'flourish' | 'chip' | 'proclaim' | 'reward'
   tone: BeatTone
   /** The big text: "12", "Fire Bolt", "DOWNED". */
   headline: string
@@ -34,6 +34,8 @@ export interface Beat {
   /** Content id an icon can be looked up from, resolved by the renderer. */
   spellId?: string
   damageType?: string
+  /** Content id an item icon can be looked up from. */
+  itemId?: string
 }
 
 const num = (v: unknown): number | undefined =>
@@ -90,6 +92,19 @@ export function beatFrom(event: BeatSource): Beat | undefined {
         id, kind: 'flourish', tone: 'arcane', headline: label,
         detail: level === 0 ? 'cantrip' : level ? `level ${level}` : undefined,
         ...(str(p['spellId']) ? { spellId: str(p['spellId'])! } : {})
+      } as Beat
+    }
+    case 'ItemGranted': {
+      const label = str(p['label'])
+      if (!label) return undefined
+      const quantity = num(p['quantity']) ?? 1
+      // The one beat that is a gift rather than a consequence, and the only
+      // one worth a moment of the player's attention on its own terms.
+      return {
+        id, kind: 'reward', tone: 'arcane',
+        headline: quantity > 1 ? `${label} ×${quantity}` : label,
+        detail: 'received',
+        ...(str(p['itemId']) ? { itemId: str(p['itemId'])! } : {})
       } as Beat
     }
     case 'Bloodied':

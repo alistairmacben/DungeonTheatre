@@ -23,10 +23,13 @@ export type Role = 'owner' | 'dm' | 'other'
  * Inflicting is the DM's job: damage, healing, resources set by fiat, effects
  * improvised at the table. Conditions are here too — imposing one is narration,
  * and a player frightening themselves at will is not a rule anybody wrote.
+ *
+ * `dmGrantItem` most of all: without it here a player could hand themselves
+ * any of the 323 magic items in the catalogue.
  */
 export const DM_ONLY_COMMANDS: readonly CommandType[] = [
   'dmDamage', 'dmHeal', 'dmTemporaryHitPoints', 'dmSetResource',
-  'dmApplyEffect', 'dmRemoveEffect', 'dmOverride',
+  'dmApplyEffect', 'dmRemoveEffect', 'dmOverride', 'dmGrantItem',
   'applyCondition', 'removeCondition'
 ]
 

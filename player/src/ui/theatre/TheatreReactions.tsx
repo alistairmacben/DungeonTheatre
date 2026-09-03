@@ -12,7 +12,7 @@
 
 import React, { useEffect, useRef, useState } from 'react'
 import { beatsFrom, type Beat, type BeatSource } from './reactions'
-import { damageTypeIcon, spellIcon } from '../icons'
+import { damageTypeIcon, itemIcon, spellIcon } from '../icons'
 
 /** How long a beat stays on screen. Long enough to read, short enough to miss. */
 const LIFETIME_MS = 2600
@@ -118,6 +118,23 @@ function BeatView({ beat }: { beat: Beat }): React.JSX.Element {
               {beat.detail}
             </span>
           )}
+        </span>
+      </div>
+    )
+  }
+
+  // A reward is the one beat worth stopping for, so it gets a frame and
+  // holds the eye rather than drifting upward like a damage number.
+  if (beat.kind === 'reward') {
+    const icon = beat.itemId ? itemIcon({ label: beat.headline }) : undefined
+    return (
+      <div className="animate-beat-fade flex items-center gap-4 rounded-2xl border border-ember/40 bg-ink/90 px-5 py-3 shadow-2xl backdrop-blur">
+        {icon && <img src={icon} alt="" className="h-12 w-12 rounded" />}
+        <span>
+          <span className="block text-[10px] uppercase tracking-[0.25em] text-ember/80">
+            {beat.detail}
+          </span>
+          <span className="block font-display text-2xl text-parchment">{beat.headline}</span>
         </span>
       </div>
     )

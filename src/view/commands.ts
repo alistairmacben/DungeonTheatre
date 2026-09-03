@@ -41,7 +41,7 @@ export interface DomainEvent extends Omit<GameEvent, 'id' | 'seq' | 'timestampSe
 
 export type DomainEventType =
   | 'ItemEquipped' | 'ItemUnequipped' | 'ItemAttuned' | 'AttunementEnded'
-  | 'ItemUsed' | 'ItemTransferred'
+  | 'ItemUsed' | 'ItemTransferred' | 'ItemGranted'
   | 'ResourceSpent' | 'ResourceRestored' | 'LastUseSpent'
   | 'ConditionApplied' | 'ConditionRemoved'
   | 'ToggleChanged'
@@ -99,6 +99,7 @@ export function applyCommand(
     case 'dmSetResource': return dmSetResource(character, command, content)
     case 'dmApplyEffect': return dmApplyEffect(character, command)
     case 'dmRemoveEffect': return dmRemoveEffect(character, command)
+    case 'dmGrantItem': return dmGrantItem(character, command, content)
     case 'spendResource': return spendResource(character, command, content)
     case 'restoreResource': return restoreResource(character, command)
     case 'applyCondition': return applyCondition(character, command, content)
@@ -926,6 +927,54 @@ function dmApplyEffect(
     character: next,
     events: [event('EffectApplied', next, {
       sourceId: effect.id, label: effect.name, provenance: 'dm'
+    })]
+  }
+}
+
+/**
+ * Grants an item, stacking it when the item is the sort that stacks.
+ *
+ * Quantity is folded into an existing instance rather than pushing a second
+ * one, so handing over three potions reads as "Potion of Healing ×3" and not
+ * as three separate rows. A weapon or a wondrous item has no quantity and so
+ * always arrives as its own instance — two Cloaks of Protection are two
+ * cloaks, each attunable on its own.
+ */
+function dmGrantItem(
+  character: Character,
+  command: Extract<PlayerCommand, { type: 'dmGrantItem' }>,
+  content: ContentIndex
+): CommandResult {
+  const def = content.items.get(command.itemId)
+  if (!def) return reject(character, [`unknown item "${command.itemId}"`])
+
+  const quantity = Math.max(1, Math.floor(command.quantity ?? 1))
+  const next = clone(character)
+  // Only things already carried with a quantity stack; anything else is its
+  // own object with its own attunement and charges.
+  const stackable = def.category === 'consumable'
+  const existing = stackable
+    ? next.inventory.instances.find((i) => i.definitionId === def.id)
+    : undefined
+
+  if (existing) {
+    existing.quantity = (existing.quantity ?? 1) + quantity
+  } else {
+    for (let n = 0; n < (stackable ? 1 : quantity); n++) {
+      next.inventory.instances.push({
+        instanceId: `gi-${next.inventory.instances.length}-${def.id}`,
+        definitionId: def.id,
+        contentVersion: def.contentVersion,
+        identified: true,
+        ...(stackable && quantity > 1 ? { quantity } : {})
+      })
+    }
+  }
+
+  return {
+    character: next,
+    events: [event('ItemGranted', next, {
+      itemId: def.id, label: def.name, quantity, category: def.category
     })]
   }
 }

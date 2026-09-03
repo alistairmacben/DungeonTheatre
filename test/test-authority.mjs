@@ -14,6 +14,9 @@ import {
   isServerRolled, mayIssue
 } from './bundle/engine.mjs'
 import { makeChecker } from './rules-fixtures.mjs'
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { dirname, join } from 'node:path'
 
 const check = makeChecker()
 
@@ -25,7 +28,8 @@ const ALL_COMMANDS = [
   'prepareSpells', 'endConcentration', 'spendResource', 'restoreResource',
   'applyCondition', 'removeCondition', 'setToggle', 'shortRest', 'longRest',
   'transferItem', 'dmOverride', 'dmDamage', 'dmHeal', 'dmTemporaryHitPoints',
-  'dmSetResource', 'dmApplyEffect', 'dmRemoveEffect'
+  'dmSetResource', 'dmApplyEffect', 'dmRemoveEffect', 'dmGrantItem',
+  'levelUp', 'answerBuildChoice', 'answerSelection'
 ]
 
 // ---------------------------------------------------------------------------
@@ -144,6 +148,20 @@ const ALL_COMMANDS = [
 {
   // An unknown command must not sail through as permitted. This is the check
   // that catches a new dm-something being added to the contract and forgotten
+  // The literal above is a tripwire on purpose — it is meant to fail when
+  // the union grows so a human looks at the new command and decides who may
+  // issue it. But it only ever *caught* dm-prefixed additions: a new player
+  // command simply went untested, which is how levelUp, answerBuildChoice
+  // and answerSelection sat outside this file for a whole phase. Comparing
+  // the literal against the reducer keeps the tripwire and closes that.
+  const here = dirname(fileURLToPath(import.meta.url))
+  const reducer = readFileSync(join(here, '..', 'src', 'view', 'commands.ts'), 'utf8')
+  const handled = [...reducer.matchAll(/case '([a-zA-Z]+)':\s*return/g)].map((m) => m[1])
+  const missing = handled.filter((t) => !ALL_COMMANDS.includes(t))
+  check('completeness: this file knows about every command the reducer handles',
+    missing.length === 0,
+    `not listed here: ${missing.join(', ')}`)
+
   // here: it will be allowed for an owner, and this test says so.
   check('completeness: every dm-prefixed command is DM-only',
     ALL_COMMANDS.filter((t) => t.startsWith('dm')).every(isDmOnly),

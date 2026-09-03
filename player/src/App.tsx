@@ -235,6 +235,13 @@ function Stage({
           roster={snapshot.campaign.characters.map((c) => ({
             id: c.id, name: c.name, kind: c.kind, color: c.color
           }))}
+          // The DM's dice go to the same tray the players' do — a roll the
+          // table cannot see is a roll they may as well not have watched.
+          onRollToStage={(r) => send(
+            { notation: r.notation, dice: r.dice, modifier: r.modifier, total: r.total,
+              visibility: r.visibility },
+            identity.diceTheme
+          )}
           onClose={() => setDmOpen(false)}
         />
       )}

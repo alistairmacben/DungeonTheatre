@@ -519,5 +519,16 @@ export type PlayerCommand =
   | { type: 'dmSetResource'; characterId: string; resourceId: string; remaining: number }
   | { type: 'dmApplyEffect'; characterId: string; effect: EffectSource }
   | { type: 'dmRemoveEffect'; characterId: string; sourceId: string }
+  /**
+   * Puts an item into a character's hands — the DM's reward, a chest's
+   * contents, a scroll handed across the table.
+   *
+   * The seventh dm verb, and it earns the place: every other one modifies
+   * something the character already has, and there was no way to make an
+   * item exist. `transferItem` moves an instance that already exists between
+   * two characters, which cannot conjure loot from a defeated ogre nobody
+   * modelled.
+   */
+  | { type: 'dmGrantItem'; characterId: string; itemId: string; quantity?: number }
 
 export type CommandType = PlayerCommand['type']
