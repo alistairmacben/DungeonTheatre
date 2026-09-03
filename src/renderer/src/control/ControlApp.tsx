@@ -66,6 +66,12 @@ export function ControlApp(): React.JSX.Element {
 
         <div className="ml-auto flex gap-2">
           <button
+            onClick={() => send({ type: 'table:open' })}
+            className="rounded-md border border-ember/60 px-3 py-1.5 text-sm text-ember hover:bg-ember/10"
+          >
+            DM Table
+          </button>
+          <button
             onClick={() => send({ type: 'stage:open' })}
             className="rounded-md border border-ink-line px-3 py-1.5 text-sm hover:border-ember/60 hover:text-ember"
           >

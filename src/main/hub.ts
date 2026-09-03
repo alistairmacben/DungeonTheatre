@@ -74,6 +74,13 @@ export class Hub extends EventEmitter<HubEvents> {
     const campaign = this.campaign.load()
     this.cloud.bindSnapshot(() => this.getSnapshot())
     this.cloud.on('changed', () => this.publish())
+
+    // Auto-sync. A DM adding an NPC and then wondering why nobody can see it
+    // was the single most confusing thing about running a table: the live
+    // channel only ever carried WHICH scene is showing, while the scenes and
+    // characters themselves went up only when somebody remembered a button.
+    // Now every change schedules its own push.
+    this.campaign.onChanged = () => this.scheduleCloudSync()
     // Player rolls arrive over the channel; route them into the DM's log.
     this.cloud.onRemoteDice = (roll) => this.onRemoteRoll?.(roll as DiceRoll)
     this.publish()
@@ -112,15 +119,48 @@ export class Hub extends EventEmitter<HubEvents> {
     this.cloud.publish(snapshot)
   }
 
+  private syncTimer: NodeJS.Timeout | null = null
+  /** True while a sync is writing its own bookkeeping back into the store. */
+  private syncing = false
+
+  /**
+   * Queues a push, coalescing a burst of edits into one.
+   *
+   * Debounced because renaming an NPC is a keystroke per mutation, and each
+   * one would otherwise be a round trip. Skipped entirely until the campaign
+   * has been synced once — before that there is no cloud campaign to push to,
+   * and the first push is a deliberate act the DM takes.
+   */
+  private scheduleCloudSync(): void {
+    // `syncToCloud` records the campaign id and uploaded assets, which is
+    // itself a mutation; without this guard the sync would trigger a sync.
+    if (this.syncing) return
+    if (!this.campaign.get().cloud.campaignId) return
+
+    if (this.syncTimer) clearTimeout(this.syncTimer)
+    this.syncTimer = setTimeout(() => {
+      this.syncTimer = null
+      void this.syncToCloud()
+    }, 1500)
+  }
+
   /** Pushes the campaign to the backend and stores the returned cloud ids. */
   async syncToCloud(): Promise<void> {
-    const result = await this.cloud.sync(this.campaign.get())
-    if (result) {
-      this.campaign.recordCloudSync(result.campaignId, result.inviteCode, result.uploaded)
-      // Players hold the campaign locally, so tell them to refetch.
-      this.cloud.sendCampaignUpdated()
+    // `finally`, not a trailing assignment: a network failure that left this
+    // flag raised would disable auto-sync for the rest of the session, and it
+    // would look like the feature was never built.
+    this.syncing = true
+    try {
+      const result = await this.cloud.sync(this.campaign.get())
+      if (result) {
+        this.campaign.recordCloudSync(result.campaignId, result.inviteCode, result.uploaded)
+        // Players hold the campaign locally, so tell them to refetch.
+        this.cloud.sendCampaignUpdated()
+      }
+    } finally {
+      this.syncing = false
+      this.publish()
     }
-    this.publish()
   }
 
   /**

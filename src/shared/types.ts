@@ -95,6 +95,8 @@ export type Command =
   | { type: 'source:connect' }
   | { type: 'source:disconnect' }
   | { type: 'stage:open' }
+  /** Opens the DM's table — the player app in DM mode, in its own window. */
+  | { type: 'table:open' }
   | { type: 'stage:toggleFullscreen' }
   /** Mock-source only: flip a fake member's speaking state. */
   | { type: 'mock:setSpeaking'; userId: DiscordUserId; speaking: boolean }

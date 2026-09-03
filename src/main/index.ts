@@ -8,6 +8,7 @@ import {
   allWindows,
   createControlWindow,
   createStageWindow,
+  createTableWindow,
   toggleStageFullscreen
 } from './windows'
 
@@ -68,6 +69,9 @@ ipcMain.on(IPC.command, (_event, command: Command) => {
       break
     case 'stage:open':
       createStageWindow()
+      break
+    case 'table:open':
+      createTableWindow()
       break
     case 'stage:toggleFullscreen':
       toggleStageFullscreen()

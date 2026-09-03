@@ -137,10 +137,20 @@ export class CampaignStore {
     mkdirSync(root(), { recursive: true })
     writeFileSync(campaignFile(), JSON.stringify(this.campaign, null, 2))
   }
+  /**
+   * Called after any change to the campaign.
+   *
+   * Every mutation in this class funnels through `mutate`, so this is the one
+   * place that can promise "something changed" without each new method having
+   * to remember to say so.
+   */
+  onChanged: (() => void) | null = null
+
 
   private mutate(fn: (c: Campaign) => void): Campaign {
     fn(this.campaign)
     this.save()
+    this.onChanged?.()
     return this.campaign
   }
 
