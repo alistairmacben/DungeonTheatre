@@ -21,11 +21,17 @@ const CONDITIONS = [
 ]
 
 export function DmPanel({
-  view, dispatch, onClose
+  view, dispatch, onClose, embedded = false
 }: {
   view: PlayerView
   dispatch(command: PlayerCommand): Promise<string[] | undefined> | string[] | undefined
   onClose(): void
+  /**
+   * True when the panel sits inside the DM screen rather than floating over
+   * the stage. It then drops its own frame and close button: the surrounding
+   * screen owns both, and a close button that closes nothing is a lie.
+   */
+  embedded?: boolean
 }): React.JSX.Element {
   const [amount, setAmount] = useState(10)
   const [damageType, setDamageType] = useState<string>('slashing')
@@ -42,16 +48,20 @@ export function DmPanel({
   const active = view.effects.filter((e) => e.kind !== 'passive')
 
   return (
-    <div className="pointer-events-auto absolute right-4 top-4 z-30 w-80 rounded-2xl border border-ember/30 bg-ink/95 p-4 shadow-2xl backdrop-blur">
+    <div className={embedded
+      ? 'p-4'
+      : 'pointer-events-auto absolute right-4 top-4 z-30 w-80 rounded-2xl border border-ember/30 bg-ink/95 p-4 shadow-2xl backdrop-blur'}>
       <div className="flex items-baseline justify-between">
         <h3 className="text-sm text-ember">DM · {view.meta.name}</h3>
-        <button
-          type="button"
-          onClick={onClose}
-          className="text-[11px] text-parchment/40 transition hover:text-parchment/80"
-        >
-          close
-        </button>
+        {!embedded && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-[11px] text-parchment/40 transition hover:text-parchment/80"
+          >
+            close
+          </button>
+        )}
       </div>
 
       <p className="mt-1 text-[11px] text-parchment/40">

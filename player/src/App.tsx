@@ -24,6 +24,7 @@ import { PortraitPicker } from './ui/PortraitPicker'
 import { supabasePortraits } from './game/portraitStore'
 import { usePortrait } from './game/usePortrait'
 import { useTableEvents } from './game/useTableEvents'
+import { DmScreen } from './ui/dm/DmScreen'
 import { HUD_RESERVED_PX } from './ui/usePinnedActions'
 import { claimAndCreateSheet } from './game/sheetStore'
 import { Solo } from './Solo'
@@ -114,6 +115,7 @@ function Stage({
   // The class being levelled, or null when the wizard is closed.
   const [levellingClassId, setLevellingClassId] = useState<string | null>(null)
   const [pickingPortrait, setPickingPortrait] = useState(false)
+  const [dmOpen, setDmOpen] = useState(false)
   // Memoised: `usePortrait` takes the store as an effect dependency, and a
   // store rebuilt every render would re-fetch the portrait forever.
   const portraitStore = useMemo(() => supabasePortraits(campaignId), [campaignId])
@@ -223,6 +225,29 @@ function Stage({
       {/* The stage reacting to what just happened — Phase L. Driven by the
           same domain events the reducer has always emitted. */}
       <TheatreReactions streams={reactionStreams} />
+
+      {/* The DM's own tools. Gated on the campaign role, not on holding a
+          character — a DM who is not cast as anybody still runs the table. */}
+      {isDm && dmOpen && (
+        <DmScreen
+          campaignId={campaignId}
+          actorId={identity.profileId}
+          roster={snapshot.campaign.characters.map((c) => ({
+            id: c.id, name: c.name, kind: c.kind, color: c.color
+          }))}
+          onClose={() => setDmOpen(false)}
+        />
+      )}
+
+      {isDm && !dmOpen && chromeVisible && (
+        <button
+          type="button"
+          onClick={() => setDmOpen(true)}
+          className="pointer-events-auto absolute right-4 top-4 z-30 rounded-lg border border-ember/50 bg-ink/85 px-3 py-1.5 text-xs text-ember backdrop-blur transition hover:bg-ember/10"
+        >
+          DM
+        </button>
+      )}
 
       {/* The HUD sits over the theatre and never competes with it. */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center gap-2 p-4">

@@ -115,6 +115,10 @@ const uiFiles = [join(root, 'player/src'), join(root, 'src/stage-ui')]
         // — this codebase's custom colours never contain one.
         if (/\d/.test(word)) continue
         if (word.startsWith('gradient')) continue
+        // A trailing hyphen means the match stopped at an arbitrary value —
+        // `border-l-[3px]` reads as a colour called "l-". No colour token in
+        // Tailwind or in @theme ends in a hyphen.
+        if (word.endsWith('-')) continue
         if (BUILTIN.has(word) || declared.has(word)) continue
         if (!missing.has(word)) missing.set(word, new Set())
         missing.get(word).add(rel(file))
